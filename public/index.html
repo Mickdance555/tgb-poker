@@ -224,50 +224,62 @@
         </div>
       </div>
 
-      <!-- MAIN POKER TABLE CONTAINER -->
-      <div class="relative flex-1 flex items-center justify-center min-h-[500px] lg:min-h-[560px]">
+      <!-- MAIN POKER TABLE ARENA -->
+      <div class="relative flex-1 flex items-center justify-center my-auto min-h-[480px] lg:min-h-[530px] px-2 sm:px-6">
         
-        <!-- THE FELT OVAL TABLE -->
-        <div class="poker-table-felt w-full max-w-5xl h-[440px] sm:h-[480px] lg:h-[500px] relative rounded-[200px] sm:rounded-[240px] border-[14px] sm:border-[18px] border-[#2c1d11] shadow-[0_0_60px_rgba(0,0,0,0.85),inset_0_0_80px_rgba(0,0,0,0.7)] flex flex-col items-center justify-center select-none overflow-hidden">
+        <!-- THE FELT OVAL TABLE (Spacious center) -->
+        <div class="poker-table-felt w-[82%] sm:w-[84%] lg:w-[86%] h-[320px] sm:h-[350px] lg:h-[380px] relative rounded-[160px] sm:rounded-[200px] border-[14px] sm:border-[18px] border-[#2c1d11] shadow-[0_0_60px_rgba(0,0,0,0.85),inset_0_0_80px_rgba(0,0,0,0.7)] flex flex-col items-center justify-center select-none overflow-hidden">
           
           <!-- Inner Felt Texture & Watermark -->
           <div class="absolute inset-0 bg-radial from-emerald-800/90 via-emerald-950 to-[#032014] opacity-95"></div>
-          <div class="absolute inset-4 rounded-[180px] sm:rounded-[220px] border border-emerald-600/20 pointer-events-none flex items-center justify-center">
-            <div class="text-emerald-700/10 font-black text-6xl lg:text-8xl tracking-widest font-mono uppercase select-none">
+          <div class="absolute inset-3 rounded-[140px] sm:rounded-[180px] border border-emerald-600/20 pointer-events-none flex items-center justify-center">
+            <div class="text-emerald-700/10 font-black text-5xl lg:text-7xl tracking-widest font-mono uppercase select-none">
               TGB POKER
             </div>
           </div>
 
           <!-- TABLE CENTER: Community Cards & Pot -->
-          <div class="relative z-10 flex flex-col items-center space-y-3">
+          <div class="relative z-10 flex flex-col items-center space-y-2.5">
             
             <!-- Pot Badge -->
-            <div class="bg-black/60 backdrop-blur-md border border-amber-500/40 rounded-full px-5 py-1.5 shadow-2xl flex items-center space-x-2">
+            <div class="bg-black/65 backdrop-blur-md border border-amber-500/40 rounded-full px-5 py-1.5 shadow-2xl flex items-center space-x-2">
               <span class="text-amber-400 text-xs font-black tracking-wider uppercase">MAIN POT:</span>
               <span id="table-pot-amount" class="text-amber-300 font-mono font-black text-base lg:text-lg">0</span>
               <span class="text-xs text-amber-500 font-bold">₮</span>
             </div>
 
             <!-- Community 5 Cards Container -->
-            <div id="community-cards" class="flex items-center space-x-2 sm:space-x-2.5 h-24">
+            <div id="community-cards" class="flex items-center space-x-1.5 sm:space-x-2 h-20 sm:h-22">
               <!-- Rendered by JS -->
             </div>
 
             <!-- Stage & Hand Notice -->
-            <div id="table-stage-banner" class="text-xs font-black tracking-wider uppercase px-3 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300">
+            <div id="table-stage-banner" class="text-[11px] font-black tracking-wider uppercase px-3 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300">
               PREFLOP
             </div>
           </div>
 
-          <!-- 6 RADIAL SEATS AROUND THE TABLE -->
-          <div id="seat-0" class="poker-seat absolute bottom-4 left-1/2 -translate-x-1/2 z-20"></div>
-          <div id="seat-1" class="poker-seat absolute bottom-14 left-4 sm:left-12 z-20"></div>
-          <div id="seat-2" class="poker-seat absolute top-14 left-4 sm:left-12 z-20"></div>
-          <div id="seat-3" class="poker-seat absolute top-4 left-1/2 -translate-x-1/2 z-20"></div>
-          <div id="seat-4" class="poker-seat absolute top-14 right-4 sm:right-12 z-20"></div>
-          <div id="seat-5" class="poker-seat absolute bottom-14 right-4 sm:right-12 z-20"></div>
-
         </div>
+
+        <!-- 6 SEATS PLACED ON THE OUTER PERIMETER (OUTSIDE THE FELT) -->
+        <!-- Seat 0: Hero (Bottom Center Outside) -->
+        <div id="seat-0" class="poker-seat absolute -bottom-3 sm:-bottom-5 left-1/2 -translate-x-1/2 z-30"></div>
+        
+        <!-- Seat 3: Top Center (Outside) -->
+        <div id="seat-3" class="poker-seat absolute -top-3 sm:-top-5 left-1/2 -translate-x-1/2 z-30"></div>
+        
+        <!-- Seat 1: Bottom Left (Outside rail) -->
+        <div id="seat-1" class="poker-seat absolute bottom-8 sm:bottom-10 left-0 sm:left-2 lg:left-4 z-30"></div>
+        
+        <!-- Seat 2: Top Left (Outside rail) -->
+        <div id="seat-2" class="poker-seat absolute top-8 sm:top-10 left-0 sm:left-2 lg:left-4 z-30"></div>
+        
+        <!-- Seat 4: Top Right (Outside rail) -->
+        <div id="seat-4" class="poker-seat absolute top-8 sm:top-10 right-0 sm:right-2 lg:right-4 z-30"></div>
+        
+        <!-- Seat 5: Bottom Right (Outside rail) -->
+        <div id="seat-5" class="poker-seat absolute bottom-8 sm:bottom-10 right-0 sm:right-2 lg:right-4 z-30"></div>
+
       </div>
 
       <!-- BOTTOM ACTION CONSOLE & HAND RANK INDICATOR -->

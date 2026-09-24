@@ -282,24 +282,47 @@ function renderPokerTable() {
       cardsHtml = `<div class="text-[10px] text-slate-500 font-bold uppercase mb-1">FOLDED</div>`;
     }
 
-    seatEl.innerHTML = `
-      ${cardsHtml}
-      <div class="avatar-ring ${isTurn ? 'turn-active' : ''} bg-gradient-to-tr ${seat.avatarBg}">
-        <span class="font-black text-white text-base">${seat.name.charAt(0)}</span>
-        ${isDealer ? `<div class="dealer-button absolute -top-1 -right-1">D</div>` : ''}
-      </div>
-      <div class="text-center mt-1">
-        <div class="text-[11px] font-extrabold text-white truncate max-w-[80px] sm:max-w-[100px]">${seat.name}</div>
-        <div class="chip-badge mt-0.5 justify-center">
-          <span>₮</span> ${seat.chips.toLocaleString()}
+    if (idx === 3) {
+      // Top Center Seat: Avatar on top outside, cards below pointing into felt
+      seatEl.innerHTML = `
+        <div class="avatar-ring ${isTurn ? 'turn-active' : ''} bg-gradient-to-tr ${seat.avatarBg}">
+          <span class="font-black text-white text-base">${seat.name.charAt(0)}</span>
+          ${isDealer ? `<div class="dealer-button absolute -top-1 -right-1">D</div>` : ''}
         </div>
-      </div>
-      ${seat.currentBet > 0 ? `
-        <div class="mt-1 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-mono font-bold">
-          Bet: ${seat.currentBet}
+        <div class="text-center my-0.5">
+          <div class="text-[11px] font-extrabold text-white truncate max-w-[80px] sm:max-w-[100px]">${seat.name}</div>
+          <div class="chip-badge mt-0.5 justify-center">
+            <span>₮</span> ${seat.chips.toLocaleString()}
+          </div>
         </div>
-      ` : ''}
-    `;
+        ${cardsHtml}
+        ${seat.currentBet > 0 ? `
+          <div class="mt-0.5 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-mono font-bold">
+            Bet: ${seat.currentBet}
+          </div>
+        ` : ''}
+      `;
+    } else {
+      // Bottom & Side Seats: Cards pointing toward felt, avatar and info below
+      seatEl.innerHTML = `
+        ${cardsHtml}
+        <div class="avatar-ring ${isTurn ? 'turn-active' : ''} bg-gradient-to-tr ${seat.avatarBg}">
+          <span class="font-black text-white text-base">${seat.name.charAt(0)}</span>
+          ${isDealer ? `<div class="dealer-button absolute -top-1 -right-1">D</div>` : ''}
+        </div>
+        <div class="text-center mt-1">
+          <div class="text-[11px] font-extrabold text-white truncate max-w-[80px] sm:max-w-[100px]">${seat.name}</div>
+          <div class="chip-badge mt-0.5 justify-center">
+            <span>₮</span> ${seat.chips.toLocaleString()}
+          </div>
+        </div>
+        ${seat.currentBet > 0 ? `
+          <div class="mt-1 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-mono font-bold">
+            Bet: ${seat.currentBet}
+          </div>
+        ` : ''}
+      `;
+    }
   });
 
   // Action Buttons state for Hero
