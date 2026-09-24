@@ -24,10 +24,10 @@
         </div>
       </div>
 
-      <!-- Quick Casual Rooms Pill button matching MTT SPORTS -->
-      <button onclick="switchView('career')" class="hidden xl:flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold hover:bg-emerald-500/20 transition">
+      <!-- Quick Casual Rooms Pill button -->
+      <button onclick="switchView('casual')" class="hidden xl:flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold hover:bg-emerald-500/20 transition">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span>Casual Rooms</span>
+        <span>Casual Lobby (1-2,000 TGB)</span>
       </button>
 
       <!-- Navigation Links -->
@@ -35,16 +35,21 @@
         <button onclick="switchView('lobby')" id="nav-lobby" class="nav-btn active px-3 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all">
           Home
         </button>
-        <button onclick="switchView('career')" id="nav-career" class="nav-btn px-3 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all">
-          Casual Rooms
+        <button onclick="switchView('casual')" id="nav-casual" class="nav-btn px-3 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all text-emerald-400 hover:text-emerald-300 flex items-center gap-1">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>Casual Lobby</span>
         </button>
         <button onclick="switchView('table')" id="nav-table" class="nav-btn px-3 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all">
-          Tournaments
+          Arena Table
         </button>
-        <button onclick="openMiniGame('slots')" class="nav-btn px-2.5 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all text-amber-400 hover:text-amber-300">
+        <button onclick="openGtbShopModal()" class="nav-btn px-2.5 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all text-yellow-400 hover:text-yellow-300 flex items-center gap-1">
+          <i class="fa-solid fa-shop"></i>
+          <span>GTB Shop</span>
+        </button>
+        <button onclick="openMiniGame('slots')" class="nav-btn px-2.5 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all text-purple-400 hover:text-purple-300">
           <i class="fa-solid fa-gem mr-1"></i>Slots
         </button>
-        <button onclick="openMiniGame('mines')" class="nav-btn px-2.5 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all text-emerald-400 hover:text-emerald-300">
+        <button onclick="openMiniGame('mines')" class="nav-btn px-2.5 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all text-teal-400 hover:text-teal-300">
           <i class="fa-solid fa-burst mr-1"></i>Mines
         </button>
         <button onclick="switchView('academy')" id="nav-academy" class="nav-btn px-3 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all">
@@ -56,29 +61,53 @@
       </nav>
     </div>
 
-    <!-- Right Controls: Balance, Level, Profile & Auth -->
+    <!-- Right Controls: 30-min Gift, Balances, Level, Profile & Auth -->
     <div class="flex items-center space-x-2 sm:space-x-3">
       
-      <!-- Cashier Button (Matching MTT SPORTS) -->
+      <!-- 30-Minute Free Gift Refill Button (5 TGB) -->
+      <button id="nav-gift-btn" onclick="claimThirtyMinGift()" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 font-black text-xs flex items-center gap-1.5 hover:bg-amber-500/20 transition shadow cursor-pointer">
+        <i class="fa-solid fa-gift text-amber-400"></i>
+        <span id="nav-gift-timer">🎁 5 TGB (30:00)</span>
+      </button>
+
+      <!-- Cashier / Wallet Button -->
       <button onclick="switchView('wallet')" class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs transition shadow">
         <i class="fa-solid fa-building-columns text-amber-400 text-xs"></i>
         <span>Cashier</span>
       </button>
 
       <!-- Login / Register Trigger Button (Visible when logged out) -->
-      <button id="nav-login-btn" onclick="openAuthModal()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs transition shadow-md shadow-amber-500/20 flex items-center">
+      <button id="nav-login-btn" onclick="openAuthModal()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs transition shadow-md shadow-amber-500/20 flex items-center">
         <i class="fa-solid fa-user-plus mr-1.5"></i> เข้าสู่ระบบ / สมัคร
       </button>
 
       <!-- TGB Balance Pill -->
-      <div onclick="switchView('wallet')" class="flex items-center bg-slate-800/80 hover:bg-slate-800 border border-amber-500/30 rounded-xl px-3 py-1.5 shadow-inner cursor-pointer transition">
-        <span class="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black text-xs flex items-center justify-center mr-2 shadow">
+      <div onclick="switchView('wallet')" title="TGB Balance (คลิกเพื่อดูประเป๋าเงิน)" class="flex items-center bg-slate-800/80 hover:bg-slate-800 border border-amber-500/40 rounded-xl px-2.5 sm:px-3 py-1.5 shadow-inner cursor-pointer transition">
+        <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black text-[10px] sm:text-xs flex items-center justify-center mr-1.5 shadow">
           ₮
         </span>
         <div class="text-right">
-          <div class="text-[10px] text-amber-400/80 font-bold leading-none">TGB BALANCE</div>
-          <div id="top-tgb-balance" class="text-sm font-black text-amber-300 font-mono tracking-tight leading-none mt-0.5">12,500.00</div>
+          <div class="text-[9px] text-amber-400/90 font-black leading-none">TGB</div>
+          <div id="top-tgb-balance" class="text-xs sm:text-sm font-black text-amber-300 font-mono tracking-tight leading-none mt-0.5">0</div>
         </div>
+      </div>
+
+      <!-- GTB Balance Pill (Real Money Premium Token) -->
+      <div onclick="openGtbShopModal()" title="GTB Premium Token (คลิกเพื่อเปิดร้านค้า)" class="flex items-center bg-slate-800/80 hover:bg-slate-800 border border-yellow-500/40 rounded-xl px-2.5 py-1.5 shadow-inner cursor-pointer transition space-x-1.5">
+        <span class="w-5 h-5 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-950 font-black text-[10px] flex items-center justify-center shadow">
+          ⭐
+        </span>
+        <div class="text-right">
+          <div class="text-[9px] text-yellow-400 font-black leading-none">GTB</div>
+          <div id="top-gtb-balance" class="text-xs sm:text-sm font-black text-yellow-300 font-mono leading-none mt-0.5">0</div>
+        </div>
+        <span class="px-1.5 py-0.5 rounded-md bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-[10px] font-black shadow">+ ฿</span>
+      </div>
+
+      <!-- Sunday Tickets Pill -->
+      <div onclick="openTicketsModal()" title="Sunday Major Tickets" class="hidden lg:flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-purple-950/60 border border-purple-500/40 text-purple-300 font-bold text-xs cursor-pointer hover:bg-purple-900/60 transition">
+        <i class="fa-solid fa-ticket text-purple-400"></i>
+        <span id="top-sunday-tickets" class="font-mono font-black text-white">0</span>
       </div>
 
       <!-- User Profile Pill & Dropdown (Image 1) -->
@@ -116,30 +145,35 @@
                   <span class="font-semibold">Profile</span>
                 </div>
               </button>
-              <button onclick="switchView('career'); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-slate-800/80 text-slate-300 hover:text-white flex items-center justify-between transition">
+              <button onclick="switchView('casual'); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-slate-800/80 text-emerald-400 hover:text-emerald-300 flex items-center justify-between transition">
                 <div class="flex items-center space-x-2.5">
-                  <i class="fa-solid fa-chart-line text-slate-400 w-4"></i>
-                  <span class="font-semibold">Career</span>
+                  <i class="fa-solid fa-layer-group text-emerald-400 w-4"></i>
+                  <span class="font-semibold">Casual Lobby (1-2000 TGB)</span>
                 </div>
               </button>
-              <button onclick="switchView('history'); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-slate-800/80 text-slate-300 hover:text-white flex items-center justify-between transition">
+              <button onclick="openCardSkinsModal(); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-slate-800/80 text-indigo-400 hover:text-indigo-300 flex items-center justify-between transition">
                 <div class="flex items-center space-x-2.5">
-                  <i class="fa-solid fa-gamepad text-slate-400 w-4"></i>
-                  <span class="font-semibold">My Games</span>
+                  <i class="fa-solid fa-wand-magic-sparkles text-indigo-400 w-4"></i>
+                  <span class="font-semibold">Card Skins (สกินไพ่)</span>
+                </div>
+              </button>
+              <button onclick="openGtbShopModal(); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-slate-800/80 text-yellow-400 hover:text-yellow-300 flex items-center justify-between transition">
+                <div class="flex items-center space-x-2.5">
+                  <i class="fa-solid fa-coins text-yellow-400 w-4"></i>
+                  <span class="font-semibold">GTB Shop (ซื้อเหรียญ)</span>
                 </div>
               </button>
               <button onclick="switchView('wallet'); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-slate-800/80 text-slate-300 hover:text-white flex items-center justify-between transition">
                 <div class="flex items-center space-x-2.5">
                   <i class="fa-solid fa-wallet text-slate-400 w-4"></i>
-                  <span class="font-semibold">Wallet</span>
+                  <span class="font-semibold">Wallet & Cashier</span>
                 </div>
               </button>
-              <button onclick="alert('Tickets Feature Coming Soon'); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-slate-800/80 text-slate-300 hover:text-white flex items-center justify-between transition">
+              <button onclick="openTicketsModal(); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-slate-800/80 text-slate-300 hover:text-white flex items-center justify-between transition">
                 <div class="flex items-center space-x-2.5">
-                  <i class="fa-regular fa-envelope text-slate-400 w-4"></i>
-                  <span class="font-semibold">Tickets</span>
+                  <i class="fa-solid fa-ticket text-purple-400 w-4"></i>
+                  <span class="font-semibold">Sunday Tickets</span>
                 </div>
-                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
               </button>
             </div>
 
@@ -1609,50 +1643,119 @@
     </section>
 
     <!-- ========================================================================= -->
-    <!-- VIEW 5: CAREER (Matching Image 3) -->
+    <!-- VIEW 5: CASUAL POKER LOBBY & CUSTOM ROOMS (1 - 2,000 TGB, 2x Prize Pool) -->
     <!-- ========================================================================= -->
-    <section id="view-career" class="p-4 lg:p-8 max-w-5xl mx-auto w-full space-y-6 hidden">
-      <div class="flex items-center justify-between">
-        <h2 class="text-2xl font-black text-white">Career</h2>
-      </div>
-
-      <!-- Sub Tabs: Casual Rooms | Friends Room (Image 3) -->
-      <div class="flex items-center space-x-8 border-b border-slate-800 text-sm font-bold">
-        <button class="pb-3 text-amber-400 border-b-2 border-amber-400">Casual Rooms</button>
-        <button class="pb-3 text-slate-400 hover:text-white transition">Friends Room</button>
-      </div>
-
-      <!-- Section: Profit -->
-      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5">
-        <h3 class="text-base font-black text-white">Profit</h3>
-        
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800/80 text-center">
-            <div class="text-xs text-slate-400 font-semibold">Total Profit</div>
-            <div id="career-total-profit" class="text-2xl sm:text-3xl font-black text-white font-mono mt-1">0</div>
-          </div>
-          <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800/80 text-center">
-            <div class="text-xs text-slate-400 font-semibold">Weekly Profit</div>
-            <div id="career-weekly-profit" class="text-2xl sm:text-3xl font-black text-white font-mono mt-1">0</div>
-          </div>
+    <section id="view-casual" class="p-3 sm:p-5 lg:p-8 max-w-7xl mx-auto w-full space-y-6 hidden">
+      
+      <!-- Top Title & Create Room Button -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
+            <i class="fa-solid fa-layer-group text-emerald-400"></i>
+            <span>Casual Poker Lobby</span>
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">
+            สร้างห้องและเล่นโป๊กเกอร์ได้ตั้งแต่ <span class="text-amber-400 font-bold">1 TGB ถึงเพดาน 2,000 TGB</span> • Prizepool ทบรางวัล 2 เท่า! • ผู้ชมทั่วไปเข้าดูการเล่นฟรี 100%
+          </p>
         </div>
-
-        <!-- Profit/Loss Trend Chart (Image 3) -->
-        <div class="space-y-2">
-          <div class="text-xs text-slate-400 font-semibold">Profit/Loss trend</div>
-          <div class="w-full h-48 bg-slate-950 rounded-2xl p-4 border border-slate-800/80 relative">
-            <canvas id="career-trend-chart" class="w-full h-full"></canvas>
-          </div>
+        <div class="flex items-center space-x-2.5">
+          <button onclick="openCreateCasualModal()" class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs transition shadow-lg shadow-emerald-500/25 flex items-center gap-2 active:scale-95">
+            <i class="fa-solid fa-plus-circle text-sm"></i>
+            <span>สร้างห้องใหม่ (+ Create Room)</span>
+          </button>
+          <button onclick="switchView('table')" class="px-4 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition border border-slate-700 flex items-center gap-1.5">
+            <i class="fa-solid fa-eye text-cyan-400"></i>
+            <span>ดูโต๊ะหลักสด</span>
+          </button>
         </div>
       </div>
 
-      <!-- Section: History (Image 3) -->
-      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-        <h3 class="text-base font-black text-white">History</h3>
-        <div id="career-history-rows" class="space-y-3">
-          <!-- Rendered dynamically by JS -->
+      <!-- FEATURE BANNER: DAILY SATELLITE TO SUNDAY MAJOR (20:00 น. ทุกวัน) -->
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-950/80 via-slate-900/90 to-indigo-950/80 border border-purple-500/40 p-5 sm:p-7 shadow-2xl">
+        <div class="absolute -right-10 -bottom-10 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+          <div class="space-y-2 max-w-xl">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="satellite-status-badge px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] font-black uppercase tracking-wider">
+                เริ่มทุกวัน 20:00 น.
+              </span>
+              <span class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold">
+                ค่าเข้าเพียง 5 TGB
+              </span>
+              <span class="satellite-countdown-timer font-mono text-xs text-rose-400 font-bold">
+                เริ่มในอีก 04:12:00
+              </span>
+            </div>
+            <h3 class="text-xl sm:text-2xl font-black text-white leading-tight">
+              Daily Satellite to Sunday Major 🎟️
+            </h3>
+            <p class="text-xs text-slate-300">
+              เข้าร่วมแข่งขันทุกวันเวลา 20.00 น. ค่าเข้าเพียง <strong class="text-amber-300">5 TGB</strong> เพื่อชิง <strong class="text-purple-300">ตั๋วเข้าแข่งขันวันอาทิตย์ (Sunday Major Ticket)</strong> รางวัลพูลใหญ่กว่า 100,000 TGB!
+            </p>
+          </div>
+
+          <div class="flex items-center space-x-3 w-full md:w-auto">
+            <button onclick="joinSundaySatellite()" class="flex-1 md:flex-none px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white font-black text-xs transition shadow-xl shadow-purple-900/40 active:scale-95 flex items-center justify-center gap-2">
+              <i class="fa-solid fa-ticket"></i>
+              <span>เข้าแข่งชิงตั๋ว (5 TGB)</span>
+            </button>
+            <button onclick="launchTable('mtt_satellite_2000')" class="px-4 py-3 rounded-2xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-300 hover:text-white font-bold text-xs transition border border-slate-700 flex items-center justify-center gap-1.5">
+              <i class="fa-regular fa-eye"></i>
+              <span>ดูสดฟรี</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      <!-- Filters & Room Categories Bar -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900/80 p-2 sm:px-4 sm:py-2.5 rounded-2xl border border-slate-800/80">
+        <div class="flex items-center space-x-2 text-xs font-bold overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+          <button onclick="filterCasualRooms('all')" class="casual-filter-btn active px-3.5 py-1.5 rounded-xl bg-slate-800 text-white border border-slate-700">All Rooms</button>
+          <button onclick="filterCasualRooms('micro')" class="casual-filter-btn px-3.5 py-1.5 rounded-xl bg-slate-950 text-slate-400 hover:text-white border border-slate-800">Micro (1 - 10 TGB)</button>
+          <button onclick="filterCasualRooms('mid')" class="casual-filter-btn px-3.5 py-1.5 rounded-xl bg-slate-950 text-slate-400 hover:text-white border border-slate-800">Mid (20 - 200 TGB)</button>
+          <button onclick="filterCasualRooms('high')" class="casual-filter-btn px-3.5 py-1.5 rounded-xl bg-slate-950 text-slate-400 hover:text-white border border-slate-800">High Roller (500 - 2000 TGB)</button>
+        </div>
+
+        <div class="text-xs text-slate-400 font-mono self-end sm:self-auto">
+          <span>Min: </span><span class="text-amber-400 font-bold">1 TGB</span> • <span>Max: </span><span class="text-amber-400 font-bold">2,000 TGB</span>
+        </div>
+      </div>
+
+      <!-- CASUAL ROOMS GRID (Rendered by JS) -->
+      <div id="casual-rooms-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Rendered dynamically by renderCasualLobby() -->
+      </div>
+
+      <!-- PROFIT & CAREER STATS ACCORDION -->
+      <div class="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-5 sm:p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-amber-400"></i>
+            <span>Casual & Career Statistics</span>
+          </h3>
+          <span class="text-xs text-slate-500 font-mono">Real-time Session Track</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+          <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
+            <div class="text-[11px] text-slate-400 font-semibold">Total Hands</div>
+            <div id="career-total-hands" class="text-xl sm:text-2xl font-black text-white font-mono mt-1">0</div>
+          </div>
+          <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
+            <div class="text-[11px] text-slate-400 font-semibold">Total Profit (TGB)</div>
+            <div id="career-total-profit" class="text-xl sm:text-2xl font-black text-emerald-400 font-mono mt-1">0</div>
+          </div>
+          <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
+            <div class="text-[11px] text-slate-400 font-semibold">VPIP / PFR</div>
+            <div class="text-xl sm:text-2xl font-black text-amber-300 font-mono mt-1">0% / 0%</div>
+          </div>
+          <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
+            <div class="text-[11px] text-slate-400 font-semibold">Sunday Tickets</div>
+            <div id="career-sunday-tickets" class="text-xl sm:text-2xl font-black text-purple-400 font-mono mt-1">0 🎟️</div>
+          </div>
+        </div>
+      </div>
+
     </section>
 
     <!-- ========================================================================= -->
@@ -1688,26 +1791,57 @@
         </div>
       </div>
 
-      <!-- Emerald Gradient Balance Card (Matching Image 5) -->
-      <div class="rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-emerald-900/90 via-teal-900/70 to-slate-900 border border-emerald-500/30 shadow-2xl space-y-5">
-        <div>
-          <div class="text-xs font-bold text-emerald-300 uppercase tracking-wider">Balance (TGB)</div>
-          <div id="wallet-balance-big" class="text-4xl sm:text-5xl font-black text-white font-mono tracking-tight mt-1">
-            12,500
+      <!-- Dual Currency & Balances Card -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- TGB Balance -->
+        <div class="rounded-3xl p-6 bg-gradient-to-br from-emerald-950/80 via-slate-900 to-teal-950/80 border border-emerald-500/40 shadow-xl space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black text-emerald-400 uppercase tracking-wider">TGB Game Chips</span>
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-xs font-black">₮</span>
+          </div>
+          <div id="wallet-balance-big" class="text-3xl sm:text-4xl font-black text-white font-mono tracking-tight">
+            0
+          </div>
+          <div class="pt-1">
+            <button id="wallet-gift-btn" onclick="claimThirtyMinGift()" class="w-full py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 text-xs font-black transition flex items-center justify-center gap-1.5 shadow">
+              <i class="fa-solid fa-gift text-amber-400"></i>
+              <span id="wallet-gift-timer">🎁 รับฟรี 5 TGB (30:00)</span>
+            </button>
           </div>
         </div>
 
-        <!-- Buttons: Purchase / Claim Faucet, Transfer, Gift (Image 5) -->
-        <div class="flex flex-wrap gap-3 pt-2">
-          <button onclick="claimFaucet()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black text-xs uppercase tracking-wider hover:from-amber-300 hover:to-yellow-400 transition shadow-lg shadow-amber-500/25 flex items-center active:scale-95">
-            <i class="fa-solid fa-plus mr-1.5"></i> Purchase / Claim Faucet
-          </button>
-          <button onclick="alert('Transfer feature available in MTT v2');" class="px-5 py-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-white font-bold text-xs transition flex items-center border border-slate-700">
-            <i class="fa-solid fa-arrow-right-arrow-left mr-2 text-cyan-400"></i> Transfer
-          </button>
-          <button onclick="alert('Gift feature available in MTT v2');" class="px-5 py-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-white font-bold text-xs transition flex items-center border border-slate-700">
-            <i class="fa-solid fa-gift mr-2 text-amber-400"></i> Gift
-          </button>
+        <!-- GTB Balance (Real Money Premium Token) -->
+        <div class="rounded-3xl p-6 bg-gradient-to-br from-amber-950/80 via-slate-900 to-yellow-950/80 border border-yellow-500/40 shadow-xl space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black text-yellow-400 uppercase tracking-wider">GTB Golden Token</span>
+            <span class="w-6 h-6 rounded-full bg-yellow-500/20 text-yellow-300 flex items-center justify-center text-xs font-black">⭐</span>
+          </div>
+          <div id="wallet-gtb-balance" class="text-3xl sm:text-4xl font-black text-yellow-300 font-mono tracking-tight">
+            0
+          </div>
+          <div class="pt-1">
+            <button onclick="openGtbShopModal()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-slate-950 text-xs font-black transition shadow-lg shadow-amber-500/25 flex items-center justify-center gap-1.5 active:scale-95">
+              <i class="fa-solid fa-cart-shopping"></i>
+              <span>ซื้อเหรียญ GTB (เงินจริง)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sunday Tickets & Passes -->
+        <div class="rounded-3xl p-6 bg-gradient-to-br from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-500/40 shadow-xl space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black text-purple-400 uppercase tracking-wider">Sunday Major Tickets</span>
+            <span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center text-xs font-black">🎟️</span>
+          </div>
+          <div id="wallet-sunday-tickets" class="text-3xl sm:text-4xl font-black text-white font-mono tracking-tight">
+            0
+          </div>
+          <div class="pt-1">
+            <button onclick="openCardSkinsModal()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i>
+              <span>สกินไพ่ (Card Skins)</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -2320,16 +2454,171 @@
             Use
           </button>
         </div>
+      </div>
+    </div>
+  </div>
 
-        <div class="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between">
-          <div>
-            <div class="font-black text-xs text-slate-300">🎫 Satellite 110MTT Pass</div>
-            <div class="text-[10px] text-slate-400">Valid until 2026-09-30 • Free Entry</div>
-          </div>
-          <button onclick="launchTable('mtt_001'); closeTicketsModal();" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition">
-            Use
-          </button>
+  <!-- ========================================================================= -->
+  <!-- MODAL: CREATE CASUAL POKER ROOM (1 - 2,000 TGB, 2x Prize Pool) -->
+  <!-- ========================================================================= -->
+  <div id="modal-create-casual-room" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-emerald-500/40 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
+      <button onclick="closeCreateCasualModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="text-center space-y-1">
+        <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-black">
+          <i class="fa-solid fa-plus-circle"></i>
+          <span>CASUAL ROOM CREATOR</span>
         </div>
+        <h3 class="text-2xl font-black text-white">สร้างห้องโป๊กเกอร์ใหม่</h3>
+        <p class="text-xs text-slate-400">กำหนดค่าเข้าได้ตั้งแต่ 1 ถึง 2,000 TGB • Prizepool ทบรางวัล 2 เท่า!</p>
+      </div>
+
+      <form onsubmit="handleCreateCasualRoom(event)" class="space-y-4">
+        <!-- Room Name -->
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-slate-300">ชื่อห้อง (Room Name)</label>
+          <input id="create-room-name" type="text" value="โต๊ะแคชชวล 1-2000 TGB" required class="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
+        </div>
+
+        <!-- Buy-In Slider & Input (1 to 2000 TGB) -->
+        <div class="space-y-2 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-300">ค่าเข้า Buy-in (ขั้นต่ำ 1 TGB • เพดาน 2,000 TGB)</span>
+            <div class="flex items-center space-x-1 font-mono">
+              <span class="text-amber-400 font-bold">₮</span>
+              <input id="create-room-buyin" type="number" min="1" max="2000" value="10" class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 py-0.5 text-center font-bold text-amber-300 text-sm focus:outline-none" oninput="syncBuyInValues(this.value)">
+            </div>
+          </div>
+          <input id="create-room-buyin-slider" type="range" min="1" max="2000" step="1" value="10" class="w-full accent-emerald-500 cursor-pointer" oninput="syncBuyInValues(this.value)">
+          <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+            <span>Min: 1 TGB</span>
+            <span>200 TGB</span>
+            <span>1,000 TGB</span>
+            <span>Max: 2,000 TGB</span>
+          </div>
+        </div>
+
+        <!-- Max Seats & Blinds Preview -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="text-xs font-bold text-slate-300">จำนวนที่นั่งสูงสุด</label>
+            <select id="create-room-seats" onchange="updateCreateRoomPreview()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+              <option value="8" selected>8-Max (8 ที่นั่ง)</option>
+              <option value="6">6-Max (6 ที่นั่ง)</option>
+            </select>
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-bold text-slate-300">Blinds อัตโนมัติ</label>
+            <div id="create-room-blinds-preview" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-300">
+              0.25 / 0.5 TGB
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculated Prizepool (2x Doubled!) -->
+        <div class="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-slate-950 border border-emerald-500/30 flex items-center justify-between">
+          <div>
+            <div class="text-[11px] text-emerald-400 font-bold uppercase tracking-wide flex items-center gap-1.5">
+              <span>ESTIMATED PRIZE POOL</span>
+              <span class="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-black">2x ทบรางวัล</span>
+            </div>
+            <div class="text-[10px] text-slate-400">ยิ่งค่าเข้าแพง Prizepool ยิ่งได้รางวัลเยอะเป็นเท่าตัว</div>
+          </div>
+          <div id="create-room-prize-preview" class="text-xl sm:text-2xl font-black text-emerald-300 font-mono">
+            160 TGB
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-sm transition shadow-xl shadow-emerald-500/25 active:scale-95">
+          สร้างห้องและเปิดโต๊ะเล่นทันที
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: GTB TOKEN SHOP (ซื้อเหรียญ GTB ด้วยเงินจริง) -->
+  <!-- ========================================================================= -->
+  <div id="modal-gtb-shop" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-yellow-500/40 rounded-3xl max-w-xl w-full p-6 sm:p-7 space-y-5 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+      <button onclick="closeGtbShopModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="text-center space-y-1">
+        <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs font-black">
+          <i class="fa-solid fa-coins"></i>
+          <span>OFFICIAL GTB CASHIER</span>
+        </div>
+        <h3 class="text-2xl sm:text-3xl font-black text-white">ร้านค้าเหรียญทอง GTB</h3>
+        <p class="text-xs text-slate-400">เติมเหรียญ GTB ด้วยเงินจริง (PromptPay / บัตรเครดิต) เพื่อปลดล็อกสกินไพ่และสิทธิพิเศษ</p>
+      </div>
+
+      <!-- Packages Selection Grid -->
+      <div id="gtb-packages-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- Rendered dynamically by renderGtbShopPacks() -->
+      </div>
+
+      <!-- Checkout Payment Simulator Box -->
+      <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
+        <div class="flex items-center justify-between text-xs border-b border-slate-800 pb-2">
+          <span class="text-slate-400">แพ็กเกจที่เลือก:</span>
+          <span id="shop-summary-gtb" class="font-black text-yellow-400 font-mono text-sm">1,200 GTB</span>
+        </div>
+        <div class="flex items-center justify-between text-xs border-b border-slate-800 pb-2">
+          <span class="text-slate-400">ยอดชำระสุทธิ:</span>
+          <span id="shop-summary-thb" class="font-black text-white font-mono text-base">฿350</span>
+        </div>
+
+        <!-- Thai QR PromptPay Mock Preview -->
+        <div class="flex items-center space-x-4 bg-slate-900 p-3 rounded-xl border border-slate-800">
+          <div class="w-16 h-16 bg-white rounded-lg p-1 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-qrcode text-slate-950 text-4xl"></i>
+          </div>
+          <div class="space-y-0.5 text-left text-xs">
+            <div class="font-black text-white flex items-center gap-1.5">
+              <span class="px-1.5 py-0.5 rounded bg-blue-600 text-[10px] text-white">PromptPay</span>
+              <span>สแกนจ่าย QR พร้อมเพย์</span>
+            </div>
+            <div class="text-[11px] text-slate-400">ยอดเงิน: <strong id="shop-qr-amount" class="text-emerald-400 font-mono">฿350</strong></div>
+            <div class="text-[10px] text-slate-500 font-mono">REF: TGB-GTB-20260924</div>
+          </div>
+        </div>
+
+        <!-- Instant Simulate Payment Button -->
+        <button onclick="executeSimulatedPayment()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 hover:from-yellow-300 hover:to-amber-300 text-slate-950 font-black text-sm transition shadow-xl shadow-amber-500/25 active:scale-95 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>ยืนยันการชำระเงิน (จำลองเงินเข้าทันที)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: CARD SKINS (ตู้เสื้อผ้าและสกินหลังไพ่) -->
+  <!-- ========================================================================= -->
+  <div id="modal-card-skins" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+      <button onclick="closeCardSkinsModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="text-center space-y-1">
+        <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-black">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span>CARD SKINS & THEMES</span>
+        </div>
+        <h3 class="text-2xl sm:text-3xl font-black text-white">สกินไพ่ (Card Skins)</h3>
+        <p class="text-xs text-slate-400">เลือกและสวมใส่สกินหลังไพ่ ซึ่งจะแสดงผลบนโต๊ะแข่งขันจริง</p>
+      </div>
+
+      <!-- Card Skins Grid -->
+      <div id="card-skins-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Rendered dynamically by renderCardSkinsUI() -->
       </div>
     </div>
   </div>

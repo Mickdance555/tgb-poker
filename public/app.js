@@ -95,9 +95,10 @@ const RANK_CHARS = {
   10: 'T', 11: 'J', 12: 'Q', 13: 'K', 14: 'A',
 };
 
-function renderCardHTML(code, isRevealed = true) {
+function renderCardHTML(code, isRevealed = true, customSkin = null) {
+  const skin = customSkin || userProfile.cardSkin || 'bicycle_red';
   if (!isRevealed || !code) {
-    return `<div class="poker-card poker-card-back card-dealt"></div>`;
+    return `<div class="poker-card poker-card-back skin-${skin} card-dealt"></div>`;
   }
   const rankChar = code[0];
   const suitChar = code[1];
@@ -324,9 +325,11 @@ let userProfile = {
   followers: 0,
   following: 0,
   likes: 0,
-  tgbBalance: 12500, // 12,500 TGB starting bonus
-  level: 1,
-  exp: 0,
+  tgbBalance: 0, // Reset starting balance to 0 as requested
+  gtbBalance: 0, // Reset starting GTB to 0 as requested
+  sundayTickets: 0, // Sunday Major tickets starting at 0
+  level: 0, // Reset Level to 0 as requested
+  exp: 0, // Reset EXP to 0
   tournamentsPlayed: 0,
   tournamentsWon: 0,
   itmCount: 0,
@@ -339,6 +342,9 @@ let userProfile = {
   avatarEmoji: '🦁',
   avatarUrl: '',
   frame: 'frame-none',
+  cardSkin: 'bicycle_red',
+  unlockedCardSkins: ['bicycle_red'],
+  lastGiftClaimTime: 0,
   registeredAt: new Date().toLocaleDateString('th-TH'),
 };
 
@@ -406,7 +412,8 @@ let currentHandStats = {
 // 5. NAVIGATION & VIEW SWITCHING
 // ============================================================================
 function switchView(viewName) {
-  const views = ['lobby', 'table', 'academy', 'profile', 'career', 'history', 'wallet', 'verifier'];
+  if (viewName === 'career') viewName = 'casual';
+  const views = ['lobby', 'casual', 'table', 'academy', 'profile', 'career', 'history', 'wallet', 'verifier'];
   views.forEach(v => {
     const el = document.getElementById(`view-${v}`);
     const navBtn = document.getElementById(`nav-${v}`);
@@ -427,12 +434,12 @@ function switchView(viewName) {
 
   if (viewName === 'table') {
     renderPokerTable();
+  } else if (viewName === 'casual') {
+    renderCasualLobby('all');
   } else if (viewName === 'wallet') {
     renderWallet();
   } else if (viewName === 'profile') {
     renderProfileView();
-  } else if (viewName === 'career') {
-    renderCareer();
   } else if (viewName === 'history') {
     renderHistory();
   }
@@ -1288,9 +1295,34 @@ function sitDownAtSeat(seatIdx) {
   if (seatIdx < 0 || seatIdx >= activeTable.seats.length) return;
   const targetSeat = activeTable.seats[seatIdx];
   if (!targetSeat.empty && !targetSeat.isHero) {
-    alert(`Seat #${seatIdx} is already taken!`);
+    alert(`ที่นั่ง #${seatIdx} มีผู้เล่นท่านอื่นนั่งอยู่แล้ว`);
     return;
   }
+
+  // Minimum buy-in required: at least 1 TGB!
+  const minTableBuyIn = Math.max(1, activeTable.bigBlind * 2);
+  if ((userProfile.tgbBalance || 0) < minTableBuyIn) {
+    const claimGift = confirm(`❌ เหรียญ TGB ของคุณไม่เพียงพอสำหรับซื้อที่นั่ง\n(ค่าเข้าโต๊ะขั้นต่ำ: ${minTableBuyIn} TGB แต่คุณมี ${userProfile.tgbBalance || 0} TGB)\n\nกด 'ตกลง' เพื่อรับของขวัญฟรี 5 TGB ประจำรอบ 30 นาที\nหรือกด 'ยกเลิก' เพื่อดูการเล่นฟรีแบบ Spectator`);
+    if (claimGift) {
+      claimThirtyMinGift();
+    }
+    return;
+  }
+
+  // Deduct Buy-in from userProfile.tgbBalance
+  const buyInAmount = Math.min(minTableBuyIn * 5, userProfile.tgbBalance);
+  userProfile.tgbBalance -= buyInAmount;
+  saveUserProfile();
+
+  userLedgerTransactions.unshift({
+    id: `tx_${Date.now()}`,
+    game: activeTable.title || 'Poker Arena',
+    type: `Buy-in Seat #${seatIdx}`,
+    amount: -buyInAmount,
+    currency: 'TGB',
+    balance: userProfile.tgbBalance,
+    timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+  });
 
   // Remove hero from any existing seat first
   activeTable.seats.forEach(s => {
@@ -1307,8 +1339,8 @@ function sitDownAtSeat(seatIdx) {
   // Sit Hero into seatIdx
   targetSeat.empty = false;
   targetSeat.isHero = true;
-  targetSeat.name = userProfile.nickname || 'Hero';
-  targetSeat.chips = userProfile.tgbBalance > 0 ? userProfile.tgbBalance : 1000;
+  targetSeat.name = userProfile.username || 'Hero';
+  targetSeat.chips = buyInAmount;
   targetSeat.currentBet = 0;
   targetSeat.totalBetThisHand = 0;
   targetSeat.isFolded = false;
@@ -1319,6 +1351,7 @@ function sitDownAtSeat(seatIdx) {
 
   isSpectatorMode = false;
   playSound('deal');
+  updateAuthUI(true, userProfile);
   renderPokerTable();
 
   // If hand not active or fewer than 2 players in hand, start a hand
@@ -1329,16 +1362,31 @@ function sitDownAtSeat(seatIdx) {
 }
 
 function standUpToSpectate() {
-  activeTable.seats.forEach(s => {
-    if (s.isHero) {
-      s.isHero = false;
-      s.empty = true;
-      s.name = '';
-      s.chips = 0;
-      s.cards = [];
-      s.isFolded = true;
+  const heroSeat = activeTable.seats.find(s => s.isHero);
+  if (heroSeat) {
+    const returnedChips = heroSeat.chips || 0;
+    if (returnedChips > 0) {
+      userProfile.tgbBalance += returnedChips;
+      userLedgerTransactions.unshift({
+        id: `tx_${Date.now()}`,
+        game: activeTable.title || 'Poker Arena',
+        type: `Stand Up Cashout`,
+        amount: returnedChips,
+        currency: 'TGB',
+        balance: userProfile.tgbBalance,
+        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      });
+      saveUserProfile();
+      updateAuthUI(true, userProfile);
+      renderLedgerTable();
     }
-  });
+    heroSeat.isHero = false;
+    heroSeat.empty = true;
+    heroSeat.name = '';
+    heroSeat.chips = 0;
+    heroSeat.cards = [];
+    heroSeat.isFolded = true;
+  }
   isSpectatorMode = true;
   renderPokerTable();
 }
@@ -2237,8 +2285,10 @@ function handleGuestPlay() {
     id: `guest_${Date.now()}`,
     username: `Guest_${Math.floor(1000 + Math.random() * 9000)}`,
     email: 'guest@tgbpoker.local',
-    tgbBalance: 12500,
-    level: 1,
+    tgbBalance: 0, // Reset to 0
+    gtbBalance: 0, // Reset to 0
+    sundayTickets: 0,
+    level: 0,
     exp: 0,
     tournamentsPlayed: 0,
     tournamentsWon: 0,
@@ -2252,6 +2302,9 @@ function handleGuestPlay() {
     avatarEmoji: '🦁',
     avatarUrl: '',
     frame: 'frame-none',
+    cardSkin: 'bicycle_red',
+    unlockedCardSkins: ['bicycle_red'],
+    lastGiftClaimTime: 0,
     registeredAt: new Date().toLocaleDateString('th-TH'),
   };
   setLoggedInUser(guestUser);
@@ -2259,14 +2312,16 @@ function handleGuestPlay() {
   playSound('chips');
 }
 
-function setLoggedInUser(user) {
+function saveUserProfile() {
   try {
-    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(user));
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(userProfile));
   } catch (e) {}
+}
 
-  userProfile.id = user.id;
-  userProfile.username = user.username;
-  userProfile.handle = user.handle || `@${user.username}`;
+function setLoggedInUser(user) {
+  userProfile.id = user.id || `user_${Date.now()}`;
+  userProfile.username = user.username || 'Hero';
+  userProfile.handle = user.handle || `@${user.username || 'Hero'}`;
   userProfile.bio = user.bio || 'I have no bio yet';
   userProfile.gender = user.gender || 'male';
   userProfile.country = user.country || '🇹🇭';
@@ -2274,8 +2329,10 @@ function setLoggedInUser(user) {
   userProfile.following = user.following !== undefined ? user.following : 0;
   userProfile.likes = user.likes !== undefined ? user.likes : 0;
   userProfile.email = user.email || 'user@tgbpoker.local';
-  userProfile.tgbBalance = user.tgbBalance !== undefined ? user.tgbBalance : 12500;
-  userProfile.level = user.level || 1;
+  userProfile.tgbBalance = user.tgbBalance !== undefined ? user.tgbBalance : 0;
+  userProfile.gtbBalance = user.gtbBalance !== undefined ? user.gtbBalance : 0;
+  userProfile.sundayTickets = user.sundayTickets !== undefined ? user.sundayTickets : 0;
+  userProfile.level = user.level !== undefined ? user.level : 0;
   userProfile.exp = user.exp || 0;
   userProfile.tournamentsPlayed = user.tournamentsPlayed || 0;
   userProfile.tournamentsWon = user.tournamentsWon || 0;
@@ -2289,11 +2346,16 @@ function setLoggedInUser(user) {
   userProfile.avatarEmoji = user.avatarEmoji || '🦁';
   userProfile.avatarUrl = user.avatarUrl || '';
   userProfile.frame = user.frame || 'frame-none';
+  userProfile.cardSkin = user.cardSkin || 'bicycle_red';
+  userProfile.unlockedCardSkins = user.unlockedCardSkins || ['bicycle_red'];
+  userProfile.lastGiftClaimTime = user.lastGiftClaimTime || 0;
   userProfile.registeredAt = user.registeredAt || new Date().toLocaleDateString('th-TH');
+
+  saveUserProfile();
 
   // Update Hero seat on table
   if (activeTable && activeTable.seats && activeTable.seats[0]) {
-    activeTable.seats[0].name = `${user.username} (You)`;
+    activeTable.seats[0].name = `${userProfile.username} (You)`;
   }
 
   updateAuthUI(true, userProfile);
@@ -2316,8 +2378,10 @@ function handleLogout() {
     following: 0,
     likes: 0,
     email: 'guest@tgbpoker.local',
-    tgbBalance: 12500,
-    level: 1,
+    tgbBalance: 0,
+    gtbBalance: 0,
+    sundayTickets: 0,
+    level: 0,
     exp: 0,
     tournamentsPlayed: 0,
     tournamentsWon: 0,
@@ -2331,6 +2395,9 @@ function handleLogout() {
     avatarEmoji: '🦁',
     avatarUrl: '',
     frame: 'frame-none',
+    cardSkin: 'bicycle_red',
+    unlockedCardSkins: ['bicycle_red'],
+    lastGiftClaimTime: 0,
     registeredAt: new Date().toLocaleDateString('th-TH'),
   };
 
@@ -2351,10 +2418,24 @@ function updateAuthUI(isLoggedIn, user = null) {
   const navLevelBadge = document.getElementById('nav-user-level-badge');
   const navRankTitle = document.getElementById('nav-user-rank-title');
   const topBalance = document.getElementById('top-tgb-balance');
+  const topGtb = document.getElementById('top-gtb-balance');
+  const topSundayTickets = document.getElementById('top-sunday-tickets');
+  const walletTgb = document.getElementById('wallet-balance-big');
+  const walletGtb = document.getElementById('wallet-gtb-balance');
+  const walletSunday = document.getElementById('wallet-sunday-tickets');
+  const careerSunday = document.getElementById('career-sunday-tickets');
+  const careerHands = document.getElementById('career-total-hands');
+  const careerProfit = document.getElementById('career-total-profit');
 
-  if (topBalance) {
-    topBalance.innerText = (userProfile.tgbBalance || 12500).toLocaleString() + '.00';
-  }
+  if (topBalance) topBalance.innerText = (userProfile.tgbBalance || 0).toLocaleString();
+  if (topGtb) topGtb.innerText = (userProfile.gtbBalance || 0).toLocaleString();
+  if (topSundayTickets) topSundayTickets.innerText = (userProfile.sundayTickets || 0).toString();
+  if (walletTgb) walletTgb.innerText = (userProfile.tgbBalance || 0).toLocaleString();
+  if (walletGtb) walletGtb.innerText = (userProfile.gtbBalance || 0).toLocaleString();
+  if (walletSunday) walletSunday.innerText = `${userProfile.sundayTickets || 0} 🎟️`;
+  if (careerSunday) careerSunday.innerText = `${userProfile.sundayTickets || 0} 🎟️`;
+  if (careerHands) careerHands.innerText = (userProfile.totalHands || 0).toLocaleString();
+  if (careerProfit) careerProfit.innerText = (userProfile.netTgb || 0).toLocaleString();
 
   const homeWelcome = document.getElementById('home-welcome-name');
   if (homeWelcome) {
@@ -2364,22 +2445,23 @@ function updateAuthUI(isLoggedIn, user = null) {
   if (isLoggedIn && user) {
     if (navLoginBtn) navLoginBtn.classList.add('hidden');
     if (navUserContainer) navUserContainer.classList.remove('hidden');
-    if (navName) navName.innerText = user.username;
+    if (navName) navName.innerText = userProfile.username;
     
     if (navAvatar) {
       navAvatar.className = `w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center font-bold text-white shadow overflow-hidden text-sm ${userProfile.frame || 'frame-none'}`;
       if (userProfile.avatarType === 'image' && userProfile.avatarUrl) {
         navAvatar.innerHTML = `<img src="${userProfile.avatarUrl}" class="w-full h-full object-cover">`;
       } else {
-        navAvatar.innerHTML = `<span class="text-base">${userProfile.avatarEmoji || user.username.charAt(0)}</span>`;
+        navAvatar.innerHTML = `<span class="text-base">${userProfile.avatarEmoji || '🦁'}</span>`;
       }
     }
 
-    if (navLevelBadge) navLevelBadge.innerText = `Lv.${user.level || 1}`;
+    if (navLevelBadge) navLevelBadge.innerText = `Lv.${userProfile.level || 0}`;
     if (navRankTitle) {
       let rankTitle = 'Novice Player';
-      if (user.level >= 10) rankTitle = 'Grand Master';
-      else if (user.level >= 5) rankTitle = 'Elite Pro';
+      if (userProfile.level >= 10) rankTitle = 'Grand Master';
+      else if (userProfile.level >= 5) rankTitle = 'Elite Pro';
+      else if (userProfile.level >= 1) rankTitle = 'Amateur';
       navRankTitle.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>${rankTitle}`;
     }
   } else {
@@ -2387,22 +2469,745 @@ function updateAuthUI(isLoggedIn, user = null) {
     if (navUserContainer) navUserContainer.classList.add('hidden');
   }
 
+  updateGiftTimerDisplay();
+  updateSatelliteTimerDisplay();
   renderPokerTable();
 }
 
 function restoreUserSession() {
   try {
+    const economyResetDone = localStorage.getItem('tgb_poker_economy_reset_v5');
+    if (!economyResetDone) {
+      // Complete reset to 0 as requested by the user
+      userProfile.tgbBalance = 0;
+      userProfile.gtbBalance = 0;
+      userProfile.sundayTickets = 0;
+      userProfile.level = 0;
+      userProfile.exp = 0;
+      userProfile.totalHands = 0;
+      userProfile.tournamentsPlayed = 0;
+      userProfile.tournamentsWon = 0;
+      userProfile.itmCount = 0;
+      userProfile.netTgb = 0;
+      userProfile.vpipHands = 0;
+      userProfile.pfrHands = 0;
+      userProfile.threeBetHands = 0;
+      userProfile.cardSkin = 'bicycle_red';
+      userProfile.unlockedCardSkins = ['bicycle_red'];
+      userProfile.lastGiftClaimTime = 0;
+
+      localStorage.setItem('tgb_poker_economy_reset_v5', 'true');
+      saveUserProfile();
+      setLoggedInUser(userProfile);
+      initThirtyMinGiftTimer();
+      initDailySatelliteTimer();
+      return;
+    }
+
     const raw = localStorage.getItem(SESSION_STORAGE_KEY);
     if (raw) {
       const user = JSON.parse(raw);
       setLoggedInUser(user);
+      initThirtyMinGiftTimer();
+      initDailySatelliteTimer();
       return;
     }
   } catch (e) {}
 
-  // If no saved user, default to initial userProfile
   setLoggedInUser(userProfile);
-  updateAuthUI(false);
+  initThirtyMinGiftTimer();
+  initDailySatelliteTimer();
+}
+
+// ============================================================================
+// 9. 30-MINUTE FREE GIFT SYSTEM (5 TGB REFILL)
+// ============================================================================
+let giftTimerInterval = null;
+
+function initThirtyMinGiftTimer() {
+  if (giftTimerInterval) clearInterval(giftTimerInterval);
+  updateGiftTimerDisplay();
+  giftTimerInterval = setInterval(updateGiftTimerDisplay, 1000);
+}
+
+function updateGiftTimerDisplay() {
+  const GIFT_INTERVAL_MS = 30 * 60 * 1000; // 30 mins
+  const now = Date.now();
+  const lastClaim = userProfile.lastGiftClaimTime || 0;
+  const elapsed = now - lastClaim;
+  const remainingMs = Math.max(0, GIFT_INTERVAL_MS - elapsed);
+
+  const timerEl = document.getElementById('nav-gift-timer');
+  const giftBtn = document.getElementById('nav-gift-btn');
+  const walletTimerEl = document.getElementById('wallet-gift-timer');
+  const walletGiftBtn = document.getElementById('wallet-gift-btn');
+
+  if (remainingMs <= 0) {
+    if (timerEl) timerEl.innerText = '🎁 รับฟรี 5 TGB!';
+    if (giftBtn) {
+      giftBtn.classList.add('gift-claim-ready');
+      giftBtn.title = 'คลิกเพื่อรับ 5 TGB ฟรีประจำรอบ 30 นาที!';
+    }
+    if (walletTimerEl) walletTimerEl.innerText = '🎁 รับฟรี 5 TGB ทันที';
+    if (walletGiftBtn) walletGiftBtn.classList.add('gift-claim-ready');
+  } else {
+    const totalSecs = Math.floor(remainingMs / 1000);
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+    if (timerEl) timerEl.innerText = `🎁 5 TGB (${formatted})`;
+    if (giftBtn) {
+      giftBtn.classList.remove('gift-claim-ready');
+      giftBtn.title = `ของขวัญ 5 TGB รอบถัดไปในอีก ${formatted}`;
+    }
+    if (walletTimerEl) walletTimerEl.innerText = `🎁 รับฟรี 5 TGB (${formatted})`;
+    if (walletGiftBtn) walletGiftBtn.classList.remove('gift-claim-ready');
+  }
+}
+
+function claimThirtyMinGift() {
+  const GIFT_INTERVAL_MS = 30 * 60 * 1000;
+  const now = Date.now();
+  const lastClaim = userProfile.lastGiftClaimTime || 0;
+  const elapsed = now - lastClaim;
+
+  if (lastClaim > 0 && elapsed < GIFT_INTERVAL_MS) {
+    const remainingSecs = Math.ceil((GIFT_INTERVAL_MS - elapsed) / 1000);
+    const mins = Math.floor(remainingSecs / 60);
+    const secs = remainingSecs % 60;
+    alert(`⏳ ระบบของขวัญ 5 TGB จะเปิดให้กดรับทุกๆ 30 นาที\nกรุณารออีก ${mins} นาที ${secs} วินาที`);
+    return;
+  }
+
+  userProfile.tgbBalance = (userProfile.tgbBalance || 0) + 5;
+  userProfile.lastGiftClaimTime = now;
+  saveUserProfile();
+
+  userLedgerTransactions.unshift({
+    id: `tx_${Date.now()}`,
+    game: 'Gift Refill',
+    type: 'Free 30m Gift Bonus',
+    amount: 5,
+    currency: 'TGB',
+    balance: userProfile.tgbBalance,
+    timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+  });
+
+  updateAuthUI(true, userProfile);
+  renderLedgerTable();
+  playSound('win');
+  alert('🎉 ยินดีด้วย! คุณได้รับของขวัญ +5 TGB เข้าสู่กระเป๋าเรียบร้อยแล้ว');
+}
+
+// ============================================================================
+// 10. DAILY SATELLITE TO SUNDAY MAJOR (20:00 น. ทุกวัน • Buy-in 5 TGB)
+// ============================================================================
+let satelliteTimerInterval = null;
+
+function initDailySatelliteTimer() {
+  if (satelliteTimerInterval) clearInterval(satelliteTimerInterval);
+  updateSatelliteTimerDisplay();
+  satelliteTimerInterval = setInterval(updateSatelliteTimerDisplay, 1000);
+}
+
+function updateSatelliteTimerDisplay() {
+  const now = new Date();
+  const target = new Date();
+  target.setHours(20, 0, 0, 0);
+
+  if (now.getHours() === 20 && now.getMinutes() < 30) {
+    const badges = document.querySelectorAll('.satellite-status-badge');
+    badges.forEach(b => {
+      b.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 animate-ping mr-1"></span> LIVE NOW (20:00)';
+      b.className = 'satellite-status-badge px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 text-xs font-black animate-pulse flex items-center';
+    });
+    const timers = document.querySelectorAll('.satellite-countdown-timer');
+    timers.forEach(t => t.innerText = '🔴 กำลังแข่งขันสด! เข้าเล่นได้ทันที');
+    return;
+  }
+
+  if (now.getTime() >= target.getTime()) {
+    target.setDate(target.getDate() + 1);
+  }
+
+  const diffMs = target.getTime() - now.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  const hours = Math.floor(diffSecs / 3600);
+  const mins = Math.floor((diffSecs % 3600) / 60);
+  const secs = diffSecs % 60;
+  const timeStr = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+  const badges = document.querySelectorAll('.satellite-status-badge');
+  badges.forEach(b => {
+    b.innerText = 'เริ่มทุกวัน 20:00 น.';
+    b.className = 'satellite-status-badge px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/30 text-[10px] font-bold';
+  });
+
+  const timers = document.querySelectorAll('.satellite-countdown-timer');
+  timers.forEach(t => t.innerText = `เริ่มในอีก ${timeStr}`);
+}
+
+function joinSundaySatellite() {
+  if ((userProfile.tgbBalance || 0) < 5) {
+    alert('❌ เหรียญ TGB ไม่เพียงพอ (ต้องการ 5 TGB เพื่อเข้าแข่งขันชิงตั๋ววันอาทิตย์)\nกรุณากดรับของขวัญ 5 TGB หรือเติมเหรียญ');
+    return;
+  }
+
+  if (!confirm('ยืนยันจ่าย 5 TGB เพื่อเข้าร่วมการแข่งขัน Daily Satellite ชิงตั๋ววันอาทิตย์?')) {
+    return;
+  }
+
+  userProfile.tgbBalance -= 5;
+  userProfile.sundayTickets = (userProfile.sundayTickets || 0) + 1; // Award ticket for tournament simulation
+  saveUserProfile();
+
+  userLedgerTransactions.unshift({
+    id: `tx_${Date.now()}`,
+    game: 'Satellite 20:00',
+    type: 'Buy-in Daily Sunday Satellite',
+    amount: -5,
+    currency: 'TGB',
+    balance: userProfile.tgbBalance,
+    timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+  });
+
+  updateAuthUI(true, userProfile);
+  renderLedgerTable();
+  playSound('chips');
+
+  activeTable.id = 'satellite_2000';
+  activeTable.title = 'Daily Satellite to Sunday Major (20:00)';
+  activeTable.smallBlind = 0.25;
+  activeTable.bigBlind = 0.5;
+  activeTable.pot = 15;
+  activeTable.stage = 'PREFLOP';
+
+  isSpectatorMode = false;
+  activeTable.seats[0].empty = false;
+  activeTable.seats[0].isHero = true;
+  activeTable.seats[0].name = userProfile.username || 'Hero';
+  activeTable.seats[0].chips = 100;
+  activeTable.seats[0].cards = ['As', 'Ks'];
+
+  switchView('table');
+  renderPokerTable();
+  playSound('deal');
+  alert('🎟️ ลงทะเบียนสำเร็จ! คุณได้รับสิทธิ์แข่งขันและสิทธิลุ้นตั๋ววันอาทิตย์เรียบร้อยแล้ว');
+}
+
+// ============================================================================
+// 11. GTB REAL MONEY TOKEN SHOP (ซื้อเหรียญ GTB ด้วยเงินจริง)
+// ============================================================================
+const GTB_PACKAGES = [
+  { id: 'gtb_100', gtb: 100, thb: 35, bonus: '', badge: '' },
+  { id: 'gtb_550', gtb: 550, thb: 175, bonus: '+10% Bonus', badge: 'bg-emerald-500/20 text-emerald-400' },
+  { id: 'gtb_1200', gtb: 1200, thb: 350, bonus: '+20% Bonus', badge: 'bg-amber-500/20 text-amber-400 border border-amber-500/40', popular: true },
+  { id: 'gtb_3500', gtb: 3500, thb: 1000, bonus: '+25% Bonus', badge: 'bg-purple-500/20 text-purple-400' },
+  { id: 'gtb_7000', gtb: 7000, thb: 1750, bonus: '+30% Bonus', badge: 'bg-rose-500/20 text-rose-400', whale: true },
+];
+
+let selectedGtbPack = GTB_PACKAGES[2]; // Default to 1200 GTB
+
+function openGtbShopModal() {
+  const modal = document.getElementById('modal-gtb-shop');
+  if (modal) {
+    modal.classList.remove('hidden');
+    renderGtbShopPacks();
+    selectGtbPack('gtb_1200');
+  }
+}
+
+function closeGtbShopModal() {
+  const modal = document.getElementById('modal-gtb-shop');
+  if (modal) modal.classList.add('hidden');
+}
+
+function renderGtbShopPacks() {
+  const container = document.getElementById('gtb-packages-grid');
+  if (!container) return;
+
+  container.innerHTML = GTB_PACKAGES.map(pack => {
+    const isSelected = selectedGtbPack && selectedGtbPack.id === pack.id;
+    return `
+      <div onclick="selectGtbPack('${pack.id}')" class="p-3.5 rounded-2xl cursor-pointer transition border ${isSelected ? 'bg-slate-950 border-yellow-400 shadow-lg shadow-yellow-500/20' : 'bg-slate-950/80 border-slate-800 hover:border-slate-700'} relative space-y-1.5">
+        ${pack.popular ? `<span class="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[9px] font-black uppercase">Best Value</span>` : ''}
+        ${pack.whale ? `<span class="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full bg-rose-500 text-white text-[9px] font-black uppercase">Whale Pack</span>` : ''}
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">⭐</span>
+            <span class="text-base font-black text-white font-mono">${pack.gtb.toLocaleString()} GTB</span>
+          </div>
+          <span class="text-xs font-black text-emerald-400 font-mono">฿${pack.thb.toLocaleString()}</span>
+        </div>
+        ${pack.bonus ? `<div class="text-[10px] font-bold text-amber-400">${pack.bonus}</div>` : `<div class="text-[10px] text-slate-500">Standard Pack</div>`}
+      </div>
+    `;
+  }).join('');
+}
+
+function selectGtbPack(packId) {
+  selectedGtbPack = GTB_PACKAGES.find(p => p.id === packId) || GTB_PACKAGES[0];
+  renderGtbShopPacks();
+  const summaryGtb = document.getElementById('shop-summary-gtb');
+  const summaryThb = document.getElementById('shop-summary-thb');
+  const qrAmount = document.getElementById('shop-qr-amount');
+  if (summaryGtb) summaryGtb.innerText = selectedGtbPack.gtb.toLocaleString() + ' GTB';
+  if (summaryThb) summaryThb.innerText = '฿' + selectedGtbPack.thb.toLocaleString();
+  if (qrAmount) qrAmount.innerText = '฿' + selectedGtbPack.thb.toLocaleString();
+}
+
+function executeSimulatedPayment() {
+  if (!selectedGtbPack) return;
+  const pack = selectedGtbPack;
+
+  userProfile.gtbBalance = (userProfile.gtbBalance || 0) + pack.gtb;
+  saveUserProfile();
+
+  userLedgerTransactions.unshift({
+    id: `tx_${Date.now()}`,
+    game: 'GTB Token Shop',
+    type: `Purchased ${pack.gtb.toLocaleString()} GTB (฿${pack.thb})`,
+    amount: pack.gtb,
+    currency: 'GTB',
+    balance: userProfile.gtbBalance,
+    timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+  });
+
+  updateAuthUI(true, userProfile);
+  renderLedgerTable();
+  playSound('win');
+  closeGtbShopModal();
+
+  alert(`🎉 ชำระเงินสำเร็จ ฿${pack.thb.toLocaleString()}!\nได้รับเหรียญทอง +${pack.gtb.toLocaleString()} GTB เข้าสู่บัญชีเรียบร้อยแล้ว`);
+}
+
+// ============================================================================
+// 12. CARD SKINS SYSTEM (สกินหลังไพ่)
+// ============================================================================
+const CARD_SKINS_DATA = [
+  {
+    id: 'bicycle_red',
+    name: 'Classic Bicycle Red',
+    nameTh: 'คลาสสิกไบซิเคิล แดง',
+    priceGtb: 0,
+    priceTgb: 0,
+    desc: 'ลวดลายหลังไพ่มาตรฐานการแข่งขันโป๊กเกอร์ระดับโลก',
+    previewClass: 'skin-bicycle_red',
+  },
+  {
+    id: 'cyber_neon',
+    name: 'Cyber Neon Dark',
+    nameTh: 'ไซเบอร์ นีออน ดาร์ก',
+    priceGtb: 150,
+    priceTgb: 500,
+    desc: 'ดีไซน์นีออนเรืองแสงสีฟ้าและม่วงสไตล์ Cyberpunk ล้ำสมัย',
+    previewClass: 'skin-cyber_neon',
+  },
+  {
+    id: 'gold_royale',
+    name: 'Gold Luxury Royale',
+    nameTh: 'โกลด์ ลักชูรี่ รอยัล',
+    priceGtb: 300,
+    priceTgb: 1000,
+    desc: 'ลายฉลุทองคำ 24K บนผ้ากำมะหยี่สีรัตติกาลสุดหรูหรา',
+    previewClass: 'skin-gold_royale',
+  },
+  {
+    id: 'emerald_mtt',
+    name: 'MTT Emerald Championship',
+    nameTh: 'เอ็มทีที เอเมอรัลด์ แชมเปียนชิป',
+    priceGtb: 500,
+    priceTgb: 2000,
+    desc: 'ลายเคฟล่าคาร์บอนขลิบทองมรกตเฉพาะแชมป์ทัวร์นาเมนต์',
+    previewClass: 'skin-emerald_mtt',
+  },
+];
+
+function openCardSkinsModal() {
+  const modal = document.getElementById('modal-card-skins');
+  if (modal) {
+    modal.classList.remove('hidden');
+    renderCardSkinsUI();
+  }
+}
+
+function closeCardSkinsModal() {
+  const modal = document.getElementById('modal-card-skins');
+  if (modal) modal.classList.add('hidden');
+}
+
+function renderCardSkinsUI() {
+  const container = document.getElementById('card-skins-container');
+  if (!container) return;
+
+  const unlocked = userProfile.unlockedCardSkins || ['bicycle_red'];
+  const activeSkin = userProfile.cardSkin || 'bicycle_red';
+
+  container.innerHTML = CARD_SKINS_DATA.map(skin => {
+    const isUnlocked = unlocked.includes(skin.id);
+    const isEquipped = activeSkin === skin.id;
+
+    return `
+      <div class="p-4 rounded-2xl bg-slate-950 border ${isEquipped ? 'border-amber-400 shadow-lg shadow-amber-500/20' : 'border-slate-800'} flex items-center space-x-4">
+        <div class="w-14 h-20 rounded-xl ${skin.previewClass} flex-shrink-0 shadow-lg border border-white/20"></div>
+        <div class="flex-1 space-y-1">
+          <div class="flex items-center justify-between">
+            <h4 class="font-black text-sm text-white">${skin.nameTh}</h4>
+            ${isEquipped ? `<span class="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[9px]">EQUIPPED</span>` : ''}
+          </div>
+          <div class="text-[11px] text-slate-400 leading-tight">${skin.desc}</div>
+          <div class="pt-2 flex items-center justify-between">
+            ${isUnlocked ? `
+              <button onclick="equipCardSkin('${skin.id}')" ${isEquipped ? 'disabled' : ''} class="px-4 py-1.5 rounded-xl ${isEquipped ? 'bg-slate-800 text-slate-500' : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black'} text-xs transition">
+                ${isEquipped ? 'กำลังใช้งาน' : 'สวมใส่ (Equip)'}
+              </button>
+            ` : `
+              <div class="flex items-center space-x-2">
+                <button onclick="unlockSkinWithGtb('${skin.id}', ${skin.priceGtb})" class="px-2.5 py-1.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black text-xs transition">
+                  ${skin.priceGtb} GTB
+                </button>
+                <button onclick="unlockSkinWithTgb('${skin.id}', ${skin.priceTgb})" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 font-black text-xs transition border border-slate-700">
+                  ${skin.priceTgb} TGB
+                </button>
+              </div>
+            `}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function equipCardSkin(skinId) {
+  userProfile.cardSkin = skinId;
+  saveUserProfile();
+  renderCardSkinsUI();
+  renderPokerTable();
+  playSound('win');
+  alert(`✨ สวมใส่สกินไพ่สำเร็จ!`);
+}
+
+function unlockSkinWithGtb(skinId, price) {
+  if ((userProfile.gtbBalance || 0) < price) {
+    alert(`❌ เหรียญ GTB ไม่เพียงพอ (ต้องการ ${price} GTB)\nกรุณาเติมเหรียญที่ร้านค้า GTB`);
+    return;
+  }
+  userProfile.gtbBalance -= price;
+  if (!userProfile.unlockedCardSkins) userProfile.unlockedCardSkins = ['bicycle_red'];
+  userProfile.unlockedCardSkins.push(skinId);
+  userProfile.cardSkin = skinId;
+  saveUserProfile();
+  updateAuthUI(true, userProfile);
+  renderCardSkinsUI();
+  renderPokerTable();
+  playSound('win');
+  alert(`🎉 ปลดล็อกและสวมใส่สกินไพ่เรียบร้อยแล้ว!`);
+}
+
+function unlockSkinWithTgb(skinId, price) {
+  if ((userProfile.tgbBalance || 0) < price) {
+    alert(`❌ เหรียญ TGB ไม่เพียงพอ (ต้องการ ${price} TGB)`);
+    return;
+  }
+  userProfile.tgbBalance -= price;
+  if (!userProfile.unlockedCardSkins) userProfile.unlockedCardSkins = ['bicycle_red'];
+  userProfile.unlockedCardSkins.push(skinId);
+  userProfile.cardSkin = skinId;
+  saveUserProfile();
+  updateAuthUI(true, userProfile);
+  renderCardSkinsUI();
+  renderPokerTable();
+  playSound('win');
+  alert(`🎉 ปลดล็อกและสวมใส่สกินไพ่เรียบร้อยแล้ว!`);
+}
+
+// ============================================================================
+// 13. CASUAL POKER LOBBY & CUSTOM ROOM CREATION (1 - 2,000 TGB, 2x Prize Pool)
+// ============================================================================
+let casualRoomsData = [
+  {
+    id: 'casual_101',
+    name: 'Newbie 1 TGB Friendly',
+    host: 'System Host',
+    buyIn: 1,
+    smallBlind: 0.05,
+    bigBlind: 0.1,
+    maxSeats: 8,
+    seatedCount: 2,
+    multiplier: 2,
+    prizePool: 16, // 1 * 8 * 2
+    status: 'PLAYING',
+  },
+  {
+    id: 'casual_102',
+    name: 'Daily 5 TGB Satellite (รอบ 20:00)',
+    host: 'Sunday Satellite Host',
+    buyIn: 5,
+    smallBlind: 0.25,
+    bigBlind: 0.5,
+    maxSeats: 8,
+    seatedCount: 4,
+    multiplier: 2,
+    prizePool: 80, // 5 * 8 * 2
+    status: 'REGISTERING',
+  },
+  {
+    id: 'casual_103',
+    name: 'Mid Stakes 50 TGB Arena',
+    host: 'CryptoShark',
+    buyIn: 50,
+    smallBlind: 2.5,
+    bigBlind: 5,
+    maxSeats: 8,
+    seatedCount: 5,
+    multiplier: 2,
+    prizePool: 800, // 50 * 8 * 2
+    status: 'PLAYING',
+  },
+  {
+    id: 'casual_104',
+    name: 'High Roller 2,000 TGB Max Pool',
+    host: 'WhaleKing',
+    buyIn: 2000,
+    smallBlind: 100,
+    bigBlind: 200,
+    maxSeats: 8,
+    seatedCount: 3,
+    multiplier: 2,
+    prizePool: 32000, // 2000 * 8 * 2
+    status: 'PLAYING',
+  },
+];
+
+function renderCasualLobby(filter = 'all') {
+  const container = document.getElementById('casual-rooms-grid');
+  if (!container) return;
+
+  let filtered = casualRoomsData;
+  if (filter === 'micro') filtered = casualRoomsData.filter(r => r.buyIn <= 10);
+  else if (filter === 'mid') filtered = casualRoomsData.filter(r => r.buyIn > 10 && r.buyIn <= 200);
+  else if (filter === 'high') filtered = casualRoomsData.filter(r => r.buyIn > 200);
+
+  container.innerHTML = filtered.map(room => `
+    <div class="bg-slate-900 border border-slate-800 hover:border-emerald-500/40 rounded-3xl p-5 space-y-4 shadow-xl transition flex flex-col justify-between">
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="px-2 py-0.5 rounded-full ${room.status === 'PLAYING' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'} text-[10px] font-black uppercase">
+            ${room.status}
+          </span>
+          <span class="text-xs text-slate-400 font-mono"><i class="fa-solid fa-users mr-1"></i>${room.seatedCount}/${room.maxSeats} Max</span>
+        </div>
+        <h3 class="text-base font-black text-white leading-tight">${escapeHtml(room.name)}</h3>
+        <div class="text-[11px] text-slate-400 font-medium">Host: <span class="text-slate-300 font-bold">${escapeHtml(room.host)}</span></div>
+      </div>
+
+      <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800/80 space-y-2 font-mono text-xs">
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400">Buy-In (ขั้นต่ำ):</span>
+          <span class="font-black text-amber-300">${room.buyIn.toLocaleString()} TGB</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400">Blinds:</span>
+          <span class="text-slate-300">${room.smallBlind} / ${room.bigBlind}</span>
+        </div>
+        <div class="flex justify-between items-center border-t border-slate-800/60 pt-1.5">
+          <span class="text-emerald-400 font-bold flex items-center gap-1">
+            <span>Prize Pool</span>
+            <span class="px-1 rounded bg-emerald-500/20 text-[9px] text-emerald-300">2x ทบรางวัล</span>
+          </span>
+          <span class="font-black text-emerald-400 text-sm">${room.prizePool.toLocaleString()} TGB</span>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2 pt-1">
+        <button onclick="joinCasualRoom('${room.id}', ${room.buyIn})" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs transition shadow-lg shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-play"></i>
+          <span>เข้าเล่น (${room.buyIn} TGB)</span>
+        </button>
+        <button onclick="spectateCasualRoom('${room.id}')" title="เข้าดูฟรี 100%" class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs transition border border-slate-700 flex items-center justify-center gap-1">
+          <i class="fa-regular fa-eye"></i>
+          <span class="hidden sm:inline">ดูฟรี</span>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterCasualRooms(cat) {
+  const btns = document.querySelectorAll('.casual-filter-btn');
+  btns.forEach(b => {
+    b.className = 'casual-filter-btn px-3.5 py-1.5 rounded-xl bg-slate-950 text-slate-400 hover:text-white border border-slate-800';
+  });
+  if (window.event && window.event.target) {
+    window.event.target.className = 'casual-filter-btn active px-3.5 py-1.5 rounded-xl bg-slate-800 text-white border border-slate-700';
+  }
+  renderCasualLobby(cat);
+}
+
+function openCreateCasualModal() {
+  const modal = document.getElementById('modal-create-casual-room');
+  if (modal) {
+    modal.classList.remove('hidden');
+    syncBuyInValues(10);
+  }
+}
+
+function closeCreateCasualModal() {
+  const modal = document.getElementById('modal-create-casual-room');
+  if (modal) modal.classList.add('hidden');
+}
+
+function syncBuyInValues(val) {
+  let num = parseFloat(val);
+  if (isNaN(num) || num < 1) num = 1;
+  if (num > 2000) num = 2000;
+
+  const slider = document.getElementById('create-room-buyin-slider');
+  const input = document.getElementById('create-room-buyin');
+  if (slider && slider.value !== num.toString()) slider.value = num;
+  if (input && input.value !== num.toString()) input.value = num;
+
+  updateCreateRoomPreview();
+}
+
+function updateCreateRoomPreview() {
+  const input = document.getElementById('create-room-buyin');
+  const seatsSelect = document.getElementById('create-room-seats');
+  const blindsPreview = document.getElementById('create-room-blinds-preview');
+  const prizePreview = document.getElementById('create-room-prize-preview');
+
+  const buyIn = input ? parseFloat(input.value) || 10 : 10;
+  const seats = seatsSelect ? parseInt(seatsSelect.value, 10) || 8 : 8;
+
+  const sb = Math.max(0.05, +(buyIn * 0.025).toFixed(2));
+  const bb = Math.max(0.1, +(buyIn * 0.05).toFixed(2));
+  const prize = buyIn * seats * 2; // 2x Multiplier
+
+  if (blindsPreview) blindsPreview.innerText = `${sb} / ${bb} TGB`;
+  if (prizePreview) prizePreview.innerText = `${prize.toLocaleString()} TGB`;
+}
+
+function handleCreateCasualRoom(e) {
+  if (e) e.preventDefault();
+  const nameInput = document.getElementById('create-room-name');
+  const buyInInput = document.getElementById('create-room-buyin');
+  const seatsInput = document.getElementById('create-room-seats');
+
+  const name = nameInput.value.trim() || 'My Custom Casual Table';
+  let buyIn = parseFloat(buyInInput.value);
+
+  // Validate Buy-In bounds: 1 to 2,000 TGB ceiling
+  if (isNaN(buyIn) || buyIn < 1) buyIn = 1;
+  if (buyIn > 2000) buyIn = 2000;
+
+  const maxSeats = parseInt(seatsInput.value, 10) || 8;
+  const prizePool = buyIn * maxSeats * 2; // 2x Multiplier
+
+  if ((userProfile.tgbBalance || 0) < buyIn) {
+    alert(`❌ คุณมี TGB ไม่เพียงพอสำหรับสร้างห้องนี้\n(ต้องการ ${buyIn} TGB แต่มี ${userProfile.tgbBalance || 0} TGB)\nกรุณากดรับของขวัญ 5 TGB หรือเติมเหรียญ`);
+    return;
+  }
+
+  // Deduct Buy-in from host
+  userProfile.tgbBalance -= buyIn;
+  saveUserProfile();
+
+  const newRoom = {
+    id: `casual_${Date.now()}`,
+    name,
+    host: userProfile.username || 'You',
+    buyIn,
+    smallBlind: Math.max(0.05, +(buyIn * 0.025).toFixed(2)),
+    bigBlind: Math.max(0.1, +(buyIn * 0.05).toFixed(2)),
+    maxSeats,
+    seatedCount: 1,
+    multiplier: 2,
+    prizePool,
+    status: 'PLAYING',
+  };
+
+  casualRoomsData.unshift(newRoom);
+  closeCreateCasualModal();
+  renderCasualLobby('all');
+
+  userLedgerTransactions.unshift({
+    id: `tx_${Date.now()}`,
+    game: 'Casual Lobby',
+    type: `Created Room: ${name}`,
+    amount: -buyIn,
+    currency: 'TGB',
+    balance: userProfile.tgbBalance,
+    timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+  });
+
+  updateAuthUI(true, userProfile);
+  renderLedgerTable();
+  launchCasualTable(newRoom, true);
+}
+
+function joinCasualRoom(roomId, buyIn) {
+  const room = casualRoomsData.find(r => r.id === roomId);
+  if (!room) return;
+
+  if ((userProfile.tgbBalance || 0) < buyIn) {
+    alert(`❌ คุณมี TGB ไม่เพียงพอ (ต้องการ ${buyIn} TGB แต่มี ${userProfile.tgbBalance || 0} TGB)\nคุณยังสามารถกด "ดูการเล่นฟรี" เพื่อรับชมสดได้!`);
+    return;
+  }
+
+  userProfile.tgbBalance -= buyIn;
+  saveUserProfile();
+
+  userLedgerTransactions.unshift({
+    id: `tx_${Date.now()}`,
+    game: 'Casual Room',
+    type: `Buy-in ${room.name}`,
+    amount: -buyIn,
+    currency: 'TGB',
+    balance: userProfile.tgbBalance,
+    timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+  });
+
+  updateAuthUI(true, userProfile);
+  renderLedgerTable();
+  playSound('chips');
+
+  launchCasualTable(room, true);
+}
+
+function spectateCasualRoom(roomId) {
+  const room = casualRoomsData.find(r => r.id === roomId);
+  if (!room) return;
+  launchCasualTable(room, false); // Free spectator!
+}
+
+function launchCasualTable(room, isSeatedHero) {
+  activeTable.id = room.id;
+  activeTable.title = `${room.name} • ${room.maxSeats}-Max`;
+  activeTable.smallBlind = room.smallBlind;
+  activeTable.bigBlind = room.bigBlind;
+  activeTable.pot = room.smallBlind + room.bigBlind;
+  activeTable.stage = 'PREFLOP';
+
+  if (isSeatedHero) {
+    isSpectatorMode = false;
+    // Seat Hero at seat 0 with buy-in chips
+    activeTable.seats[0].empty = false;
+    activeTable.seats[0].isHero = true;
+    activeTable.seats[0].name = userProfile.username || 'Hero';
+    activeTable.seats[0].chips = room.buyIn;
+    activeTable.seats[0].avatarEmoji = userProfile.avatarEmoji || '🦁';
+    activeTable.seats[0].avatarBg = 'from-emerald-600 to-teal-700';
+    activeTable.seats[0].currentBet = room.smallBlind;
+    activeTable.seats[0].cards = ['Ah', 'Kd'];
+  } else {
+    isSpectatorMode = true;
+    activeTable.seats[0].isHero = false;
+  }
+
+  switchView('table');
+  renderPokerTable();
+  playSound('deal');
 }
 
 // ============================================================================
@@ -2800,12 +3605,35 @@ window.openTicketsModal = openTicketsModal;
 window.closeTicketsModal = closeTicketsModal;
 window.openPointsModal = openPointsModal;
 
+// Economy, Gift, Satellite, GTB Shop, Card Skins, Casual Lobby
+window.claimThirtyMinGift = claimThirtyMinGift;
+window.joinSundaySatellite = joinSundaySatellite;
+window.openGtbShopModal = openGtbShopModal;
+window.closeGtbShopModal = closeGtbShopModal;
+window.selectGtbPack = selectGtbPack;
+window.executeSimulatedPayment = executeSimulatedPayment;
+window.openCardSkinsModal = openCardSkinsModal;
+window.closeCardSkinsModal = closeCardSkinsModal;
+window.equipCardSkin = equipCardSkin;
+window.unlockSkinWithGtb = unlockSkinWithGtb;
+window.unlockSkinWithTgb = unlockSkinWithTgb;
+window.renderCasualLobby = renderCasualLobby;
+window.filterCasualRooms = filterCasualRooms;
+window.openCreateCasualModal = openCreateCasualModal;
+window.closeCreateCasualModal = closeCreateCasualModal;
+window.syncBuyInValues = syncBuyInValues;
+window.updateCreateRoomPreview = updateCreateRoomPreview;
+window.handleCreateCasualRoom = handleCreateCasualRoom;
+window.joinCasualRoom = joinCasualRoom;
+window.spectateCasualRoom = spectateCasualRoom;
+
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
 function initApp() {
   restoreUserSession();
   renderTournamentCards();
+  renderCasualLobby('all');
   renderPokerTable();
   renderLedgerTable();
   renderProfileView();
