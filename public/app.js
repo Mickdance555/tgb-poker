@@ -70,6 +70,19 @@ function playSound(type) {
       gain.connect(audioCtx.destination);
       osc.start(now);
       osc.stop(now + 0.12);
+    } else if (type === 'chime') {
+      [659.25, 880].forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+        gain.gain.setValueAtTime(0.15, now + idx * 0.1);
+        gain.gain.linearRampToValueAtTime(0.01, now + idx * 0.1 + 0.25);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + idx * 0.1);
+        osc.stop(now + idx * 0.1 + 0.25);
+      });
     }
   } catch (e) {
     console.warn('Audio not initialized yet:', e);
@@ -113,6 +126,16 @@ function renderCardHTML(code, isRevealed = true, customSkin = null) {
       <div class="text-xs sm:text-sm font-black text-right leading-none">${rankChar}</div>
     </div>
   `;
+}
+
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 // ============================================================================
@@ -348,7 +371,7 @@ let userProfile = {
   registeredAt: new Date().toLocaleDateString('th-TH'),
 };
 
-let isSpectatorMode = true;
+let isSpectatorMode = false;
 
 let activeTable = {
   id: 'table_daily_tgb_01',
@@ -363,17 +386,17 @@ let activeTable = {
   communityCards: [],
   handNumber: 1,
   deck: [],
-  handActive: true,
+  handActive: false,
   tableNotice: 'READY',
   serverSeedHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
   serverSeed: '',
   seats: [
-    { seatNumber: 0, name: '蘇察哈爾燦', chips: 497, currentBet: 1, totalBetThisHand: 1, isHero: false, cards: ['Kh', 'Qs'], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-amber-600 to-red-600', avatarEmoji: '🐻', empty: false, turnTimeLeft: 4 },
-    { seatNumber: 1, name: 'jryep117179...', chips: 48.5, currentBet: 2, totalBetThisHand: 2, isHero: false, cards: ['Jc', '10d'], isFolded: false, isAllIn: false, actedThisStreet: true, avatarBg: 'from-slate-700 to-slate-900', avatarEmoji: '👤', empty: false, turnTimeLeft: 0 },
-    { seatNumber: 2, name: '', chips: 0, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: true, isAllIn: false, actedThisStreet: true, empty: true },
-    { seatNumber: 3, name: '', chips: 0, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: true, isAllIn: false, actedThisStreet: true, empty: true },
-    { seatNumber: 4, name: '', chips: 0, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: true, isAllIn: false, actedThisStreet: true, empty: true },
-    { seatNumber: 5, name: '', chips: 0, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: true, isAllIn: false, actedThisStreet: true, empty: true },
+    { seatNumber: 0, name: 'Hero (You)', chips: 500, currentBet: 0, totalBetThisHand: 0, isHero: true, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-emerald-600 to-teal-700', avatarEmoji: '🦁', empty: false, turnTimeLeft: 15, lastAction: '', showdownHandDesc: '' },
+    { seatNumber: 1, name: '蘇察哈爾燦', chips: 480, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-amber-600 to-red-600', avatarEmoji: '🐻', empty: false, turnTimeLeft: 15, lastAction: '', showdownHandDesc: '' },
+    { seatNumber: 2, name: 'jryep117', chips: 520, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-slate-700 to-slate-900', avatarEmoji: '👤', empty: false, turnTimeLeft: 15, lastAction: '', showdownHandDesc: '' },
+    { seatNumber: 3, name: 'ViperKing', chips: 650, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-purple-700 to-indigo-900', avatarEmoji: '🐍', empty: false, turnTimeLeft: 15, lastAction: '', showdownHandDesc: '' },
+    { seatNumber: 4, name: 'PokerQueen', chips: 410, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-rose-600 to-pink-800', avatarEmoji: '👑', empty: false, turnTimeLeft: 15, lastAction: '', showdownHandDesc: '' },
+    { seatNumber: 5, name: 'AceHunter', chips: 590, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-cyan-600 to-blue-800', avatarEmoji: '🦅', empty: false, turnTimeLeft: 15, lastAction: '', showdownHandDesc: '' },
     { seatNumber: 6, name: '', chips: 0, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: true, isAllIn: false, actedThisStreet: true, empty: true },
     { seatNumber: 7, name: '', chips: 0, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: true, isAllIn: false, actedThisStreet: true, empty: true },
   ],
@@ -446,8 +469,19 @@ function switchView(viewName) {
 }
 
 function launchTable(tournamentId) {
+  activeTable.id = tournamentId || 'tgb_001';
+  const tourney = (typeof TOURNAMENTS_DATA !== 'undefined' && TOURNAMENTS_DATA.find(t => t.id === tournamentId)) || null;
+  if (tourney) {
+    activeTable.title = `${tourney.title} • ${tourney.type}`;
+  }
+  isSpectatorMode = false;
+  if (typeof initTableForPlay === 'function') {
+    initTableForPlay(500);
+  }
   switchView('table');
-  startNewHand();
+  setTimeout(() => {
+    if (typeof startNewHand === 'function') startNewHand();
+  }, 350);
 }
 
 // User Dropdown Handlers (Image 1)
@@ -559,7 +593,7 @@ function renderProfileView() {
 // Draw Profit / Loss Trend Canvas Chart (Matching Image 2)
 function drawProfitLossChart() {
   const canvas = document.getElementById('profit-loss-chart');
-  if (!canvas) return;
+  if (!canvas || !canvas.getContext) return;
 
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
@@ -1065,15 +1099,134 @@ function saveProfileCustomization() {
 
 
 // ============================================================================
-// 7. RENDER POKER TABLE & ACTION CONSOLE
+// 7. REAL TEXAS HOLD'EM POKER ENGINE & TABLE CONTROLS
 // ============================================================================
+let turnTimerInterval = null;
+let currentTurnTimeoutId = null;
+
+function clearAllTurnTimers() {
+  if (turnTimerInterval) {
+    clearInterval(turnTimerInterval);
+    turnTimerInterval = null;
+  }
+  if (currentTurnTimeoutId) {
+    clearTimeout(currentTurnTimeoutId);
+    currentTurnTimeoutId = null;
+  }
+}
+
+function initTableForPlay(heroChips = 500) {
+  isSpectatorMode = false;
+  
+  const heroName = (userProfile && (userProfile.nickname || userProfile.username)) 
+    ? `${userProfile.nickname || userProfile.username} (You)` 
+    : 'Hero (You)';
+
+  activeTable.seats[0] = {
+    seatNumber: 0,
+    name: heroName,
+    chips: Math.max(100, heroChips),
+    currentBet: 0,
+    totalBetThisHand: 0,
+    isHero: true,
+    cards: [],
+    isFolded: false,
+    isAllIn: false,
+    actedThisStreet: false,
+    avatarBg: 'from-emerald-600 to-teal-700',
+    avatarEmoji: (userProfile && userProfile.avatarEmoji) || '🦁',
+    empty: false,
+    turnTimeLeft: 15,
+    lastAction: '',
+    showdownHandDesc: ''
+  };
+
+  const defaultBots = [
+    { name: '蘇察哈爾燦', chips: 480, avatarBg: 'from-amber-600 to-red-600', avatarEmoji: '🐻' },
+    { name: 'jryep117', chips: 520, avatarBg: 'from-slate-700 to-slate-900', avatarEmoji: '👤' },
+    { name: 'ViperKing', chips: 650, avatarBg: 'from-purple-700 to-indigo-900', avatarEmoji: '🐍' },
+    { name: 'PokerQueen', chips: 410, avatarBg: 'from-rose-600 to-pink-800', avatarEmoji: '👑' },
+    { name: 'AceHunter', chips: 590, avatarBg: 'from-cyan-600 to-blue-800', avatarEmoji: '🦅' }
+  ];
+
+  for (let i = 1; i <= 5; i++) {
+    const s = activeTable.seats[i];
+    if (!s || s.empty || s.isHero) {
+      const b = defaultBots[i - 1];
+      activeTable.seats[i] = {
+        seatNumber: i,
+        name: b.name,
+        chips: b.chips,
+        currentBet: 0,
+        totalBetThisHand: 0,
+        isHero: false,
+        cards: [],
+        isFolded: false,
+        isAllIn: false,
+        actedThisStreet: false,
+        avatarBg: b.avatarBg,
+        avatarEmoji: b.avatarEmoji,
+        empty: false,
+        turnTimeLeft: 15,
+        lastAction: '',
+        showdownHandDesc: ''
+      };
+    }
+  }
+
+  activeTable.seats[6] = { seatNumber: 6, name: '', chips: 0, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: true, isAllIn: false, actedThisStreet: true, empty: true };
+  activeTable.seats[7] = { seatNumber: 7, name: '', chips: 0, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: true, isAllIn: false, actedThisStreet: true, empty: true };
+}
+
+function initTableForSpectator() {
+  isSpectatorMode = true;
+  const botNames = [
+    { name: 'TigerPro', chips: 500, emoji: '🐯', bg: 'from-amber-600 to-yellow-700' },
+    { name: '蘇察哈爾燦', chips: 480, emoji: '🐻', bg: 'from-amber-600 to-red-600' },
+    { name: 'jryep117', chips: 520, emoji: '🦊', bg: 'from-slate-700 to-slate-900' },
+    { name: 'ViperKing', chips: 650, emoji: '🐍', bg: 'from-purple-700 to-indigo-900' },
+    { name: 'PokerQueen', chips: 410, emoji: '👑', bg: 'from-rose-600 to-pink-800' },
+    { name: 'AceHunter', chips: 590, emoji: '🦅', bg: 'from-cyan-600 to-blue-800' }
+  ];
+
+  for (let i = 0; i < 6; i++) {
+    const b = botNames[i];
+    activeTable.seats[i] = {
+      seatNumber: i,
+      name: b.name,
+      chips: b.chips,
+      currentBet: 0,
+      totalBetThisHand: 0,
+      isHero: false,
+      cards: [],
+      isFolded: false,
+      isAllIn: false,
+      actedThisStreet: false,
+      avatarBg: b.bg,
+      avatarEmoji: b.emoji,
+      empty: false,
+      turnTimeLeft: 15,
+      lastAction: '',
+      showdownHandDesc: ''
+    };
+  }
+  activeTable.seats[6] = { seatNumber: 6, name: '', chips: 0, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: true, isAllIn: false, actedThisStreet: true, empty: true };
+  activeTable.seats[7] = { seatNumber: 7, name: '', chips: 0, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: true, isAllIn: false, actedThisStreet: true, empty: true };
+}
+
+function showTableBanner(text) {
+  activeTable.tableNotice = text;
+  const bannerEl = document.getElementById('table-stage-banner');
+  if (bannerEl) bannerEl.innerText = text;
+}
+
 function renderPokerTable() {
   const potEl = document.getElementById('table-pot-amount');
   const bannerEl = document.getElementById('table-stage-banner');
   const blindsEl = document.getElementById('table-blinds-info');
   const blindsPill = document.getElementById('table-blinds-pill');
 
-  if (potEl) potEl.innerText = activeTable.pot.toLocaleString();
+  if (potEl) potEl.innerText = (activeTable.pot || 0).toLocaleString();
   if (bannerEl) bannerEl.innerText = activeTable.tableNotice || activeTable.stage;
   if (blindsEl) blindsEl.innerText = `Blinds: ${activeTable.smallBlind} / ${activeTable.bigBlind} • Ante: ${activeTable.ante}`;
   if (blindsPill) blindsPill.innerText = `${activeTable.smallBlind} / ${activeTable.bigBlind}`;
@@ -1113,7 +1266,7 @@ function renderPokerTable() {
   // Community Cards
   const communityContainer = document.getElementById('community-cards');
   if (communityContainer) {
-    if (activeTable.communityCards.length === 0) {
+    if (!activeTable.communityCards || activeTable.communityCards.length === 0) {
       communityContainer.innerHTML = `
         <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-10 sm:w-12 h-14 sm:h-18 flex items-center justify-center text-emerald-600/40 text-xs font-bold">1</div>
         <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-10 sm:w-12 h-14 sm:h-18 flex items-center justify-center text-emerald-600/40 text-xs font-bold">2</div>
@@ -1129,7 +1282,7 @@ function renderPokerTable() {
   // Active Spotlight Beam
   const spotlightEl = document.getElementById('table-spotlight');
   if (spotlightEl) {
-    spotlightEl.style.opacity = activeTable.handActive ? '0.35' : '0.1';
+    spotlightEl.style.opacity = activeTable.handActive ? '0.4' : '0.1';
   }
 
   // Render 8 Seats
@@ -1137,7 +1290,6 @@ function renderPokerTable() {
     const seatEl = document.getElementById(`seat-${idx}`);
     if (!seatEl) return;
 
-    // Check if empty seat
     if (seat.empty) {
       seatEl.innerHTML = `
         <button onclick="sitDownAtSeat(${idx})" class="empty-seat-btn group" title="Take Seat #${idx}">
@@ -1147,7 +1299,6 @@ function renderPokerTable() {
       return;
     }
 
-    // Occupied seat
     const isTurn = activeTable.handActive && activeTable.turnSeat === idx;
     const isDealer = activeTable.dealerSeat === idx;
 
@@ -1187,18 +1338,36 @@ function renderPokerTable() {
       avatarContentHtml = `<span class="text-lg sm:text-xl">${seat.avatarEmoji || '👤'}</span>`;
     }
 
-    // Turn countdown ring + badge (e.g. 4s)
-    const countdownBadge = isTurn ? `<div class="turn-countdown-badge">${seat.turnTimeLeft || 4}</div>` : '';
+    // Turn countdown ring + badge
+    const countdownBadge = isTurn ? `<div class="turn-countdown-badge">${seat.turnTimeLeft != null ? seat.turnTimeLeft : 15}</div>` : '';
 
     // Bet chip on felt
-    const betChipHtml = seat.currentBet > 0 ? `
+    const betChipHtml = (seat.currentBet && seat.currentBet > 0) ? `
       <div class="felt-bet-chip mt-1 animate-pulse">
         <span class="chip-icon"></span>
         <span class="chip-val">${seat.currentBet}</span>
       </div>
     ` : '';
 
-    // Seats layout: top seats (4, 5) have cards below, others have cards above pointing into table
+    // Showdown Hand Description or Last Action Badge
+    let statusBadgeHtml = '';
+    if (activeTable.stage === 'SHOWDOWN' && seat.showdownHandDesc && !seat.isFolded) {
+      statusBadgeHtml = `
+        <div class="px-2 py-0.5 mt-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-[9px] font-black text-amber-300 animate-pulse text-center truncate max-w-[85px]">
+          ${seat.showdownHandDesc}
+        </div>
+      `;
+    } else if (seat.lastAction && activeTable.handActive) {
+      const isFold = seat.lastAction === 'Fold';
+      const isRaise = seat.lastAction.includes('Raise') || seat.lastAction.includes('Bet');
+      const badgeColor = isFold ? 'bg-rose-950/80 text-rose-300 border-rose-800' : isRaise ? 'bg-amber-950/80 text-amber-300 border-amber-800' : 'bg-emerald-950/80 text-emerald-300 border-emerald-800';
+      statusBadgeHtml = `
+        <div class="px-2 py-0.5 mt-0.5 text-[9px] font-bold rounded-md border ${badgeColor} shadow-md uppercase tracking-wider text-center truncate max-w-[80px]">
+          ${seat.lastAction}
+        </div>
+      `;
+    }
+
     const isTopSeat = (idx === 4 || idx === 5);
 
     if (isTopSeat) {
@@ -1211,8 +1380,9 @@ function renderPokerTable() {
           </div>
           <div class="bg-slate-950/90 border border-slate-700/60 rounded-full px-2.5 py-0.5 mt-1 text-center shadow-lg min-w-[70px]">
             <div class="text-[10px] font-bold text-white truncate max-w-[80px]">${seat.name}</div>
-            <div class="text-[10px] font-mono font-black text-amber-400">₮ ${seat.chips.toLocaleString()}</div>
+            <div class="text-[10px] font-mono font-black text-amber-400">₮ ${(seat.chips || 0).toLocaleString()}</div>
           </div>
+          ${statusBadgeHtml}
           ${cardsHtml}
           ${betChipHtml}
         </div>
@@ -1228,8 +1398,9 @@ function renderPokerTable() {
           </div>
           <div class="bg-slate-950/90 border border-slate-700/60 rounded-full px-2.5 py-0.5 mt-1 text-center shadow-lg min-w-[70px]">
             <div class="text-[10px] font-bold text-white truncate max-w-[80px]">${seat.name}</div>
-            <div class="text-[10px] font-mono font-black text-amber-400">₮ ${seat.chips.toLocaleString()}</div>
+            <div class="text-[10px] font-mono font-black text-amber-400">₮ ${(seat.chips || 0).toLocaleString()}</div>
           </div>
+          ${statusBadgeHtml}
           ${betChipHtml}
         </div>
       `;
@@ -1244,6 +1415,8 @@ function renderPokerTable() {
   const foldBtn = document.getElementById('action-fold-btn');
   const callBtn = document.getElementById('action-call-btn');
   const raiseBtn = document.getElementById('action-raise-btn');
+  const slider = document.getElementById('raise-range-slider');
+  const input = document.getElementById('raise-amount-input');
 
   if (foldBtn && callBtn && raiseBtn && heroSeat) {
     foldBtn.disabled = !isHeroTurn;
@@ -1259,8 +1432,20 @@ function renderPokerTable() {
       callBtn.innerText = `Call ${toCall}`;
     }
 
-    const minRaise = highestBet > 0 ? highestBet * 2 : activeTable.bigBlind;
-    raiseBtn.innerText = `Raise to ${minRaise}`;
+    const minRaise = highestBet > 0 ? highestBet * 2 : (activeTable.bigBlind || 1) * 2;
+    const maxRaise = (heroSeat.chips || 0) + (heroSeat.currentBet || 0);
+
+    if (slider && isHeroTurn) {
+      slider.min = minRaise;
+      slider.max = Math.max(minRaise, maxRaise);
+      if (parseFloat(slider.value) < minRaise || parseFloat(slider.value) > maxRaise) {
+        slider.value = minRaise;
+        if (input) input.value = minRaise;
+      }
+    }
+
+    const currentRaiseVal = input ? parseFloat(input.value) || minRaise : minRaise;
+    raiseBtn.innerText = `Raise to ${currentRaiseVal}`;
 
     const heroRankText = document.getElementById('hero-hand-rank-text');
     if (heroRankText) {
@@ -1274,7 +1459,7 @@ function evaluateHeroHandText() {
   if (!hero || hero.isFolded) return 'Folded';
   if (!hero.cards || hero.cards.length < 2) return 'Waiting for next hand...';
 
-  if (activeTable.communityCards.length === 0) {
+  if (!activeTable.communityCards || activeTable.communityCards.length === 0) {
     const c1 = hero.cards[0];
     const c2 = hero.cards[1];
     const isPair = c1[0] === c2[0];
@@ -1290,41 +1475,87 @@ function evaluateHeroHandText() {
   return `${evaluation.desc} • ${activeTable.stage}`;
 }
 
-// Seat and Spectator Mode Handlers
+function renderCountdownBadgeOnly(seatIdx, seconds) {
+  const seatEl = document.getElementById(`seat-${seatIdx}`);
+  if (!seatEl) return;
+  const badge = seatEl.querySelector('.turn-countdown-badge');
+  if (badge) {
+    badge.innerText = Math.max(0, seconds);
+    if (seconds <= 4) {
+      badge.classList.add('bg-rose-600', 'text-white', 'animate-pulse');
+    }
+  }
+}
+
+function updateSpotlightBeam(seatIdx) {
+  const spotlight = document.getElementById('table-spotlight');
+  if (!spotlight) return;
+  spotlight.style.opacity = '0.45';
+}
+
+function requestTakeAnySeat() {
+  const existingHero = activeTable.seats.find(s => s.isHero);
+  if (existingHero) {
+    isSpectatorMode = false;
+    renderPokerTable();
+    return;
+  }
+
+  if (activeTable.seats[0].empty || !activeTable.seats[0].isHero) {
+    if (!activeTable.seats[0].empty) {
+      const emptyIdx = activeTable.seats.findIndex((s, idx) => idx > 0 && s.empty);
+      if (emptyIdx !== -1) {
+        activeTable.seats[emptyIdx] = { ...activeTable.seats[0], seatNumber: emptyIdx };
+      }
+      activeTable.seats[0].empty = true;
+    }
+    sitDownAtSeat(0);
+    return;
+  }
+
+  const emptyIdx = activeTable.seats.findIndex(s => s.empty);
+  if (emptyIdx !== -1) {
+    sitDownAtSeat(emptyIdx);
+  } else {
+    activeTable.seats[0].empty = true;
+    sitDownAtSeat(0);
+  }
+}
+
 function sitDownAtSeat(seatIdx) {
   if (seatIdx < 0 || seatIdx >= activeTable.seats.length) return;
   const targetSeat = activeTable.seats[seatIdx];
+
   if (!targetSeat.empty && !targetSeat.isHero) {
-    alert(`ที่นั่ง #${seatIdx} มีผู้เล่นท่านอื่นนั่งอยู่แล้ว`);
-    return;
-  }
-
-  // Minimum buy-in required: at least 1 TGB!
-  const minTableBuyIn = Math.max(1, activeTable.bigBlind * 2);
-  if ((userProfile.tgbBalance || 0) < minTableBuyIn) {
-    const claimGift = confirm(`❌ เหรียญ TGB ของคุณไม่เพียงพอสำหรับซื้อที่นั่ง\n(ค่าเข้าโต๊ะขั้นต่ำ: ${minTableBuyIn} TGB แต่คุณมี ${userProfile.tgbBalance || 0} TGB)\n\nกด 'ตกลง' เพื่อรับของขวัญฟรี 5 TGB ประจำรอบ 30 นาที\nหรือกด 'ยกเลิก' เพื่อดูการเล่นฟรีแบบ Spectator`);
-    if (claimGift) {
-      claimThirtyMinGift();
+    const emptyIdx = activeTable.seats.findIndex((s, idx) => s.empty && idx !== seatIdx);
+    if (emptyIdx !== -1) {
+      activeTable.seats[emptyIdx] = { ...targetSeat, seatNumber: emptyIdx };
     }
-    return;
+    targetSeat.empty = true;
   }
 
-  // Deduct Buy-in from userProfile.tgbBalance
-  const buyInAmount = Math.min(minTableBuyIn * 5, userProfile.tgbBalance);
-  userProfile.tgbBalance -= buyInAmount;
-  saveUserProfile();
+  const minTableBuyIn = Math.max(1, (activeTable.bigBlind || 1) * 2);
+  let buyInAmount = 500;
 
-  userLedgerTransactions.unshift({
-    id: `tx_${Date.now()}`,
-    game: activeTable.title || 'Poker Arena',
-    type: `Buy-in Seat #${seatIdx}`,
-    amount: -buyInAmount,
-    currency: 'TGB',
-    balance: userProfile.tgbBalance,
-    timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
-  });
+  if ((userProfile.tgbBalance || 0) >= minTableBuyIn) {
+    buyInAmount = Math.min(minTableBuyIn * 10, userProfile.tgbBalance);
+    userProfile.tgbBalance -= buyInAmount;
+    saveUserProfile();
 
-  // Remove hero from any existing seat first
+    userLedgerTransactions.unshift({
+      id: `tx_${Date.now()}`,
+      game: activeTable.title || 'Poker Arena',
+      type: `Buy-in Seat #${seatIdx}`,
+      amount: -buyInAmount,
+      currency: 'TGB',
+      balance: userProfile.tgbBalance,
+      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+    });
+  } else {
+    buyInAmount = 500;
+    showTableBanner('🎁 มอบชิปทดลองเล่น 500 TGB ให้คุณเริ่มเล่นได้ทันที!');
+  }
+
   activeTable.seats.forEach(s => {
     if (s.isHero) {
       s.isHero = false;
@@ -1336,17 +1567,23 @@ function sitDownAtSeat(seatIdx) {
     }
   });
 
-  // Sit Hero into seatIdx
+  const heroName = (userProfile && (userProfile.nickname || userProfile.username))
+    ? `${userProfile.nickname || userProfile.username} (You)`
+    : 'Hero (You)';
+
   targetSeat.empty = false;
   targetSeat.isHero = true;
-  targetSeat.name = userProfile.username || 'Hero';
+  targetSeat.name = heroName;
   targetSeat.chips = buyInAmount;
   targetSeat.currentBet = 0;
   targetSeat.totalBetThisHand = 0;
   targetSeat.isFolded = false;
   targetSeat.isAllIn = false;
   targetSeat.actedThisStreet = false;
-  targetSeat.avatarEmoji = userProfile.avatarEmoji || '🦁';
+  targetSeat.turnTimeLeft = 15;
+  targetSeat.lastAction = '';
+  targetSeat.showdownHandDesc = '';
+  targetSeat.avatarEmoji = (userProfile && userProfile.avatarEmoji) || '🦁';
   targetSeat.avatarBg = 'from-emerald-600 to-teal-700';
 
   isSpectatorMode = false;
@@ -1354,19 +1591,19 @@ function sitDownAtSeat(seatIdx) {
   updateAuthUI(true, userProfile);
   renderPokerTable();
 
-  // If hand not active or fewer than 2 players in hand, start a hand
-  const activePlayers = activeTable.seats.filter(s => !s.empty);
+  const activePlayers = activeTable.seats.filter(s => !s.empty && s.chips > 0);
   if (activePlayers.length >= 2 && !activeTable.handActive) {
     setTimeout(startNewHand, 800);
   }
 }
 
 function standUpToSpectate() {
+  clearAllTurnTimers();
   const heroSeat = activeTable.seats.find(s => s.isHero);
   if (heroSeat) {
     const returnedChips = heroSeat.chips || 0;
     if (returnedChips > 0) {
-      userProfile.tgbBalance += returnedChips;
+      userProfile.tgbBalance = (userProfile.tgbBalance || 0) + returnedChips;
       userLedgerTransactions.unshift({
         id: `tx_${Date.now()}`,
         game: activeTable.title || 'Poker Arena',
@@ -1381,24 +1618,23 @@ function standUpToSpectate() {
       renderLedgerTable();
     }
     heroSeat.isHero = false;
-    heroSeat.empty = true;
-    heroSeat.name = '';
-    heroSeat.chips = 0;
-    heroSeat.cards = [];
+    heroSeat.name = 'SharkBot';
+    heroSeat.chips = 500;
+    heroSeat.avatarEmoji = '🦈';
+    heroSeat.avatarBg = 'from-blue-700 to-indigo-900';
     heroSeat.isFolded = true;
+    heroSeat.cards = [];
   }
   isSpectatorMode = true;
   renderPokerTable();
+  if (!activeTable.handActive) {
+    setTimeout(startNewHand, 1200);
+  }
 }
 
 function toggleSpectatorMode() {
   if (isSpectatorMode) {
-    const emptyIdx = activeTable.seats.findIndex(s => s.empty);
-    if (emptyIdx !== -1) {
-      sitDownAtSeat(emptyIdx);
-    } else {
-      alert('All seats are currently full!');
-    }
+    requestTakeAnySeat();
   } else {
     standUpToSpectate();
   }
@@ -1413,7 +1649,7 @@ function handleSendTableChat(e) {
 
   const chatContainer = document.getElementById('table-chat-messages');
   if (chatContainer) {
-    const sender = userProfile.nickname || 'You';
+    const sender = (userProfile && (userProfile.nickname || userProfile.username)) || 'You';
     const msgEl = document.createElement('div');
     msgEl.innerHTML = `<span class="text-teal-400 font-bold">${escapeHtml(sender)}:</span> <span class="text-white">${escapeHtml(msg)}</span>`;
     chatContainer.appendChild(msgEl);
@@ -1425,7 +1661,7 @@ function handleSendTableChat(e) {
 function insertTableEmoji(emoji) {
   const chatContainer = document.getElementById('table-chat-messages');
   if (chatContainer) {
-    const sender = userProfile.nickname || 'You';
+    const sender = (userProfile && (userProfile.nickname || userProfile.username)) || 'You';
     const msgEl = document.createElement('div');
     msgEl.innerHTML = `<span class="text-teal-400 font-bold">${escapeHtml(sender)}:</span> <span class="text-xl">${emoji}</span>`;
     chatContainer.appendChild(msgEl);
@@ -1433,17 +1669,25 @@ function insertTableEmoji(emoji) {
   }
 }
 
-// ============================================================================
-// 8. REAL TEXAS HOLD'EM POKER ENGINE
-// ============================================================================
-function showTableBanner(text) {
-  activeTable.tableNotice = text;
-  const bannerEl = document.getElementById('table-stage-banner');
-  if (bannerEl) bannerEl.innerText = text;
-}
-
 function startNewHand() {
-  const occupiedSeats = activeTable.seats.filter(s => !s.empty);
+  clearAllTurnTimers();
+
+  activeTable.seats.forEach(s => {
+    if (s.empty) return;
+    if (s.chips <= 0) {
+      s.chips = 500;
+    }
+    s.currentBet = 0;
+    s.totalBetThisHand = 0;
+    s.isFolded = false;
+    s.isAllIn = false;
+    s.actedThisStreet = false;
+    s.turnTimeLeft = 15;
+    s.lastAction = '';
+    s.showdownHandDesc = '';
+  });
+
+  const occupiedSeats = activeTable.seats.filter(s => !s.empty && s.chips > 0);
   if (occupiedSeats.length < 2) {
     showTableBanner('Waiting for players...');
     activeTable.handActive = false;
@@ -1458,49 +1702,37 @@ function startNewHand() {
   activeTable.tableNotice = 'PREFLOP';
   activeTable.handActive = true;
 
-  // Generate 52-card shuffled deck
   activeTable.deck = createFreshShuffledDeck();
 
-  // Rotate dealer among non-empty seats
   let nextDealer = (activeTable.dealerSeat + 1) % activeTable.seats.length;
-  while (activeTable.seats[nextDealer].empty) {
+  while (activeTable.seats[nextDealer].empty || activeTable.seats[nextDealer].chips <= 0) {
     nextDealer = (nextDealer + 1) % activeTable.seats.length;
   }
   activeTable.dealerSeat = nextDealer;
 
-  // Reset player hand states & deal 2 hole cards to each occupied seat
-  activeTable.seats.forEach((seat, idx) => {
-    if (seat.empty) return;
-    if (seat.chips < 10) seat.chips = 500;
-    seat.currentBet = 0;
-    seat.totalBetThisHand = 0;
-    seat.isFolded = false;
-    seat.isAllIn = false;
-    seat.actedThisStreet = false;
-    seat.turnTimeLeft = 4;
+  activeTable.seats.forEach(seat => {
+    if (seat.empty || seat.chips <= 0) return;
     seat.cards = [activeTable.deck.pop(), activeTable.deck.pop()];
   });
 
-  // Track stats for Hero in this hand
   currentHandStats = {
     heroVpip: false,
     heroPfr: false,
     hero3Bet: false,
   };
 
-  // Blinds among occupied seats
   let sbSeatIdx = (activeTable.dealerSeat + 1) % activeTable.seats.length;
-  while (activeTable.seats[sbSeatIdx].empty) {
+  while (activeTable.seats[sbSeatIdx].empty || activeTable.seats[sbSeatIdx].chips <= 0) {
     sbSeatIdx = (sbSeatIdx + 1) % activeTable.seats.length;
   }
 
   let bbSeatIdx = (sbSeatIdx + 1) % activeTable.seats.length;
-  while (activeTable.seats[bbSeatIdx].empty) {
+  while (activeTable.seats[bbSeatIdx].empty || activeTable.seats[bbSeatIdx].chips <= 0) {
     bbSeatIdx = (bbSeatIdx + 1) % activeTable.seats.length;
   }
 
-  const sbAmt = activeTable.smallBlind || 0.5;
-  const bbAmt = activeTable.bigBlind || 1;
+  const sbAmt = Math.min(activeTable.smallBlind || 0.5, activeTable.seats[sbSeatIdx].chips);
+  const bbAmt = Math.min(activeTable.bigBlind || 1, activeTable.seats[bbSeatIdx].chips);
 
   activeTable.seats[sbSeatIdx].chips -= sbAmt;
   activeTable.seats[sbSeatIdx].currentBet = sbAmt;
@@ -1512,37 +1744,223 @@ function startNewHand() {
 
   activeTable.pot = sbAmt + bbAmt;
 
-  // Preflop first to act is seat after BB
   let utgSeatIdx = (bbSeatIdx + 1) % activeTable.seats.length;
-  while (activeTable.seats[utgSeatIdx].empty) {
+  while (activeTable.seats[utgSeatIdx].empty || activeTable.seats[utgSeatIdx].chips <= 0) {
     utgSeatIdx = (utgSeatIdx + 1) % activeTable.seats.length;
   }
-  activeTable.turnSeat = utgSeatIdx;
 
   renderPokerTable();
+  startTurn(utgSeatIdx);
+}
 
-  // If not hero's turn, schedule bot turns
-  const heroSeat = activeTable.seats.find(s => s.isHero);
-  const heroIdx = heroSeat ? activeTable.seats.indexOf(heroSeat) : -1;
-  if (activeTable.turnSeat !== heroIdx) {
-    setTimeout(runBotTurns, 750);
+function startTurn(seatIdx) {
+  clearAllTurnTimers();
+  if (!activeTable.handActive) return;
+
+  const seat = activeTable.seats[seatIdx];
+  if (!seat || seat.empty || seat.isFolded || seat.chips <= 0) {
+    advanceToNextPlayer();
+    return;
+  }
+
+  activeTable.turnSeat = seatIdx;
+  seat.turnTimeLeft = 15;
+  renderPokerTable();
+  updateSpotlightBeam(seatIdx);
+
+  const highestBet = Math.max(...activeTable.seats.filter(s => !s.empty).map(s => s.currentBet || 0));
+  const toCall = highestBet - (seat.currentBet || 0);
+
+  if (seat.isHero) {
+    playSound('chime');
+    showTableBanner('👉 ตาของคุณแล้ว! เลือก Fold, Check หรือ Raise');
+
+    turnTimerInterval = setInterval(() => {
+      seat.turnTimeLeft--;
+      renderCountdownBadgeOnly(seatIdx, seat.turnTimeLeft);
+
+      if (seat.turnTimeLeft <= 3 && seat.turnTimeLeft > 0) {
+        playSound('chips');
+      }
+
+      if (seat.turnTimeLeft <= 0) {
+        clearAllTurnTimers();
+        if (toCall <= 0) {
+          takeAction('CALL');
+        } else {
+          takeAction('FOLD');
+        }
+      }
+    }, 1000);
+
+  } else {
+    const thinkTimeMs = Math.floor(Math.random() * 600) + 750;
+
+    turnTimerInterval = setInterval(() => {
+      if (seat.turnTimeLeft > 1) {
+        seat.turnTimeLeft--;
+        renderCountdownBadgeOnly(seatIdx, seat.turnTimeLeft);
+      }
+    }, 1000);
+
+    currentTurnTimeoutId = setTimeout(() => {
+      clearAllTurnTimers();
+      executeBotDecision(seat);
+    }, thinkTimeMs);
   }
 }
 
+function executeBotDecision(bot) {
+  if (!activeTable.handActive) return;
+
+  const highestBet = Math.max(...activeTable.seats.filter(s => !s.empty).map(s => s.currentBet || 0));
+  const toCall = highestBet - (bot.currentBet || 0);
+
+  let handScore = 30;
+  const cards = bot.cards || [];
+
+  if (activeTable.stage === 'PREFLOP' && cards.length >= 2) {
+    const c1 = cards[0];
+    const c2 = cards[1];
+    const r1 = RANK_VALUES[c1[0]] || 2;
+    const r2 = RANK_VALUES[c2[0]] || 2;
+    const isPair = r1 === r2;
+    const isSuited = c1[1] === c2[1];
+    const highRank = Math.max(r1, r2);
+
+    if (isPair) {
+      if (highRank >= 10) handScore = 95;
+      else if (highRank >= 7) handScore = 80;
+      else handScore = 65;
+    } else {
+      if (highRank === 14) handScore = isSuited ? 85 : 75;
+      else if (highRank >= 11) handScore = isSuited ? 70 : 55;
+      else handScore = isSuited ? 45 : 30;
+    }
+  } else if (cards.length >= 2 && activeTable.communityCards.length >= 3) {
+    const allCards = [...cards, ...activeTable.communityCards];
+    const evalResult = evaluateBestHand(allCards);
+    const rawScore = evalResult.score;
+
+    if (rawScore >= 8000000) handScore = 99;
+    else if (rawScore >= 7000000) handScore = 95;
+    else if (rawScore >= 6000000) handScore = 90;
+    else if (rawScore >= 5000000) handScore = 85;
+    else if (rawScore >= 4000000) handScore = 80;
+    else if (rawScore >= 3000000) handScore = 75;
+    else if (rawScore >= 2000000) handScore = 65;
+    else if (rawScore >= 1000000) handScore = 50;
+    else handScore = 25;
+  }
+
+  if (toCall <= 0) {
+    const shouldBet = (handScore >= 75 && Math.random() < 0.6) || (handScore >= 55 && Math.random() < 0.3) || (Math.random() < 0.08);
+    if (shouldBet && bot.chips > (activeTable.bigBlind || 1)) {
+      const betAmt = Math.min(bot.chips, (activeTable.bigBlind || 1) * (handScore >= 85 ? 3 : 2));
+      bot.chips -= betAmt;
+      bot.currentBet += betAmt;
+      bot.totalBetThisHand = (bot.totalBetThisHand || 0) + betAmt;
+      activeTable.pot += betAmt;
+      bot.actedThisStreet = true;
+      bot.lastAction = `Bet ${betAmt}`;
+
+      activeTable.seats.forEach(s => {
+        if (s !== bot && !s.empty && !s.isFolded && s.chips > 0) {
+          s.actedThisStreet = false;
+        }
+      });
+
+      playSound('chips');
+      showTableBanner(`${bot.name} Bets ${betAmt} ₮`);
+    } else {
+      bot.actedThisStreet = true;
+      bot.lastAction = 'Check';
+      playSound('chips');
+      showTableBanner(`${bot.name} Checks`);
+    }
+  } else {
+    let action = 'FOLD';
+    const canAfford = bot.chips >= toCall;
+
+    if (!canAfford) {
+      action = (handScore >= 60 && Math.random() < 0.6) ? 'CALL' : 'FOLD';
+    } else if (handScore >= 85) {
+      action = (Math.random() < 0.45 && bot.chips > toCall * 2) ? 'RAISE' : 'CALL';
+    } else if (handScore >= 65) {
+      action = (Math.random() < 0.15 && bot.chips > toCall * 2) ? 'RAISE' : 'CALL';
+    } else if (handScore >= 45) {
+      if (toCall <= (activeTable.bigBlind || 1) * 4 || toCall <= bot.chips * 0.3) {
+        action = Math.random() < 0.8 ? 'CALL' : 'FOLD';
+      } else {
+        action = Math.random() < 0.2 ? 'CALL' : 'FOLD';
+      }
+    } else {
+      if (toCall <= (activeTable.bigBlind || 1) && Math.random() < 0.35) {
+        action = 'CALL';
+      } else {
+        action = 'FOLD';
+      }
+    }
+
+    if (action === 'RAISE') {
+      const minRaise = highestBet * 2;
+      const raiseAmt = Math.min(bot.chips, minRaise);
+      const additional = raiseAmt - bot.currentBet;
+      bot.chips -= additional;
+      bot.currentBet += additional;
+      bot.totalBetThisHand = (bot.totalBetThisHand || 0) + additional;
+      activeTable.pot += additional;
+      bot.actedThisStreet = true;
+      bot.lastAction = `Raise to ${bot.currentBet}`;
+
+      activeTable.seats.forEach(s => {
+        if (s !== bot && !s.empty && !s.isFolded && s.chips > 0) {
+          s.actedThisStreet = false;
+        }
+      });
+
+      playSound('chips');
+      showTableBanner(`${bot.name} Raises to ${bot.currentBet} ₮`);
+    } else if (action === 'CALL') {
+      const callAmt = Math.min(toCall, bot.chips);
+      bot.chips -= callAmt;
+      bot.currentBet += callAmt;
+      bot.totalBetThisHand = (bot.totalBetThisHand || 0) + callAmt;
+      activeTable.pot += callAmt;
+      bot.actedThisStreet = true;
+      bot.lastAction = `Call ${callAmt}`;
+      playSound('chips');
+      showTableBanner(`${bot.name} Calls ${callAmt} ₮`);
+    } else {
+      bot.isFolded = true;
+      bot.actedThisStreet = true;
+      bot.lastAction = 'Fold';
+      playSound('fold');
+      showTableBanner(`${bot.name} Folds`);
+    }
+  }
+
+  renderPokerTable();
+  setTimeout(advanceToNextPlayer, 500);
+}
+
 function takeAction(actionType) {
+  clearAllTurnTimers();
   const heroSeat = activeTable.seats.find(s => s.isHero);
   if (!heroSeat) return;
   const heroIdx = activeTable.seats.indexOf(heroSeat);
 
   if (!activeTable.handActive || activeTable.turnSeat !== heroIdx) return;
 
-  const highestBet = Math.max(...activeTable.seats.filter(s => !s.empty).map(s => s.currentBet));
-  const toCall = highestBet - heroSeat.currentBet;
+  const highestBet = Math.max(...activeTable.seats.filter(s => !s.empty).map(s => s.currentBet || 0));
+  const toCall = highestBet - (heroSeat.currentBet || 0);
 
   if (actionType === 'FOLD') {
     heroSeat.isFolded = true;
     heroSeat.actedThisStreet = true;
+    heroSeat.lastAction = 'Fold';
     playSound('fold');
+    showTableBanner('You Folded');
   } else if (actionType === 'CALL') {
     if (activeTable.stage === 'PREFLOP' && toCall > 0 && !currentHandStats.heroVpip) {
       currentHandStats.heroVpip = true;
@@ -1554,11 +1972,17 @@ function takeAction(actionType) {
     heroSeat.totalBetThisHand = (heroSeat.totalBetThisHand || 0) + actualCall;
     activeTable.pot += actualCall;
     heroSeat.actedThisStreet = true;
+    heroSeat.lastAction = actualCall === 0 ? 'Check' : `Call ${actualCall}`;
     playSound('chips');
+    showTableBanner(actualCall === 0 ? 'You Checked' : `You Called ${actualCall} ₮`);
   } else if (actionType === 'RAISE') {
-    const inputVal = parseFloat(document.getElementById('raise-amount-input').value);
-    const minRaise = highestBet > 0 ? highestBet * 2 : activeTable.bigBlind * 2;
-    const raiseTarget = isNaN(inputVal) || inputVal < minRaise ? minRaise : inputVal;
+    const inputEl = document.getElementById('raise-amount-input');
+    const inputVal = inputEl ? parseFloat(inputEl.value) : 0;
+    const minRaise = highestBet > 0 ? highestBet * 2 : (activeTable.bigBlind || 1) * 2;
+    const maxRaise = heroSeat.chips + heroSeat.currentBet;
+    let raiseTarget = isNaN(inputVal) || inputVal < minRaise ? minRaise : inputVal;
+    if (raiseTarget > maxRaise) raiseTarget = maxRaise;
+
     const additional = Math.min(raiseTarget - heroSeat.currentBet, heroSeat.chips);
 
     if (activeTable.stage === 'PREFLOP') {
@@ -1570,7 +1994,7 @@ function takeAction(actionType) {
         currentHandStats.heroPfr = true;
         userProfile.pfrHands = (userProfile.pfrHands || 0) + 1;
       }
-      if (highestBet > activeTable.bigBlind && !currentHandStats.hero3Bet) {
+      if (highestBet > (activeTable.bigBlind || 1) && !currentHandStats.hero3Bet) {
         currentHandStats.hero3Bet = true;
         userProfile.threeBetHands = (userProfile.threeBetHands || 0) + 1;
       }
@@ -1581,52 +2005,16 @@ function takeAction(actionType) {
     heroSeat.totalBetThisHand = (heroSeat.totalBetThisHand || 0) + additional;
     activeTable.pot += additional;
     heroSeat.actedThisStreet = true;
+    heroSeat.lastAction = `Raise to ${heroSeat.currentBet}`;
+
+    activeTable.seats.forEach(s => {
+      if (s !== heroSeat && !s.empty && !s.isFolded && s.chips > 0) {
+        s.actedThisStreet = false;
+      }
+    });
+
     playSound('chips');
-  }
-
-  renderPokerTable();
-  setTimeout(advanceToNextPlayer, 400);
-}
-
-function runBotTurns() {
-  const heroSeat = activeTable.seats.find(s => s.isHero);
-  const heroIdx = heroSeat ? activeTable.seats.indexOf(heroSeat) : -1;
-
-  if (!activeTable.handActive || activeTable.turnSeat === heroIdx) return;
-
-  const bot = activeTable.seats[activeTable.turnSeat];
-  if (!bot || bot.empty || bot.isFolded || bot.chips <= 0) {
-    advanceToNextPlayer();
-    return;
-  }
-
-  const highestBet = Math.max(...activeTable.seats.filter(s => !s.empty).map(s => s.currentBet));
-  const diff = highestBet - bot.currentBet;
-
-  if (diff === 0) {
-    bot.actedThisStreet = true;
-  } else if (diff <= 10) {
-    const callAmt = Math.min(diff, bot.chips);
-    bot.chips -= callAmt;
-    bot.currentBet += callAmt;
-    bot.totalBetThisHand = (bot.totalBetThisHand || 0) + callAmt;
-    activeTable.pot += callAmt;
-    bot.actedThisStreet = true;
-    playSound('chips');
-  } else {
-    if (Math.random() > 0.4 && bot.chips >= diff) {
-      const callAmt = Math.min(diff, bot.chips);
-      bot.chips -= callAmt;
-      bot.currentBet += callAmt;
-      bot.totalBetThisHand = (bot.totalBetThisHand || 0) + callAmt;
-      activeTable.pot += callAmt;
-      bot.actedThisStreet = true;
-      playSound('chips');
-    } else {
-      bot.isFolded = true;
-      bot.actedThisStreet = true;
-      playSound('fold');
-    }
+    showTableBanner(`You Raised to ${heroSeat.currentBet} ₮`);
   }
 
   renderPokerTable();
@@ -1634,81 +2022,103 @@ function runBotTurns() {
 }
 
 function advanceToNextPlayer() {
+  clearAllTurnTimers();
   if (!activeTable.handActive) return;
 
   const activeSeats = activeTable.seats.filter(s => !s.empty);
   const nonFolded = activeSeats.filter(s => !s.isFolded);
 
-  // 1. Check if only 1 player remains unfolded
   if (nonFolded.length === 1) {
     concludeHand(nonFolded[0], 'uncontested');
     return;
   }
 
-  // 2. Check if current street betting round is finished
-  const highestBet = Math.max(...activeSeats.map(s => s.currentBet));
+  const highestBet = Math.max(...activeSeats.map(s => s.currentBet || 0));
   const activeUnfoldedWithChips = nonFolded.filter(s => s.chips > 0);
-  const allActed = activeUnfoldedWithChips.every(s => s.actedThisStreet);
-  const betsBalanced = activeUnfoldedWithChips.every(s => s.currentBet === highestBet);
 
-  const heroSeat = activeTable.seats.find(s => s.isHero);
-  const heroIdx = heroSeat ? activeTable.seats.indexOf(heroSeat) : -1;
+  const allActed = activeUnfoldedWithChips.length === 0 || activeUnfoldedWithChips.every(s => s.actedThisStreet);
+  const betsBalanced = activeUnfoldedWithChips.every(s => (s.currentBet || 0) === highestBet);
 
   if (allActed && betsBalanced) {
-    // Street Transition!
-    activeSeats.forEach(s => {
-      s.currentBet = 0;
-      s.actedThisStreet = false;
-    });
-
-    if (activeTable.stage === 'PREFLOP') {
-      activeTable.stage = 'FLOP';
-      activeTable.communityCards = [activeTable.deck.pop(), activeTable.deck.pop(), activeTable.deck.pop()];
-      showTableBanner('FLOP');
-      playSound('deal');
-    } else if (activeTable.stage === 'FLOP') {
-      activeTable.stage = 'TURN';
-      activeTable.communityCards.push(activeTable.deck.pop());
-      showTableBanner('TURN');
-      playSound('deal');
-    } else if (activeTable.stage === 'TURN') {
-      activeTable.stage = 'RIVER';
-      activeTable.communityCards.push(activeTable.deck.pop());
-      showTableBanner('RIVER');
-      playSound('deal');
-    } else if (activeTable.stage === 'RIVER') {
-      activeTable.stage = 'SHOWDOWN';
-      renderPokerTable();
-      evaluateShowdown();
-      return;
-    }
-
-    // Set first to act in next street (player left of dealer)
-    let nextSeat = (activeTable.dealerSeat + 1) % activeTable.seats.length;
-    while (activeTable.seats[nextSeat].empty || activeTable.seats[nextSeat].isFolded || activeTable.seats[nextSeat].chips <= 0) {
-      nextSeat = (nextSeat + 1) % activeTable.seats.length;
-    }
-    activeTable.turnSeat = nextSeat;
-    renderPokerTable();
-
-    if (activeTable.turnSeat === heroIdx) return;
-    setTimeout(runBotTurns, 700);
+    transitionToNextStreet();
     return;
   }
 
-  // 3. Move to next player in current street
   let nextSeat = (activeTable.turnSeat + 1) % activeTable.seats.length;
-  while (activeTable.seats[nextSeat].empty || activeTable.seats[nextSeat].isFolded || activeTable.seats[nextSeat].chips <= 0) {
+  let loops = 0;
+  while (loops < activeTable.seats.length) {
+    const s = activeTable.seats[nextSeat];
+    if (!s.empty && !s.isFolded && s.chips > 0 && (!s.actedThisStreet || (s.currentBet || 0) < highestBet)) {
+      break;
+    }
     nextSeat = (nextSeat + 1) % activeTable.seats.length;
+    loops++;
   }
-  activeTable.turnSeat = nextSeat;
-  renderPokerTable();
 
-  if (activeTable.turnSeat === heroIdx) return;
-  setTimeout(runBotTurns, 650);
+  if (loops >= activeTable.seats.length) {
+    transitionToNextStreet();
+    return;
+  }
+
+  startTurn(nextSeat);
+}
+
+function transitionToNextStreet() {
+  clearAllTurnTimers();
+
+  activeTable.seats.forEach(s => {
+    s.currentBet = 0;
+    s.actedThisStreet = false;
+    s.lastAction = '';
+  });
+
+  if (activeTable.stage === 'PREFLOP') {
+    activeTable.stage = 'FLOP';
+    activeTable.communityCards = [activeTable.deck.pop(), activeTable.deck.pop(), activeTable.deck.pop()];
+    showTableBanner('FLOP');
+    playSound('deal');
+  } else if (activeTable.stage === 'FLOP') {
+    activeTable.stage = 'TURN';
+    activeTable.communityCards.push(activeTable.deck.pop());
+    showTableBanner('TURN');
+    playSound('deal');
+  } else if (activeTable.stage === 'TURN') {
+    activeTable.stage = 'RIVER';
+    activeTable.communityCards.push(activeTable.deck.pop());
+    showTableBanner('RIVER');
+    playSound('deal');
+  } else if (activeTable.stage === 'RIVER') {
+    activeTable.stage = 'SHOWDOWN';
+    renderPokerTable();
+    evaluateShowdown();
+    return;
+  }
+
+  const nonFoldedWithChips = activeTable.seats.filter(s => !s.empty && !s.isFolded && s.chips > 0);
+  if (nonFoldedWithChips.length <= 1) {
+    renderPokerTable();
+    setTimeout(transitionToNextStreet, 1200);
+    return;
+  }
+
+  let nextSeat = (activeTable.dealerSeat + 1) % activeTable.seats.length;
+  let count = 0;
+  while (count < activeTable.seats.length) {
+    const s = activeTable.seats[nextSeat];
+    if (!s.empty && !s.isFolded && s.chips > 0) break;
+    nextSeat = (nextSeat + 1) % activeTable.seats.length;
+    count++;
+  }
+
+  renderPokerTable();
+  startTurn(nextSeat);
 }
 
 function evaluateShowdown() {
+  clearAllTurnTimers();
+  activeTable.stage = 'SHOWDOWN';
+  activeTable.tableNotice = 'SHOWDOWN';
+
   const nonFolded = activeTable.seats.filter(s => !s.empty && !s.isFolded);
   let bestScore = -1;
   let winner = nonFolded[0];
@@ -1717,6 +2127,7 @@ function evaluateShowdown() {
   nonFolded.forEach(seat => {
     const all7 = [...seat.cards, ...activeTable.communityCards];
     const ev = evaluateBestHand(all7);
+    seat.showdownHandDesc = ev.desc;
     if (ev.score > bestScore) {
       bestScore = ev.score;
       winner = seat;
@@ -1724,19 +2135,23 @@ function evaluateShowdown() {
     }
   });
 
-  concludeHand(winner, 'showdown', winningDesc);
+  renderPokerTable();
+  setTimeout(() => {
+    concludeHand(winner, 'showdown', winningDesc);
+  }, 1000);
 }
 
 function concludeHand(winner, reason, showdownDesc = '') {
+  clearAllTurnTimers();
   activeTable.handActive = false;
   const wonPot = activeTable.pot;
+
   if (winner) {
     winner.chips += wonPot;
-    const desc = showdownDesc ? `ด้วย ${showdownDesc}` : '(Uncontested Pot)';
+    const desc = showdownDesc ? `ด้วย ${showdownDesc}` : '(ผู้เล่นอื่นหมอบหมด)';
     showTableBanner(`🏆 ${winner.name} ชนะ ${wonPot.toLocaleString()} ₮ ${desc}`);
   }
 
-  // Update Hero Stats & EXP
   const heroSeat = activeTable.seats.find(s => s.isHero);
   if (heroSeat) {
     userProfile.totalHands = (userProfile.totalHands || 0) + 1;
@@ -1745,22 +2160,19 @@ function concludeHand(winner, reason, showdownDesc = '') {
     if (winner && winner.isHero) {
       const netProfit = wonPot - heroInvested;
       userProfile.netTgb = (userProfile.netTgb || 0) + netProfit;
-      userProfile.tgbBalance = (userProfile.tgbBalance || 12500) + netProfit;
+      userProfile.tgbBalance = (userProfile.tgbBalance || 0) + netProfit;
       userProfile.exp = (userProfile.exp || 0) + 100;
       playSound('win');
     } else {
       userProfile.netTgb = (userProfile.netTgb || 0) - heroInvested;
-      userProfile.tgbBalance = Math.max(0, (userProfile.tgbBalance || 12500) - heroInvested);
       userProfile.exp = (userProfile.exp || 0) + 25;
     }
 
-    // Level check
     const neededExp = (userProfile.level || 1) * 500;
     if ((userProfile.exp || 0) >= neededExp) {
       userProfile.level = (userProfile.level || 1) + 1;
     }
 
-    // Persist session
     try {
       localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(userProfile));
     } catch (e) {}
@@ -1772,24 +2184,41 @@ function concludeHand(winner, reason, showdownDesc = '') {
   activeTable.pot = 0;
   renderPokerTable();
 
-  // Auto-deal next hand after 4 seconds
   setTimeout(startNewHand, 4000);
 }
 
-// Raise Presets
 function setRaisePreset(preset) {
   const slider = document.getElementById('raise-range-slider');
   const input = document.getElementById('raise-amount-input');
   const raiseBtn = document.getElementById('action-raise-btn');
 
-  let val = 100;
-  if (preset === 'min') val = activeTable.bigBlind * 2;
-  else if (preset === '2.5bb') val = Math.round(activeTable.bigBlind * 2.5);
-  else if (preset === 'half_pot') val = Math.round(activeTable.pot * 0.5) || 100;
-  else if (preset === 'pot') val = activeTable.pot || 100;
-  else if (preset === 'allin') val = activeTable.seats[0].chips;
+  const heroSeat = activeTable.seats.find(s => s.isHero);
+  const heroChips = heroSeat ? heroSeat.chips : 500;
+  const currentBet = heroSeat ? (heroSeat.currentBet || 0) : 0;
+  const highestBet = Math.max(...activeTable.seats.filter(s => !s.empty).map(s => s.currentBet || 0));
+  const minRaise = highestBet > 0 ? highestBet * 2 : (activeTable.bigBlind || 1) * 2;
+  const maxRaise = heroChips + currentBet;
 
-  if (slider) slider.value = val;
+  let val = minRaise;
+  if (preset === 'min') {
+    val = minRaise;
+  } else if (preset === '2.5bb') {
+    val = Math.round((activeTable.bigBlind || 1) * 2.5);
+  } else if (preset === 'half_pot') {
+    val = Math.round((activeTable.pot || 0) * 0.5) + highestBet;
+  } else if (preset === 'pot') {
+    val = (activeTable.pot || 0) + highestBet;
+  } else if (preset === 'allin') {
+    val = maxRaise;
+  }
+
+  val = Math.max(minRaise, Math.min(val, maxRaise));
+
+  if (slider) {
+    slider.min = minRaise;
+    slider.max = Math.max(minRaise, maxRaise);
+    slider.value = val;
+  }
   if (input) input.value = val;
   if (raiseBtn) raiseBtn.innerText = `Raise to ${val}`;
 }
@@ -1797,15 +2226,17 @@ function setRaisePreset(preset) {
 function onRaiseSliderChange(val) {
   const input = document.getElementById('raise-amount-input');
   const raiseBtn = document.getElementById('action-raise-btn');
-  if (input) input.value = val;
-  if (raiseBtn) raiseBtn.innerText = `Raise to ${val}`;
+  const numVal = parseFloat(val) || 0;
+  if (input) input.value = numVal;
+  if (raiseBtn) raiseBtn.innerText = `Raise to ${numVal}`;
 }
 
 function onRaiseInputChange(val) {
   const slider = document.getElementById('raise-range-slider');
   const raiseBtn = document.getElementById('action-raise-btn');
-  if (slider) slider.value = val;
-  if (raiseBtn) raiseBtn.innerText = `Raise to ${val}`;
+  const numVal = parseFloat(val) || 0;
+  if (slider) slider.value = numVal;
+  if (raiseBtn) raiseBtn.innerText = `Raise to ${numVal}`;
 }
 
 
@@ -3191,23 +3622,17 @@ function launchCasualTable(room, isSeatedHero) {
 
   if (isSeatedHero) {
     isSpectatorMode = false;
-    // Seat Hero at seat 0 with buy-in chips
-    activeTable.seats[0].empty = false;
-    activeTable.seats[0].isHero = true;
-    activeTable.seats[0].name = userProfile.username || 'Hero';
-    activeTable.seats[0].chips = room.buyIn;
-    activeTable.seats[0].avatarEmoji = userProfile.avatarEmoji || '🦁';
-    activeTable.seats[0].avatarBg = 'from-emerald-600 to-teal-700';
-    activeTable.seats[0].currentBet = room.smallBlind;
-    activeTable.seats[0].cards = ['Ah', 'Kd'];
+    const starterChips = (userProfile.tgbBalance && userProfile.tgbBalance >= room.buyIn) ? room.buyIn : 500;
+    initTableForPlay(starterChips);
   } else {
     isSpectatorMode = true;
-    activeTable.seats[0].isHero = false;
+    initTableForSpectator();
   }
 
   switchView('table');
   renderPokerTable();
   playSound('deal');
+  setTimeout(startNewHand, 500);
 }
 
 // ============================================================================
@@ -3560,6 +3985,9 @@ window.takeAction = takeAction;
 window.setRaisePreset = setRaisePreset;
 window.onRaiseSliderChange = onRaiseSliderChange;
 window.onRaiseInputChange = onRaiseInputChange;
+window.requestTakeAnySeat = requestTakeAnySeat;
+window.initTableForPlay = initTableForPlay;
+window.initTableForSpectator = initTableForSpectator;
 window.sitDownAtSeat = sitDownAtSeat;
 window.standUpToSpectate = standUpToSpectate;
 window.toggleSpectatorMode = toggleSpectatorMode;
