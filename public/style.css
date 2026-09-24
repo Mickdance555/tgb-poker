@@ -146,3 +146,34 @@
 .card-dealt {
   animation: dealCardAnim 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
+
+/* Avatar Frame Styles */
+.frame-none {
+  border: 3px solid #334155 !important;
+}
+
+.frame-gold {
+  border: 3px solid #f59e0b !important;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.65), inset 0 0 8px rgba(245, 158, 11, 0.3) !important;
+}
+
+.frame-neon {
+  border: 3px solid #06b6d4 !important;
+  box-shadow: 0 0 16px rgba(6, 182, 212, 0.75), inset 0 0 8px rgba(6, 182, 212, 0.3) !important;
+}
+
+.frame-fire {
+  border: 3px solid #f43f5e !important;
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.8), inset 0 0 8px rgba(249, 115, 22, 0.4) !important;
+}
+
+.frame-diamond {
+  border: 3px solid #38bdf8 !important;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.8), inset 0 0 8px rgba(99, 102, 241, 0.4) !important;
+}
+
+.frame-emerald {
+  border: 3px solid #10b981 !important;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.8), inset 0 0 8px rgba(16, 185, 129, 0.3) !important;
+}
+

@@ -115,17 +115,222 @@ function renderCardHTML(code, isRevealed = true) {
 }
 
 // ============================================================================
-// 3. GAME STATE & SIMULATOR
+// 3. CARD CONSTANTS & 7-CARD DETERMINISTIC HAND EVALUATOR
+// ============================================================================
+const CARD_SUITS = ['s', 'h', 'd', 'c'];
+const CARD_RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
+const RANK_VALUES = {
+  '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
+  'T': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14
+};
+const RANK_NAMES_MAP = {
+  2: 'Deuces', 3: 'Threes', 4: 'Fours', 5: 'Fives', 6: 'Sixes', 7: 'Sevens',
+  8: 'Eights', 9: 'Nines', 10: 'Tens', 11: 'Jacks', 12: 'Queens', 13: 'Kings', 14: 'Aces'
+};
+
+function createFreshShuffledDeck() {
+  const deck = [];
+  for (const s of CARD_SUITS) {
+    for (const r of CARD_RANKS) {
+      deck.push(r + s);
+    }
+  }
+  // High-entropy Fisher-Yates shuffle
+  for (let i = deck.length - 1; i > 0; i--) {
+    let rand = Math.random();
+    if (window.crypto && window.crypto.getRandomValues) {
+      const arr = new Uint32Array(1);
+      window.crypto.getRandomValues(arr);
+      rand = arr[0] / (0xffffffff + 1);
+    }
+    const j = Math.floor(rand * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  return deck;
+}
+
+function get5CardCombinations(cards) {
+  const result = [];
+  const n = cards.length;
+  for (let i = 0; i < n - 4; i++) {
+    for (let j = i + 1; j < n - 3; j++) {
+      for (let k = j + 1; k < n - 2; k++) {
+        for (let l = k + 1; l < n - 1; l++) {
+          for (let m = l + 1; m < n; m++) {
+            result.push([cards[i], cards[j], cards[k], cards[l], cards[m]]);
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
+
+function evaluate5Cards(hand) {
+  const parsed = hand.map(c => ({
+    code: c,
+    rank: RANK_VALUES[c[0]] || 2,
+    suit: c[1]
+  })).sort((a, b) => b.rank - a.rank);
+
+  const isFlush = parsed.every(c => c.suit === parsed[0].suit);
+
+  // Check straight
+  let isStraight = false;
+  let straightHigh = 0;
+  if (
+    parsed[0].rank - parsed[1].rank === 1 &&
+    parsed[1].rank - parsed[2].rank === 1 &&
+    parsed[2].rank - parsed[3].rank === 1 &&
+    parsed[3].rank - parsed[4].rank === 1
+  ) {
+    isStraight = true;
+    straightHigh = parsed[0].rank;
+  } else if (
+    parsed[0].rank === 14 &&
+    parsed[1].rank === 5 &&
+    parsed[2].rank === 4 &&
+    parsed[3].rank === 3 &&
+    parsed[4].rank === 2
+  ) {
+    // Wheel A-2-3-4-5
+    isStraight = true;
+    straightHigh = 5;
+  }
+
+  // Count rank occurrences
+  const counts = {};
+  parsed.forEach(c => { counts[c.rank] = (counts[c.rank] || 0) + 1; });
+  const groups = Object.keys(counts)
+    .map(r => ({ rank: parseInt(r, 10), count: counts[r] }))
+    .sort((a, b) => b.count !== a.count ? b.count - a.count : b.rank - a.rank);
+
+  // 1. Royal / Straight Flush
+  if (isFlush && isStraight) {
+    if (straightHigh === 14) {
+      return { score: 9000000, desc: 'Royal Flush' };
+    }
+    return { score: 8000000 + straightHigh, desc: `Straight Flush, ${RANK_NAMES_MAP[straightHigh]} High` };
+  }
+
+  // 2. Four of a Kind
+  if (groups[0].count === 4) {
+    return {
+      score: 7000000 + groups[0].rank * 100 + (groups[1] ? groups[1].rank : 0),
+      desc: `Four of a Kind, ${RANK_NAMES_MAP[groups[0].rank]}`
+    };
+  }
+
+  // 3. Full House
+  if (groups[0].count === 3 && groups[1] && groups[1].count === 2) {
+    return {
+      score: 6000000 + groups[0].rank * 100 + groups[1].rank,
+      desc: `Full House, ${RANK_NAMES_MAP[groups[0].rank]} full of ${RANK_NAMES_MAP[groups[1].rank]}`
+    };
+  }
+
+  // 4. Flush
+  if (isFlush) {
+    const tie = parsed[0].rank * 10000 + parsed[1].rank * 1000 + parsed[2].rank * 100 + parsed[3].rank * 10 + parsed[4].rank;
+    return {
+      score: 5000000 + tie,
+      desc: `Flush, ${RANK_NAMES_MAP[parsed[0].rank]} High`
+    };
+  }
+
+  // 5. Straight
+  if (isStraight) {
+    return {
+      score: 4000000 + straightHigh,
+      desc: `Straight, ${RANK_NAMES_MAP[straightHigh]} High`
+    };
+  }
+
+  // 6. Three of a Kind
+  if (groups[0].count === 3) {
+    const k1 = groups[1] ? groups[1].rank : 0;
+    const k2 = groups[2] ? groups[2].rank : 0;
+    return {
+      score: 3000000 + groups[0].rank * 1000 + k1 * 10 + k2,
+      desc: `Three of a Kind, ${RANK_NAMES_MAP[groups[0].rank]}`
+    };
+  }
+
+  // 7. Two Pair
+  if (groups[0].count === 2 && groups[1] && groups[1].count === 2) {
+    const highPair = Math.max(groups[0].rank, groups[1].rank);
+    const lowPair = Math.min(groups[0].rank, groups[1].rank);
+    const kicker = groups[2] ? groups[2].rank : 0;
+    return {
+      score: 2000000 + highPair * 1000 + lowPair * 100 + kicker,
+      desc: `Two Pair, ${RANK_NAMES_MAP[highPair]} and ${RANK_NAMES_MAP[lowPair]}`
+    };
+  }
+
+  // 8. One Pair
+  if (groups[0].count === 2) {
+    const pairRank = groups[0].rank;
+    const kickers = [groups[1] ? groups[1].rank : 0, groups[2] ? groups[2].rank : 0, groups[3] ? groups[3].rank : 0];
+    return {
+      score: 1000000 + pairRank * 10000 + kickers[0] * 100 + kickers[1] * 10 + kickers[2],
+      desc: `Pair of ${RANK_NAMES_MAP[pairRank]}`
+    };
+  }
+
+  // 9. High Card
+  const kickersVal = parsed[0].rank * 10000 + parsed[1].rank * 1000 + parsed[2].rank * 100 + parsed[3].rank * 10 + parsed[4].rank;
+  return {
+    score: kickersVal,
+    desc: `High Card, ${RANK_NAMES_MAP[parsed[0].rank]}`
+  };
+}
+
+function evaluateBestHand(cards) {
+  if (!cards || cards.length === 0) return { score: 0, desc: 'No Cards' };
+  if (cards.length < 5) {
+    if (cards.length === 2) {
+      if (cards[0][0] === cards[1][0]) {
+        return { score: 1000000, desc: `Pocket Pair of ${RANK_NAMES_MAP[RANK_VALUES[cards[0][0]]] || cards[0][0]}` };
+      }
+      return { score: 100, desc: `Hole Cards [${cards[0]}, ${cards[1]}]` };
+    }
+    return { score: 0, desc: 'Drawing' };
+  }
+
+  const combos = get5CardCombinations(cards);
+  let best = { score: -1, desc: '' };
+  for (const c of combos) {
+    const ev = evaluate5Cards(c);
+    if (ev.score > best.score) {
+      best = ev;
+    }
+  }
+  return best;
+}
+
+// ============================================================================
+// 4. USER PROFILE & CAREER METRICS (Strictly 0 for new players)
 // ============================================================================
 let userProfile = {
-  id: 'c1f1a547-494b-4f93-b26a-912c93847e11',
+  id: 'guest_user',
   username: 'HeroAce',
-  tgbBalance: 12500,
-  level: 9,
-  exp: 36800,
-  vpipHands: 102,
-  pfrHands: 81,
-  totalHands: 428,
+  email: 'hero@tgbpoker.local',
+  tgbBalance: 12500, // Starting Welcome Chips
+  level: 1,
+  exp: 0,
+  tournamentsPlayed: 0,
+  tournamentsWon: 0,
+  itmCount: 0,
+  netTgb: 0,
+  totalHands: 0,
+  vpipHands: 0,
+  pfrHands: 0,
+  threeBetHands: 0,
+  avatarType: 'preset',
+  avatarEmoji: '🦁',
+  avatarUrl: '',
+  frame: 'frame-none',
+  registeredAt: new Date().toLocaleDateString('th-TH'),
 };
 
 let activeTable = {
@@ -139,16 +344,19 @@ let activeTable = {
   dealerSeat: 0,
   turnSeat: 1,
   communityCards: [],
-  handNumber: 1,
+  handNumber: 0,
+  deck: [],
+  handActive: false,
+  tableNotice: 'READY',
   serverSeedHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
   serverSeed: '',
   seats: [
-    { seatNumber: 0, name: 'Hero (You)', chips: 4950, currentBet: 50, isHero: true, cards: ['As', 'Kd'], isFolded: false, isAllIn: false, avatarBg: 'from-amber-600 to-yellow-500' },
-    { seatNumber: 1, name: 'Viper (TAG)', chips: 4975, currentBet: 25, isHero: false, cards: ['Qh', 'Qd'], isFolded: false, isAllIn: false, avatarBg: 'from-blue-600 to-indigo-500' },
-    { seatNumber: 2, name: 'BluffMaster', chips: 5000, currentBet: 0, isHero: false, cards: ['9c', '8c'], isFolded: false, isAllIn: false, avatarBg: 'from-rose-600 to-red-500' },
-    { seatNumber: 3, name: 'The Rock', chips: 5000, currentBet: 0, isHero: false, cards: ['Jc', 'Jd'], isFolded: false, isAllIn: false, avatarBg: 'from-emerald-600 to-teal-500' },
-    { seatNumber: 4, name: 'CallingStation', chips: 5000, currentBet: 0, isHero: false, cards: ['7h', '6h'], isFolded: false, isAllIn: false, avatarBg: 'from-purple-600 to-violet-500' },
-    { seatNumber: 5, name: 'GTO_Bot', chips: 5000, currentBet: 0, isHero: false, cards: ['Ah', '5h'], isFolded: false, isAllIn: false, avatarBg: 'from-cyan-600 to-blue-500' },
+    { seatNumber: 0, name: 'Hero (You)', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: true, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-amber-600 to-yellow-500' },
+    { seatNumber: 1, name: 'Viper (TAG)', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-blue-600 to-indigo-500' },
+    { seatNumber: 2, name: 'BluffMaster', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-rose-600 to-red-500' },
+    { seatNumber: 3, name: 'The Rock', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-emerald-600 to-teal-500' },
+    { seatNumber: 4, name: 'CallingStation', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-purple-600 to-violet-500' },
+    { seatNumber: 5, name: 'GTO_Bot', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-cyan-600 to-blue-500' },
   ],
 };
 
@@ -156,43 +364,23 @@ let userLedgerTransactions = [
   {
     id: 'tx_01',
     type: 'WELCOME_BONUS',
-    amount: 10000,
-    balance: 10000,
+    amount: 12500,
+    balance: 12500,
     sig: 'hmac_sha256_9a4f21...',
     prevHash: '0000000000000000...',
-    timestamp: '2026-09-24 10:15:22',
-  },
-  {
-    id: 'tx_02',
-    type: 'TOURNAMENT_BUYIN',
-    amount: -500,
-    balance: 9500,
-    sig: 'hmac_sha256_c81d33...',
-    prevHash: '7f9a2b8e31...',
-    timestamp: '2026-09-24 11:00:00',
-  },
-  {
-    id: 'tx_03',
-    type: 'TOURNAMENT_PRIZE',
-    amount: 3500,
-    balance: 13000,
-    sig: 'hmac_sha256_44b0c2...',
-    prevHash: '3d8a9e11bc...',
-    timestamp: '2026-09-24 11:45:10',
-  },
-  {
-    id: 'tx_04',
-    type: 'TOURNAMENT_BUYIN',
-    amount: -500,
-    balance: 12500,
-    sig: 'hmac_sha256_e814a0...',
-    prevHash: 'a5c2d89b14...',
-    timestamp: '2026-09-24 12:05:00',
+    timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
   },
 ];
 
+// Current Hand Stat Trackers for Hero
+let currentHandStats = {
+  heroVpip: false,
+  heroPfr: false,
+  hero3Bet: false,
+};
+
 // ============================================================================
-// 4. NAVIGATION & VIEW SWITCHING (Immediately bound to global window)
+// 5. NAVIGATION & VIEW SWITCHING
 // ============================================================================
 function switchView(viewName) {
   const views = ['lobby', 'table', 'academy', 'profile', 'wallet', 'verifier'];
@@ -218,6 +406,8 @@ function switchView(viewName) {
     renderPokerTable();
   } else if (viewName === 'wallet') {
     renderLedgerTable();
+  } else if (viewName === 'profile') {
+    renderProfileView();
   }
 }
 
@@ -227,7 +417,261 @@ function launchTable(tournamentId) {
 }
 
 // ============================================================================
-// 5. RENDER POKER TABLE
+// 6. PROFILE VIEW & CUSTOMIZER MODAL
+// ============================================================================
+function renderProfileView() {
+  const avatarDisplay = document.getElementById('profile-avatar-display');
+  const nameEl = document.getElementById('profile-name');
+  const levelEl = document.getElementById('profile-level');
+  const styleEl = document.getElementById('profile-style');
+  const accountIdEl = document.getElementById('profile-account-id');
+  const expBar = document.getElementById('profile-exp-bar');
+  const expText = document.getElementById('profile-exp-text');
+
+  const tourneysEl = document.getElementById('profile-tournaments-count');
+  const winsEl = document.getElementById('profile-wins-count');
+  const itmEl = document.getElementById('profile-itm-count');
+  const profitEl = document.getElementById('profile-net-profit');
+
+  const vpipVal = document.getElementById('profile-vpip-val');
+  const vpipBar = document.getElementById('profile-vpip-bar');
+  const pfrVal = document.getElementById('profile-pfr-val');
+  const pfrBar = document.getElementById('profile-pfr-bar');
+  const threeBetVal = document.getElementById('profile-3bet-val');
+  const threeBetBar = document.getElementById('profile-3bet-bar');
+
+  // Avatar Display with frame
+  if (avatarDisplay) {
+    avatarDisplay.className = `w-20 h-20 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center font-black text-3xl text-white shadow-xl overflow-hidden select-none ${userProfile.frame || 'frame-none'}`;
+    if (userProfile.avatarType === 'image' && userProfile.avatarUrl) {
+      avatarDisplay.innerHTML = `<img src="${userProfile.avatarUrl}" class="w-full h-full object-cover">`;
+    } else {
+      avatarDisplay.innerHTML = `<span class="text-4xl">${userProfile.avatarEmoji || '🦁'}</span>`;
+    }
+  }
+
+  if (nameEl) nameEl.innerText = userProfile.username || 'HeroAce';
+  
+  if (levelEl) {
+    let rankDesc = 'Novice';
+    if (userProfile.level >= 10) rankDesc = 'Grand Master';
+    else if (userProfile.level >= 5) rankDesc = 'Elite Pro';
+    else if (userProfile.level >= 2) rankDesc = 'Apprentice';
+    levelEl.innerText = `Level ${userProfile.level || 1} — ${rankDesc}`;
+  }
+
+  // Play Style determination based on real hands played
+  if (styleEl) {
+    if (!userProfile.totalHands || userProfile.totalHands === 0) {
+      styleEl.innerText = 'New Player (0 Hands)';
+    } else {
+      const vpip = (userProfile.vpipHands / userProfile.totalHands) * 100;
+      const pfr = (userProfile.pfrHands / userProfile.totalHands) * 100;
+      if (vpip > 35) styleEl.innerText = 'Loose Passive';
+      else if (vpip >= 20 && pfr >= 15) styleEl.innerText = 'Tight Aggressive (TAG)';
+      else if (vpip > 28 && pfr > 20) styleEl.innerText = 'Loose Aggressive (LAG)';
+      else styleEl.innerText = 'Balanced Explorer';
+    }
+  }
+
+  if (accountIdEl) {
+    accountIdEl.innerText = `Account ID: ${userProfile.id || 'guest'} • Registered ${userProfile.registeredAt || '2026'}`;
+  }
+
+  // EXP Progress
+  const currentExp = userProfile.exp || 0;
+  const currentExpInLevel = currentExp % 500;
+  const expPct = Math.min(100, Math.round((currentExpInLevel / 500) * 100));
+  if (expBar) expBar.style.width = `${expPct}%`;
+  if (expText) expText.innerText = `${currentExpInLevel} / 500 EXP to Level ${(userProfile.level || 1) + 1}`;
+
+  // Career Statistics
+  const tPlayed = userProfile.tournamentsPlayed || 0;
+  const tWon = userProfile.tournamentsWon || 0;
+  const itm = userProfile.itmCount || 0;
+  const net = userProfile.netTgb || 0;
+
+  if (tourneysEl) tourneysEl.innerText = tPlayed;
+
+  const winRate = tPlayed > 0 ? Math.round((tWon / tPlayed) * 100) : 0;
+  if (winsEl) winsEl.innerHTML = `${tWon} <span class="text-xs text-slate-500">(${winRate}%)</span>`;
+
+  const itmRate = tPlayed > 0 ? Math.round((itm / tPlayed) * 100) : 0;
+  if (itmEl) itmEl.innerHTML = `${itm} <span class="text-xs text-slate-500">(${itmRate}%)</span>`;
+
+  if (profitEl) {
+    const sign = net > 0 ? '+' : '';
+    profitEl.innerText = `${sign}${net.toLocaleString()} ₮`;
+    if (net > 0) profitEl.className = 'text-xl font-black text-emerald-400 mt-1';
+    else if (net < 0) profitEl.className = 'text-xl font-black text-rose-400 mt-1';
+    else profitEl.className = 'text-xl font-black text-amber-300 mt-1';
+  }
+
+  // Play Style HUD percentages (Strictly 0% if totalHands === 0)
+  const totalHands = userProfile.totalHands || 0;
+  const vpipHands = userProfile.vpipHands || 0;
+  const pfrHands = userProfile.pfrHands || 0;
+  const threeBetHands = userProfile.threeBetHands || 0;
+
+  const vpipPct = totalHands > 0 ? Math.round((vpipHands / totalHands) * 100) : 0;
+  const pfrPct = totalHands > 0 ? Math.round((pfrHands / totalHands) * 100) : 0;
+  const threeBetPct = totalHands > 0 ? Math.round((threeBetHands / totalHands) * 100) : 0;
+
+  if (vpipVal) vpipVal.innerText = `${vpipPct}% (${vpipHands}/${totalHands})`;
+  if (vpipBar) vpipBar.style.width = `${vpipPct}%`;
+
+  if (pfrVal) pfrVal.innerText = `${pfrPct}% (${pfrHands}/${totalHands})`;
+  if (pfrBar) pfrBar.style.width = `${pfrPct}%`;
+
+  if (threeBetVal) threeBetVal.innerText = `${threeBetPct}% (${threeBetHands}/${totalHands})`;
+  if (threeBetBar) threeBetBar.style.width = `${threeBetPct}%`;
+}
+
+// Edit Profile Modal State
+let tempProfileEdit = {
+  username: '',
+  avatarType: 'preset',
+  avatarEmoji: '🦁',
+  avatarUrl: '',
+  frame: 'frame-none',
+  frameName: 'ไม่มีกรอบ',
+};
+
+function getFrameDisplayName(frameClass) {
+  const map = {
+    'frame-none': 'ไม่มีกรอบ',
+    'frame-gold': 'Gold Champion',
+    'frame-neon': 'Cyber Neon',
+    'frame-fire': 'Fire Dragon',
+    'frame-diamond': 'Diamond VIP',
+    'frame-emerald': 'Emerald Master',
+  };
+  return map[frameClass] || 'ไม่มีกรอบ';
+}
+
+function openEditProfileModal() {
+  const modal = document.getElementById('edit-profile-modal');
+  if (!modal) return;
+
+  tempProfileEdit = {
+    username: userProfile.username || 'HeroAce',
+    avatarType: userProfile.avatarType || 'preset',
+    avatarEmoji: userProfile.avatarEmoji || '🦁',
+    avatarUrl: userProfile.avatarUrl || '',
+    frame: userProfile.frame || 'frame-none',
+    frameName: getFrameDisplayName(userProfile.frame || 'frame-none'),
+  };
+
+  const nameInput = document.getElementById('edit-username-input');
+  if (nameInput) nameInput.value = tempProfileEdit.username;
+
+  updateProfilePreview();
+  modal.classList.remove('hidden');
+}
+
+function closeEditProfileModal() {
+  const modal = document.getElementById('edit-profile-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function selectPresetAvatar(emoji) {
+  tempProfileEdit.avatarType = 'preset';
+  tempProfileEdit.avatarEmoji = emoji;
+  tempProfileEdit.avatarUrl = '';
+  updateProfilePreview();
+}
+
+function handleAvatarFileUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert('ขนาดรูปภาพต้องไม่เกิน 2MB');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    tempProfileEdit.avatarType = 'image';
+    tempProfileEdit.avatarUrl = e.target.result;
+    updateProfilePreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+function selectAvatarFrame(frameClass, frameName) {
+  tempProfileEdit.frame = frameClass;
+  tempProfileEdit.frameName = frameName;
+  updateProfilePreview();
+}
+
+function updateProfilePreview() {
+  const nameInput = document.getElementById('edit-username-input');
+  if (nameInput) {
+    tempProfileEdit.username = nameInput.value.trim() || 'Hero';
+  }
+
+  const previewBox = document.getElementById('preview-avatar-box');
+  const previewContent = document.getElementById('preview-avatar-content');
+  const previewName = document.getElementById('preview-display-name');
+  const previewFrame = document.getElementById('preview-frame-name');
+
+  if (previewBox) {
+    previewBox.className = `w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-3xl shadow-xl overflow-hidden transition-all duration-200 ${tempProfileEdit.frame}`;
+  }
+
+  if (previewContent) {
+    if (tempProfileEdit.avatarType === 'image' && tempProfileEdit.avatarUrl) {
+      previewContent.innerHTML = `<img src="${tempProfileEdit.avatarUrl}" class="w-full h-full object-cover">`;
+    } else {
+      previewContent.innerText = tempProfileEdit.avatarEmoji || '🦁';
+    }
+  }
+
+  if (previewName) previewName.innerText = tempProfileEdit.username;
+  if (previewFrame) previewFrame.innerText = `กรอบ: ${tempProfileEdit.frameName}`;
+}
+
+function saveProfileCustomization() {
+  const nameInput = document.getElementById('edit-username-input');
+  const newName = nameInput ? nameInput.value.trim() : '';
+
+  if (!newName) {
+    alert('กรุณากรอกชื่อผู้เล่น');
+    return;
+  }
+
+  userProfile.username = newName;
+  userProfile.avatarType = tempProfileEdit.avatarType;
+  userProfile.avatarEmoji = tempProfileEdit.avatarEmoji;
+  userProfile.avatarUrl = tempProfileEdit.avatarUrl;
+  userProfile.frame = tempProfileEdit.frame;
+
+  // Persist session & user list
+  try {
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(userProfile));
+    const users = getStoredUsers();
+    const idx = users.findIndex(u => u.id === userProfile.id);
+    if (idx !== -1) {
+      users[idx] = { ...users[idx], ...userProfile };
+      saveStoredUsers(users);
+    }
+  } catch (e) {}
+
+  // Update Hero seat on Table
+  if (activeTable && activeTable.seats && activeTable.seats[0]) {
+    activeTable.seats[0].name = `${userProfile.username} (You)`;
+  }
+
+  updateAuthUI(true, userProfile);
+  renderProfileView();
+  renderPokerTable();
+  closeEditProfileModal();
+  playSound('win');
+}
+
+// ============================================================================
+// 7. RENDER POKER TABLE & ACTION CONSOLE
 // ============================================================================
 function renderPokerTable() {
   const potEl = document.getElementById('table-pot-amount');
@@ -235,7 +679,7 @@ function renderPokerTable() {
   const blindsEl = document.getElementById('table-blinds-info');
 
   if (potEl) potEl.innerText = activeTable.pot.toLocaleString();
-  if (bannerEl) bannerEl.innerText = activeTable.stage;
+  if (bannerEl) bannerEl.innerText = activeTable.tableNotice || activeTable.stage;
   if (blindsEl) blindsEl.innerText = `Blinds: ${activeTable.smallBlind} / ${activeTable.bigBlind} • Ante: ${activeTable.ante}`;
 
   // Community Cards
@@ -243,28 +687,28 @@ function renderPokerTable() {
   if (communityContainer) {
     if (activeTable.communityCards.length === 0) {
       communityContainer.innerHTML = `
-        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-14 h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">1</div>
-        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-14 h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">2</div>
-        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-14 h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">3</div>
-        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-14 h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">4</div>
-        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-14 h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">5</div>
+        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-12 sm:w-14 h-16 sm:h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">1</div>
+        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-12 sm:w-14 h-16 sm:h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">2</div>
+        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-12 sm:w-14 h-16 sm:h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">3</div>
+        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-12 sm:w-14 h-16 sm:h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">4</div>
+        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-12 sm:w-14 h-16 sm:h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">5</div>
       `;
     } else {
       communityContainer.innerHTML = activeTable.communityCards.map(c => renderCardHTML(c, true)).join('');
     }
   }
 
-  // Render Seats
+  // Render 6 Seats
   activeTable.seats.forEach((seat, idx) => {
     const seatEl = document.getElementById(`seat-${idx}`);
     if (!seatEl) return;
 
-    const isTurn = activeTable.turnSeat === idx;
+    const isTurn = activeTable.handActive && activeTable.turnSeat === idx;
     const isDealer = activeTable.dealerSeat === idx;
 
     let cardsHtml = '';
-    if (!seat.isFolded) {
-      if (seat.isHero) {
+    if (!seat.isFolded && seat.cards && seat.cards.length >= 2) {
+      if (seat.isHero || activeTable.stage === 'SHOWDOWN') {
         cardsHtml = `
           <div class="flex items-center -space-x-4 mb-1">
             ${seat.cards.map(c => renderCardHTML(c, true)).join('')}
@@ -278,15 +722,33 @@ function renderPokerTable() {
           </div>
         `;
       }
-    } else {
+    } else if (seat.isFolded) {
       cardsHtml = `<div class="text-[10px] text-slate-500 font-bold uppercase mb-1">FOLDED</div>`;
+    } else {
+      cardsHtml = `<div class="text-[10px] text-slate-500 mb-1">Waiting...</div>`;
+    }
+
+    // Avatar styling & frame
+    let avatarContentHtml = '';
+    let frameClass = 'frame-none';
+
+    if (seat.isHero) {
+      frameClass = userProfile.frame || 'frame-none';
+      if (userProfile.avatarType === 'image' && userProfile.avatarUrl) {
+        avatarContentHtml = `<img src="${userProfile.avatarUrl}" class="w-full h-full object-cover rounded-full">`;
+      } else {
+        avatarContentHtml = `<span class="text-xl sm:text-2xl">${userProfile.avatarEmoji || '🦁'}</span>`;
+      }
+    } else {
+      const botIcons = ['👤', '🐍', '🎭', '🗿', '🐴', '🤖'];
+      avatarContentHtml = `<span class="text-base sm:text-lg">${botIcons[idx] || seat.name.charAt(0)}</span>`;
     }
 
     if (idx === 3) {
       // Top Center Seat: Avatar on top outside, cards below pointing into felt
       seatEl.innerHTML = `
-        <div class="avatar-ring ${isTurn ? 'turn-active' : ''} bg-gradient-to-tr ${seat.avatarBg}">
-          <span class="font-black text-white text-base">${seat.name.charAt(0)}</span>
+        <div class="avatar-ring ${isTurn ? 'turn-active' : ''} ${frameClass} bg-gradient-to-tr ${seat.avatarBg}">
+          ${avatarContentHtml}
           ${isDealer ? `<div class="dealer-button absolute -top-1 -right-1">D</div>` : ''}
         </div>
         <div class="text-center my-0.5">
@@ -297,17 +759,17 @@ function renderPokerTable() {
         </div>
         ${cardsHtml}
         ${seat.currentBet > 0 ? `
-          <div class="mt-0.5 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-mono font-bold">
+          <div class="mt-0.5 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-mono font-bold animate-pulse">
             Bet: ${seat.currentBet}
           </div>
         ` : ''}
       `;
     } else {
-      // Bottom & Side Seats: Cards pointing toward felt, avatar and info below
+      // Bottom & Side Seats
       seatEl.innerHTML = `
         ${cardsHtml}
-        <div class="avatar-ring ${isTurn ? 'turn-active' : ''} bg-gradient-to-tr ${seat.avatarBg}">
-          <span class="font-black text-white text-base">${seat.name.charAt(0)}</span>
+        <div class="avatar-ring ${isTurn ? 'turn-active' : ''} ${frameClass} bg-gradient-to-tr ${seat.avatarBg}">
+          ${avatarContentHtml}
           ${isDealer ? `<div class="dealer-button absolute -top-1 -right-1">D</div>` : ''}
         </div>
         <div class="text-center mt-1">
@@ -317,7 +779,7 @@ function renderPokerTable() {
           </div>
         </div>
         ${seat.currentBet > 0 ? `
-          <div class="mt-1 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-mono font-bold">
+          <div class="mt-1 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-mono font-bold animate-pulse">
             Bet: ${seat.currentBet}
           </div>
         ` : ''}
@@ -327,7 +789,7 @@ function renderPokerTable() {
 
   // Action Buttons state for Hero
   const heroSeat = activeTable.seats[0];
-  const isHeroTurn = activeTable.turnSeat === 0;
+  const isHeroTurn = activeTable.handActive && activeTable.turnSeat === 0 && !heroSeat.isFolded;
 
   const foldBtn = document.getElementById('action-fold-btn');
   const callBtn = document.getElementById('action-call-btn');
@@ -341,7 +803,7 @@ function renderPokerTable() {
     const highestBet = Math.max(...activeTable.seats.map(s => s.currentBet));
     const toCall = highestBet - heroSeat.currentBet;
 
-    if (toCall === 0) {
+    if (toCall <= 0) {
       callBtn.innerText = 'Check';
     } else {
       callBtn.innerText = `Call ${toCall}`;
@@ -358,140 +820,328 @@ function renderPokerTable() {
 }
 
 function evaluateHeroHandText() {
+  const hero = activeTable.seats[0];
+  if (!hero || hero.isFolded) return 'Folded';
+  if (!hero.cards || hero.cards.length < 2) return 'Waiting for next hand...';
+
   if (activeTable.communityCards.length === 0) {
-    return 'Pre-Flop: Hole Cards [A♠, K♠] (Big Slick)';
+    const c1 = hero.cards[0];
+    const c2 = hero.cards[1];
+    const isPair = c1[0] === c2[0];
+    const isSuited = c1[1] === c2[1];
+    const r1 = RANK_NAMES_MAP[RANK_VALUES[c1[0]]] || c1[0];
+    const r2 = RANK_NAMES_MAP[RANK_VALUES[c2[0]]] || c2[0];
+    if (isPair) return `Pocket Pair: [${c1}, ${c2}] (Pocket ${r1})`;
+    return `Hole Cards: [${c1}, ${c2}] (${r1}-${r2} ${isSuited ? 'Suited' : 'Offsuit'})`;
   }
-  if (activeTable.communityCards.length >= 3) {
-    return 'Top Pair, Ace Kicker (A♠ K♠ on K-7-2-T)';
-  }
-  return 'In hand';
+
+  const allCards = [...hero.cards, ...activeTable.communityCards];
+  const evaluation = evaluateBestHand(allCards);
+  return `${evaluation.desc} • ${activeTable.stage}`;
 }
 
 // ============================================================================
-// 6. GAMEPLAY ENGINE & ACTIONS
+// 8. REAL TEXAS HOLD'EM POKER ENGINE
 // ============================================================================
+function showTableBanner(text) {
+  activeTable.tableNotice = text;
+  const bannerEl = document.getElementById('table-stage-banner');
+  if (bannerEl) bannerEl.innerText = text;
+}
+
 function startNewHand() {
   playSound('deal');
+  activeTable.handNumber = (activeTable.handNumber || 0) + 1;
   activeTable.stage = 'PREFLOP';
   activeTable.communityCards = [];
-  activeTable.serverSeed = '7f9a2b8e3104a91c890f532a10c9e83d8a9e11bc901a88b49e8a0021c432baef';
-  activeTable.serverSeedHash = '3f8b919e1c472d829928a6f9479b4a1104e7b83921d746592a839b2e0481fa79';
+  activeTable.tableNotice = 'PREFLOP';
+  activeTable.handActive = true;
+
+  // Generate 52-card shuffled deck
+  activeTable.deck = createFreshShuffledDeck();
+
+  // Rotate dealer
+  activeTable.dealerSeat = (activeTable.dealerSeat + 1) % activeTable.seats.length;
+
+  // Reset player hand states & deal 2 hole cards to each active seat
+  activeTable.seats.forEach((seat, idx) => {
+    // Top up chips if broke
+    if (seat.chips < 100) seat.chips = 5000;
+    seat.currentBet = 0;
+    seat.totalBetThisHand = 0;
+    seat.isFolded = false;
+    seat.isAllIn = false;
+    seat.actedThisStreet = false;
+    seat.cards = [activeTable.deck.pop(), activeTable.deck.pop()];
+  });
+
+  // Track stats for Hero in this hand
+  currentHandStats = {
+    heroVpip: false,
+    heroPfr: false,
+    hero3Bet: false,
+  };
 
   // Blinds
+  const sbSeatIdx = (activeTable.dealerSeat + 1) % 6;
+  const bbSeatIdx = (activeTable.dealerSeat + 2) % 6;
+
+  activeTable.seats[sbSeatIdx].chips -= 25;
+  activeTable.seats[sbSeatIdx].currentBet = 25;
+  activeTable.seats[sbSeatIdx].totalBetThisHand = 25;
+
+  activeTable.seats[bbSeatIdx].chips -= 50;
+  activeTable.seats[bbSeatIdx].currentBet = 50;
+  activeTable.seats[bbSeatIdx].totalBetThisHand = 50;
+
   activeTable.pot = 75;
-  activeTable.seats[0].currentBet = 50; // BB
-  activeTable.seats[0].chips = 4950;
-  activeTable.seats[1].currentBet = 25; // SB
-  activeTable.seats[1].chips = 4975;
 
-  for (let i = 2; i < activeTable.seats.length; i++) {
-    activeTable.seats[i].currentBet = 0;
-    activeTable.seats[i].isFolded = false;
-  }
-  activeTable.seats[0].isFolded = false;
-  activeTable.seats[1].isFolded = false;
+  // Preflop first to act is UTG (seat after BB)
+  const utgSeatIdx = (activeTable.dealerSeat + 3) % 6;
+  activeTable.turnSeat = utgSeatIdx;
 
-  activeTable.turnSeat = 2; // Under the Gun (UTG)
   renderPokerTable();
 
-  // Run initial bot actions
-  setTimeout(runBotTurns, 800);
+  // If bot turn first, schedule bot turns
+  if (activeTable.turnSeat !== 0) {
+    setTimeout(runBotTurns, 750);
+  }
 }
 
 function takeAction(actionType) {
-  if (activeTable.turnSeat !== 0) return;
+  if (!activeTable.handActive || activeTable.turnSeat !== 0) return;
 
   const hero = activeTable.seats[0];
   const highestBet = Math.max(...activeTable.seats.map(s => s.currentBet));
+  const toCall = highestBet - hero.currentBet;
 
   if (actionType === 'FOLD') {
     hero.isFolded = true;
+    hero.actedThisStreet = true;
     playSound('fold');
   } else if (actionType === 'CALL') {
-    const toCall = highestBet - hero.currentBet;
-    hero.chips -= toCall;
-    hero.currentBet += toCall;
-    activeTable.pot += toCall;
+    if (activeTable.stage === 'PREFLOP' && toCall > 0 && !currentHandStats.heroVpip) {
+      currentHandStats.heroVpip = true;
+      userProfile.vpipHands = (userProfile.vpipHands || 0) + 1;
+    }
+    const actualCall = Math.min(toCall, hero.chips);
+    hero.chips -= actualCall;
+    hero.currentBet += actualCall;
+    hero.totalBetThisHand = (hero.totalBetThisHand || 0) + actualCall;
+    activeTable.pot += actualCall;
+    hero.actedThisStreet = true;
     playSound('chips');
   } else if (actionType === 'RAISE') {
-    const raiseAmount = parseInt(document.getElementById('raise-amount-input').value, 10) || 150;
-    const additional = raiseAmount - hero.currentBet;
+    const inputVal = parseInt(document.getElementById('raise-amount-input').value, 10);
+    const minRaise = highestBet > 0 ? highestBet * 2 : activeTable.bigBlind * 2;
+    const raiseTarget = isNaN(inputVal) || inputVal < minRaise ? minRaise : inputVal;
+    const additional = Math.min(raiseTarget - hero.currentBet, hero.chips);
+
+    if (activeTable.stage === 'PREFLOP') {
+      if (!currentHandStats.heroVpip) {
+        currentHandStats.heroVpip = true;
+        userProfile.vpipHands = (userProfile.vpipHands || 0) + 1;
+      }
+      if (!currentHandStats.heroPfr) {
+        currentHandStats.heroPfr = true;
+        userProfile.pfrHands = (userProfile.pfrHands || 0) + 1;
+      }
+      if (highestBet > activeTable.bigBlind && !currentHandStats.hero3Bet) {
+        currentHandStats.hero3Bet = true;
+        userProfile.threeBetHands = (userProfile.threeBetHands || 0) + 1;
+      }
+    }
+
     hero.chips -= additional;
-    hero.currentBet = raiseAmount;
+    hero.currentBet += additional;
+    hero.totalBetThisHand = (hero.totalBetThisHand || 0) + additional;
     activeTable.pot += additional;
+    hero.actedThisStreet = true;
     playSound('chips');
   }
 
-  activeTable.turnSeat = 1;
   renderPokerTable();
-  setTimeout(runBotTurns, 700);
+  setTimeout(advanceToNextPlayer, 400);
 }
 
 function runBotTurns() {
-  if (activeTable.turnSeat === 0) return; // Hero turn
+  if (!activeTable.handActive || activeTable.turnSeat === 0) return;
 
-  const currentSeat = activeTable.seats[activeTable.turnSeat];
-  if (!currentSeat || currentSeat.isFolded) {
+  const bot = activeTable.seats[activeTable.turnSeat];
+  if (!bot || bot.isFolded || bot.chips <= 0) {
     advanceToNextPlayer();
     return;
   }
 
-  // Simple bot logic
   const highestBet = Math.max(...activeTable.seats.map(s => s.currentBet));
-  const diff = highestBet - currentSeat.currentBet;
+  const diff = highestBet - bot.currentBet;
 
   if (diff === 0) {
     // Check
+    bot.actedThisStreet = true;
   } else if (diff <= 100) {
-    currentSeat.chips -= diff;
-    currentSeat.currentBet += diff;
-    activeTable.pot += diff;
+    // Call
+    const callAmt = Math.min(diff, bot.chips);
+    bot.chips -= callAmt;
+    bot.currentBet += callAmt;
+    bot.totalBetThisHand = (bot.totalBetThisHand || 0) + callAmt;
+    activeTable.pot += callAmt;
+    bot.actedThisStreet = true;
     playSound('chips');
   } else {
-    currentSeat.isFolded = true;
-    playSound('fold');
+    // Rational fold or call
+    if (Math.random() > 0.4 && bot.chips >= diff) {
+      const callAmt = Math.min(diff, bot.chips);
+      bot.chips -= callAmt;
+      bot.currentBet += callAmt;
+      bot.totalBetThisHand = (bot.totalBetThisHand || 0) + callAmt;
+      activeTable.pot += callAmt;
+      bot.actedThisStreet = true;
+      playSound('chips');
+    } else {
+      bot.isFolded = true;
+      bot.actedThisStreet = true;
+      playSound('fold');
+    }
   }
 
-  advanceToNextPlayer();
+  renderPokerTable();
+  setTimeout(advanceToNextPlayer, 500);
 }
 
 function advanceToNextPlayer() {
-  activeTable.turnSeat = (activeTable.turnSeat + 1) % activeTable.seats.length;
+  if (!activeTable.handActive) return;
+
+  // 1. Check if only 1 player remains unfolded
+  const nonFolded = activeTable.seats.filter(s => !s.isFolded);
+  if (nonFolded.length === 1) {
+    concludeHand(nonFolded[0], 'uncontested');
+    return;
+  }
+
+  // 2. Check if current street betting round is finished
+  const highestBet = Math.max(...activeTable.seats.map(s => s.currentBet));
+  const activeUnfoldedWithChips = nonFolded.filter(s => s.chips > 0);
+  const allActed = activeUnfoldedWithChips.every(s => s.actedThisStreet);
+  const betsBalanced = activeUnfoldedWithChips.every(s => s.currentBet === highestBet);
+
+  if (allActed && betsBalanced) {
+    // Street Transition!
+    activeTable.seats.forEach(s => {
+      s.currentBet = 0;
+      s.actedThisStreet = false;
+    });
+
+    if (activeTable.stage === 'PREFLOP') {
+      activeTable.stage = 'FLOP';
+      activeTable.communityCards = [activeTable.deck.pop(), activeTable.deck.pop(), activeTable.deck.pop()];
+      showTableBanner('FLOP');
+      playSound('deal');
+    } else if (activeTable.stage === 'FLOP') {
+      activeTable.stage = 'TURN';
+      activeTable.communityCards.push(activeTable.deck.pop());
+      showTableBanner('TURN');
+      playSound('deal');
+    } else if (activeTable.stage === 'TURN') {
+      activeTable.stage = 'RIVER';
+      activeTable.communityCards.push(activeTable.deck.pop());
+      showTableBanner('RIVER');
+      playSound('deal');
+    } else if (activeTable.stage === 'RIVER') {
+      // SHOWDOWN!
+      activeTable.stage = 'SHOWDOWN';
+      renderPokerTable();
+      evaluateShowdown();
+      return;
+    }
+
+    // Set first to act in next street (player left of dealer)
+    let nextSeat = (activeTable.dealerSeat + 1) % 6;
+    while (activeTable.seats[nextSeat].isFolded || activeTable.seats[nextSeat].chips <= 0) {
+      nextSeat = (nextSeat + 1) % 6;
+    }
+    activeTable.turnSeat = nextSeat;
+    renderPokerTable();
+
+    if (activeTable.turnSeat === 0) return; // Hero's turn
+    setTimeout(runBotTurns, 700);
+    return;
+  }
+
+  // 3. Move to next player in current street
+  let nextSeat = (activeTable.turnSeat + 1) % 6;
+  while (activeTable.seats[nextSeat].isFolded || activeTable.seats[nextSeat].chips <= 0) {
+    nextSeat = (nextSeat + 1) % 6;
+  }
+  activeTable.turnSeat = nextSeat;
   renderPokerTable();
 
-  const activeUnfolded = activeTable.seats.filter(s => !s.isFolded);
-  if (activeUnfolded.length === 1) {
+  if (activeTable.turnSeat === 0) return; // Hero's turn
+  setTimeout(runBotTurns, 650);
+}
+
+function evaluateShowdown() {
+  const nonFolded = activeTable.seats.filter(s => !s.isFolded);
+  let bestScore = -1;
+  let winner = nonFolded[0];
+  let winningDesc = '';
+
+  nonFolded.forEach(seat => {
+    const all7 = [...seat.cards, ...activeTable.communityCards];
+    const ev = evaluateBestHand(all7);
+    if (ev.score > bestScore) {
+      bestScore = ev.score;
+      winner = seat;
+      winningDesc = ev.desc;
+    }
+  });
+
+  concludeHand(winner, 'showdown', winningDesc);
+}
+
+function concludeHand(winner, reason, showdownDesc = '') {
+  activeTable.handActive = false;
+  const wonPot = activeTable.pot;
+  winner.chips += wonPot;
+
+  const desc = showdownDesc ? `ด้วย ${showdownDesc}` : '(Uncontested Pot)';
+  showTableBanner(`🏆 ${winner.name} ชนะ ${wonPot.toLocaleString()} ₮ ${desc}`);
+
+  // Update Hero Stats & EXP
+  userProfile.totalHands = (userProfile.totalHands || 0) + 1;
+  const heroInvested = activeTable.seats[0].totalBetThisHand || 0;
+
+  if (winner.isHero) {
+    const netProfit = wonPot - heroInvested;
+    userProfile.netTgb = (userProfile.netTgb || 0) + netProfit;
+    userProfile.tgbBalance = (userProfile.tgbBalance || 12500) + netProfit;
+    userProfile.exp = (userProfile.exp || 0) + 100;
     playSound('win');
-    activeUnfolded[0].chips += activeTable.pot;
-    activeTable.pot = 0;
-    alert(`${activeUnfolded[0].name} wins uncontested pot!`);
-    setTimeout(startNewHand, 2000);
-    return;
+  } else {
+    userProfile.netTgb = (userProfile.netTgb || 0) - heroInvested;
+    userProfile.tgbBalance = Math.max(0, (userProfile.tgbBalance || 12500) - heroInvested);
+    userProfile.exp = (userProfile.exp || 0) + 25;
   }
 
-  if (activeTable.turnSeat === 0) {
-    // Hero's turn to act
-    return;
+  // Level check
+  const neededExp = (userProfile.level || 1) * 500;
+  if ((userProfile.exp || 0) >= neededExp) {
+    userProfile.level = (userProfile.level || 1) + 1;
   }
 
-  if (activeTable.turnSeat === 1 && activeTable.stage === 'PREFLOP') {
-    activeTable.stage = 'FLOP';
-    activeTable.communityCards = ['Kh', '7c', '2d'];
-    playSound('deal');
-    renderPokerTable();
-  } else if (activeTable.turnSeat === 1 && activeTable.stage === 'FLOP') {
-    activeTable.stage = 'TURN';
-    activeTable.communityCards.push('Ts');
-    playSound('deal');
-    renderPokerTable();
-  } else if (activeTable.turnSeat === 1 && activeTable.stage === 'TURN') {
-    activeTable.stage = 'RIVER';
-    activeTable.communityCards.push('As');
-    playSound('deal');
-    renderPokerTable();
-  }
+  // Persist session
+  try {
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(userProfile));
+  } catch (e) {}
 
-  setTimeout(runBotTurns, 600);
+  updateAuthUI(true, userProfile);
+  renderProfileView();
+
+  activeTable.pot = 0;
+  renderPokerTable();
+
+  // Auto-deal next hand after 4 seconds
+  setTimeout(startNewHand, 4000);
 }
 
 // Raise Presets
@@ -503,8 +1153,8 @@ function setRaisePreset(preset) {
   let val = 100;
   if (preset === 'min') val = activeTable.bigBlind * 2;
   else if (preset === '2.5bb') val = Math.round(activeTable.bigBlind * 2.5);
-  else if (preset === 'half_pot') val = Math.round(activeTable.pot * 0.5);
-  else if (preset === 'pot') val = activeTable.pot;
+  else if (preset === 'half_pot') val = Math.round(activeTable.pot * 0.5) || 100;
+  else if (preset === 'pot') val = activeTable.pot || 100;
   else if (preset === 'allin') val = activeTable.seats[0].chips;
 
   if (slider) slider.value = val;
@@ -525,6 +1175,7 @@ function onRaiseInputChange(val) {
   if (slider) slider.value = val;
   if (raiseBtn) raiseBtn.innerText = `Raise to ${val}`;
 }
+
 
 // ============================================================================
 // 7. TOURNAMENT LOBBY & CARDS
@@ -868,7 +1519,7 @@ function handleFormRegister(event) {
     return;
   }
 
-  // Create new player account
+  // Create new player account (Strictly 0 units across all metrics)
   const newUser = {
     id: `user_${Date.now()}`,
     username,
@@ -880,7 +1531,16 @@ function handleFormRegister(event) {
     tournamentsPlayed: 0,
     tournamentsWon: 0,
     itmCount: 0,
-    registeredAt: new Date().toISOString(),
+    netTgb: 0,
+    totalHands: 0,
+    vpipHands: 0,
+    pfrHands: 0,
+    threeBetHands: 0,
+    avatarType: 'preset',
+    avatarEmoji: '🦁',
+    avatarUrl: '',
+    frame: 'frame-none',
+    registeredAt: new Date().toLocaleDateString('th-TH'),
   };
 
   users.push(newUser);
@@ -910,20 +1570,31 @@ function handleFormLogin(event) {
   const user = users.find(u => (u.username.toLowerCase() === identifier || u.email.toLowerCase() === identifier) && u.password === password);
 
   if (!user) {
-    // If not found in custom registered users, check if trying default demo account
+    // If not found in custom registered users, check if demo account
     if ((identifier === 'hero' || identifier === 'heroace' || identifier.includes('hero')) && password.length >= 4) {
       const demoUser = {
         id: 'user_hero',
         username: 'HeroAce',
         email: 'hero@tgbpoker.com',
         tgbBalance: 12500,
-        level: 9,
-        exp: 36800,
-        tournamentsPlayed: 428,
-        tournamentsWon: 37,
+        level: 1,
+        exp: 0,
+        tournamentsPlayed: 0,
+        tournamentsWon: 0,
+        itmCount: 0,
+        netTgb: 0,
+        totalHands: 0,
+        vpipHands: 0,
+        pfrHands: 0,
+        threeBetHands: 0,
+        avatarType: 'preset',
+        avatarEmoji: '🦁',
+        avatarUrl: '',
+        frame: 'frame-none',
+        registeredAt: new Date().toLocaleDateString('th-TH'),
       };
       setLoggedInUser(demoUser);
-      showAuthAlert('เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับกลับ HeroAce', 'success');
+      showAuthAlert('เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับ HeroAce', 'success');
       playSound('win');
       setTimeout(closeAuthModal, 700);
       return;
@@ -948,10 +1619,21 @@ function handleQuickGoogleLogin() {
     username: 'Google_Player',
     email: 'player@gmail.com',
     tgbBalance: 12500,
-    level: 2,
-    exp: 1500,
-    tournamentsPlayed: 5,
-    tournamentsWon: 1,
+    level: 1,
+    exp: 0,
+    tournamentsPlayed: 0,
+    tournamentsWon: 0,
+    itmCount: 0,
+    netTgb: 0,
+    totalHands: 0,
+    vpipHands: 0,
+    pfrHands: 0,
+    threeBetHands: 0,
+    avatarType: 'preset',
+    avatarEmoji: '🤖',
+    avatarUrl: '',
+    frame: 'frame-none',
+    registeredAt: new Date().toLocaleDateString('th-TH'),
   };
   setLoggedInUser(googleUser);
   showAuthAlert('เข้าสู่ระบบด้วย Google สำเร็จ!', 'success');
@@ -968,6 +1650,18 @@ function handleGuestPlay() {
     level: 1,
     exp: 0,
     tournamentsPlayed: 0,
+    tournamentsWon: 0,
+    itmCount: 0,
+    netTgb: 0,
+    totalHands: 0,
+    vpipHands: 0,
+    pfrHands: 0,
+    threeBetHands: 0,
+    avatarType: 'preset',
+    avatarEmoji: '🦁',
+    avatarUrl: '',
+    frame: 'frame-none',
+    registeredAt: new Date().toLocaleDateString('th-TH'),
   };
   setLoggedInUser(guestUser);
   closeAuthModal();
@@ -981,16 +1675,31 @@ function setLoggedInUser(user) {
 
   userProfile.id = user.id;
   userProfile.username = user.username;
-  userProfile.tgbBalance = user.tgbBalance || 12500;
+  userProfile.email = user.email || 'user@tgbpoker.local';
+  userProfile.tgbBalance = user.tgbBalance !== undefined ? user.tgbBalance : 12500;
   userProfile.level = user.level || 1;
   userProfile.exp = user.exp || 0;
+  userProfile.tournamentsPlayed = user.tournamentsPlayed || 0;
+  userProfile.tournamentsWon = user.tournamentsWon || 0;
+  userProfile.itmCount = user.itmCount || 0;
+  userProfile.netTgb = user.netTgb || 0;
+  userProfile.totalHands = user.totalHands || 0;
+  userProfile.vpipHands = user.vpipHands || 0;
+  userProfile.pfrHands = user.pfrHands || 0;
+  userProfile.threeBetHands = user.threeBetHands || 0;
+  userProfile.avatarType = user.avatarType || 'preset';
+  userProfile.avatarEmoji = user.avatarEmoji || '🦁';
+  userProfile.avatarUrl = user.avatarUrl || '';
+  userProfile.frame = user.frame || 'frame-none';
+  userProfile.registeredAt = user.registeredAt || new Date().toLocaleDateString('th-TH');
 
   // Update Hero seat on table
   if (activeTable && activeTable.seats && activeTable.seats[0]) {
     activeTable.seats[0].name = `${user.username} (You)`;
   }
 
-  updateAuthUI(true, user);
+  updateAuthUI(true, userProfile);
+  renderProfileView();
 }
 
 function handleLogout() {
@@ -998,15 +1707,34 @@ function handleLogout() {
     localStorage.removeItem(SESSION_STORAGE_KEY);
   } catch (e) {}
 
-  userProfile.username = 'Guest';
-  userProfile.tgbBalance = 12500;
-  userProfile.level = 1;
+  userProfile = {
+    id: `guest_${Date.now()}`,
+    username: 'Guest',
+    email: 'guest@tgbpoker.local',
+    tgbBalance: 12500,
+    level: 1,
+    exp: 0,
+    tournamentsPlayed: 0,
+    tournamentsWon: 0,
+    itmCount: 0,
+    netTgb: 0,
+    totalHands: 0,
+    vpipHands: 0,
+    pfrHands: 0,
+    threeBetHands: 0,
+    avatarType: 'preset',
+    avatarEmoji: '🦁',
+    avatarUrl: '',
+    frame: 'frame-none',
+    registeredAt: new Date().toLocaleDateString('th-TH'),
+  };
 
   if (activeTable && activeTable.seats && activeTable.seats[0]) {
     activeTable.seats[0].name = 'Guest (You)';
   }
 
   updateAuthUI(false);
+  renderProfileView();
   playSound('fold');
 }
 
@@ -1027,10 +1755,22 @@ function updateAuthUI(isLoggedIn, user = null) {
     if (navLoginBtn) navLoginBtn.classList.add('hidden');
     if (navUserContainer) navUserContainer.classList.remove('hidden');
     if (navName) navName.innerText = user.username;
-    if (navAvatar) navAvatar.innerText = user.username.charAt(0).toUpperCase();
+    
+    if (navAvatar) {
+      navAvatar.className = `w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center font-bold text-white shadow overflow-hidden text-sm ${userProfile.frame || 'frame-none'}`;
+      if (userProfile.avatarType === 'image' && userProfile.avatarUrl) {
+        navAvatar.innerHTML = `<img src="${userProfile.avatarUrl}" class="w-full h-full object-cover">`;
+      } else {
+        navAvatar.innerHTML = `<span class="text-base">${userProfile.avatarEmoji || user.username.charAt(0)}</span>`;
+      }
+    }
+
     if (navLevelBadge) navLevelBadge.innerText = `Lv.${user.level || 1}`;
     if (navRankTitle) {
-      navRankTitle.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>${user.level >= 5 ? 'Elite Rank' : 'Active Player'}`;
+      let rankTitle = 'Novice Player';
+      if (user.level >= 10) rankTitle = 'Grand Master';
+      else if (user.level >= 5) rankTitle = 'Elite Pro';
+      navRankTitle.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>${rankTitle}`;
     }
   } else {
     if (navLoginBtn) navLoginBtn.classList.remove('hidden');
@@ -1050,7 +1790,8 @@ function restoreUserSession() {
     }
   } catch (e) {}
 
-  // If no saved user, default to guest with login button visible
+  // If no saved user, default to initial userProfile
+  setLoggedInUser(userProfile);
   updateAuthUI(false);
 }
 
@@ -1078,6 +1819,14 @@ window.handleFormRegister = handleFormRegister;
 window.handleQuickGoogleLogin = handleQuickGoogleLogin;
 window.handleGuestPlay = handleGuestPlay;
 window.handleLogout = handleLogout;
+window.renderProfileView = renderProfileView;
+window.openEditProfileModal = openEditProfileModal;
+window.closeEditProfileModal = closeEditProfileModal;
+window.selectPresetAvatar = selectPresetAvatar;
+window.handleAvatarFileUpload = handleAvatarFileUpload;
+window.selectAvatarFrame = selectAvatarFrame;
+window.updateProfilePreview = updateProfilePreview;
+window.saveProfileCustomization = saveProfileCustomization;
 
 // ============================================================================
 // INITIALIZATION
@@ -1087,6 +1836,7 @@ function initApp() {
   renderTournamentCards();
   renderPokerTable();
   renderLedgerTable();
+  renderProfileView();
   tryInitFirebase();
 }
 
@@ -1095,3 +1845,4 @@ if (document.readyState === 'loading') {
 } else {
   initApp();
 }
+

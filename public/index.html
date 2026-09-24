@@ -36,7 +36,7 @@
           <i class="fa-solid fa-graduation-cap mr-1.5 text-blue-400"></i>AI Academy & Exam
         </button>
         <button onclick="switchView('profile')" id="nav-profile" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all">
-          <i class="fa-solid fa-chart-pie mr-1.5 text-purple-400"></i>Profile & Style
+          <i class="fa-solid fa-user mr-1.5 text-purple-400"></i>Profile
         </button>
         <button onclick="switchView('wallet')" id="nav-wallet" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all">
           <i class="fa-solid fa-wallet mr-1.5 text-yellow-400"></i>TGB Ledger
@@ -430,62 +430,78 @@
     </section>
 
     <!-- ========================================================================= -->
-    <!-- VIEW 4: PLAYER PROFILE & PLAY STYLE -->
+    <!-- VIEW 4: USER PROFILE & STATS -->
     <!-- ========================================================================= -->
     <section id="view-profile" class="p-4 lg:p-8 max-w-5xl mx-auto w-full space-y-6 hidden">
       <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 lg:p-8 shadow-2xl space-y-6">
+        
+        <!-- Profile Header with Real Avatar & Custom Frame -->
         <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 border-b border-slate-800 pb-6">
-          <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center font-black text-3xl text-white shadow-xl shadow-purple-900/40">
-            H
-          </div>
-          <div class="text-center sm:text-left space-y-1 flex-1">
-            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-              <h2 class="text-2xl font-black text-white">HeroAce</h2>
-              <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">Level 9 — Elite</span>
-              <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">Tight Aggressive (TAG)</span>
+          <div class="relative">
+            <div id="profile-avatar-display" class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center font-black text-3xl text-white shadow-xl overflow-hidden select-none">
+              H
             </div>
-            <p class="text-xs text-slate-400">Account ID: c1f1a547-494b-4f93-b26a-912c93847e11 • Registered 2026</p>
+          </div>
+          <div class="text-center sm:text-left space-y-1.5 flex-1">
+            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+              <h2 id="profile-name" class="text-2xl font-black text-white">HeroAce</h2>
+              <span id="profile-level" class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">Level 1 — Novice</span>
+              <span id="profile-style" class="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-xs font-bold">New Player</span>
+            </div>
+            <p id="profile-account-id" class="text-xs text-slate-400">Account ID: user_guest • Registered 2026</p>
+            
             <!-- EXP Progress Bar -->
             <div class="w-full max-w-md bg-slate-950 h-2.5 rounded-full overflow-hidden mt-3 border border-slate-800">
-              <div class="bg-gradient-to-r from-amber-500 to-yellow-400 h-full w-[78%]"></div>
+              <div id="profile-exp-bar" class="bg-gradient-to-r from-amber-500 to-yellow-400 h-full w-[0%] transition-all duration-500"></div>
             </div>
-            <div class="text-[10px] text-slate-400 font-mono">36,800 / 47,200 EXP to Level 10 (Legend)</div>
+            <div id="profile-exp-text" class="text-[10px] text-slate-400 font-mono">0 / 500 EXP to Level 2</div>
+          </div>
+
+          <!-- Edit Profile Action Button -->
+          <div class="self-center sm:self-start">
+            <button onclick="openEditProfileModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition border border-slate-700 flex items-center shadow">
+              <i class="fa-solid fa-pen-to-square mr-2 text-amber-400"></i> แก้ไขโปรไฟล์ / กรอบรูป
+            </button>
           </div>
         </div>
 
-        <!-- Career Statistics Grid -->
+        <!-- Career Statistics Grid (Strictly Real Data, Starts at 0 for new players) -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
             <div class="text-xs text-slate-400 font-semibold">Tournaments Played</div>
-            <div class="text-xl font-black text-white mt-1">428</div>
+            <div id="profile-tournaments-count" class="text-xl font-black text-white mt-1">0</div>
           </div>
           <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
             <div class="text-xs text-slate-400 font-semibold">MTT 1st Wins</div>
-            <div class="text-xl font-black text-amber-400 mt-1">37 <span class="text-xs text-slate-500">(8.6%)</span></div>
+            <div id="profile-wins-count" class="text-xl font-black text-amber-400 mt-1">0 <span class="text-xs text-slate-500">(0%)</span></div>
           </div>
           <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
             <div class="text-xs text-slate-400 font-semibold">In The Money (ITM)</div>
-            <div class="text-xl font-black text-emerald-400 mt-1">188 <span class="text-xs text-slate-500">(43.9%)</span></div>
+            <div id="profile-itm-count" class="text-xl font-black text-emerald-400 mt-1">0 <span class="text-xs text-slate-500">(0%)</span></div>
           </div>
           <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
             <div class="text-xs text-slate-400 font-semibold">Net TGB Profit</div>
-            <div class="text-xl font-black text-amber-300 mt-1">+142,500 ₮</div>
+            <div id="profile-net-profit" class="text-xl font-black text-amber-300 mt-1">0 ₮</div>
           </div>
         </div>
 
-        <!-- Play Style Analysis Indicators (VPIP / PFR / 3-Bet / Aggression) -->
+        <!-- Play Style Analysis Indicators (Calculated from Real Played Hands!) -->
         <div class="space-y-3">
-          <h3 class="text-sm font-black text-slate-200 uppercase tracking-wider flex items-center">
-            <i class="fa-solid fa-radar text-purple-400 mr-2"></i> Real Gameplay Style Metrics
-          </h3>
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-black text-slate-200 uppercase tracking-wider flex items-center">
+              <i class="fa-solid fa-chart-simple text-purple-400 mr-2"></i> Real Gameplay Style Metrics
+            </h3>
+            <span id="profile-total-hands-badge" class="text-[10px] text-slate-500 font-mono">0 Hands Tracked</span>
+          </div>
+          
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
               <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
                 <span>VPIP (Voluntarily Put $ In Pot)</span>
-                <span class="text-amber-400">24%</span>
+                <span id="profile-vpip-val" class="text-amber-400">0%</span>
               </div>
               <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
-                <div class="bg-amber-500 h-full w-[24%]"></div>
+                <div id="profile-vpip-bar" class="bg-amber-500 h-full w-[0%] transition-all duration-300"></div>
               </div>
               <div class="text-[10px] text-slate-500 mt-1">Optimal Range: 20% - 28%</div>
             </div>
@@ -493,23 +509,23 @@
             <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
               <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
                 <span>PFR (Pre-Flop Raise)</span>
-                <span class="text-blue-400">19%</span>
+                <span id="profile-pfr-val" class="text-blue-400">0%</span>
               </div>
               <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
-                <div class="bg-blue-500 h-full w-[19%]"></div>
+                <div id="profile-pfr-bar" class="bg-blue-500 h-full w-[0%] transition-all duration-300"></div>
               </div>
-              <div class="text-[10px] text-slate-500 mt-1">Tight-Aggressive benchmark</div>
+              <div class="text-[10px] text-slate-500 mt-1">Tight-Aggressive benchmark: 15% - 22%</div>
             </div>
 
             <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
               <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
                 <span>3-Bet Frequency</span>
-                <span class="text-emerald-400">9.2%</span>
+                <span id="profile-3bet-val" class="text-emerald-400">0%</span>
               </div>
               <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
-                <div class="bg-emerald-500 h-full w-[35%]"></div>
+                <div id="profile-3bet-bar" class="bg-emerald-500 h-full w-[0%] transition-all duration-300"></div>
               </div>
-              <div class="text-[10px] text-slate-500 mt-1">Healthy re-raise pressure</div>
+              <div class="text-[10px] text-slate-500 mt-1">Healthy re-raise pressure: 7% - 12%</div>
             </div>
           </div>
         </div>
@@ -745,6 +761,123 @@
         <button onclick="handleGuestPlay()" type="button" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition flex items-center justify-center space-x-1.5 border border-slate-700">
           <i class="fa-solid fa-gamepad text-emerald-400"></i>
           <span>เล่นเป็น Guest</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: EDIT PROFILE & AVATAR / FRAME CUSTOMIZER -->
+  <!-- ========================================================================= -->
+  <div id="edit-profile-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-5 max-h-[90vh] overflow-y-auto">
+      
+      <!-- Close Button -->
+      <button onclick="closeEditProfileModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white transition w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <!-- Modal Header -->
+      <div>
+        <h3 class="text-xl font-black text-white flex items-center">
+          <i class="fa-solid fa-user-pen text-amber-400 mr-2.5"></i> ตั้งค่าโปรไฟล์ & กรอบรูป
+        </h3>
+        <p class="text-xs text-slate-400 mt-1">ปรับแต่งชื่อผู้เล่น รูปโปรไฟล์ และกรอบอวาตาร์ประจำตัวคุณ</p>
+      </div>
+
+      <!-- Live Preview Card -->
+      <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center space-x-4">
+        <div id="preview-avatar-box" class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-3xl shadow-xl overflow-hidden frame-none transition-all duration-200">
+          <span id="preview-avatar-content">🦁</span>
+        </div>
+        <div>
+          <div id="preview-display-name" class="text-base font-black text-white">HeroAce</div>
+          <div id="preview-frame-name" class="text-xs text-amber-400 font-semibold mt-0.5">กรอบ: ค่าเริ่มต้น (None)</div>
+          <div class="text-[10px] text-slate-500 mt-0.5">พรีวิวรูปโปรไฟล์ของคุณที่จะปรากฏบนโต๊ะโป๊กเกอร์</div>
+        </div>
+      </div>
+
+      <!-- Display Name Field -->
+      <div>
+        <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">
+          <i class="fa-solid fa-signature text-amber-400 mr-1"></i> ชื่อผู้เล่น (Display Name)
+        </label>
+        <input id="edit-username-input" type="text" maxlength="20" placeholder="ตั้งชื่อโปรไฟล์ของคุณ..." oninput="updateProfilePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 font-bold">
+      </div>
+
+      <!-- Avatar Selection -->
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-slate-400 uppercase">
+          <i class="fa-solid fa-icons text-purple-400 mr-1"></i> เลือกรูปโปรไฟล์ หรือ อัพโหลดภาพ
+        </label>
+        
+        <!-- Preset Emojis -->
+        <div class="grid grid-cols-6 gap-2">
+          <button type="button" onclick="selectPresetAvatar('🦁')" class="preset-avatar-btn p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-2xl transition active:scale-90">🦁</button>
+          <button type="button" onclick="selectPresetAvatar('🐯')" class="preset-avatar-btn p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-2xl transition active:scale-90">🐯</button>
+          <button type="button" onclick="selectPresetAvatar('🦅')" class="preset-avatar-btn p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-2xl transition active:scale-90">🦅</button>
+          <button type="button" onclick="selectPresetAvatar('🐺')" class="preset-avatar-btn p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-2xl transition active:scale-90">🐺</button>
+          <button type="button" onclick="selectPresetAvatar('🐲')" class="preset-avatar-btn p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-2xl transition active:scale-90">🐲</button>
+          <button type="button" onclick="selectPresetAvatar('🤖')" class="preset-avatar-btn p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-2xl transition active:scale-90">🤖</button>
+          <button type="button" onclick="selectPresetAvatar('👑')" class="preset-avatar-btn p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-2xl transition active:scale-90">👑</button>
+          <button type="button" onclick="selectPresetAvatar('♠️')" class="preset-avatar-btn p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-2xl transition active:scale-90">♠️</button>
+          <button type="button" onclick="selectPresetAvatar('🦊')" class="preset-avatar-btn p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-2xl transition active:scale-90">🦊</button>
+          <button type="button" onclick="selectPresetAvatar('🎯')" class="preset-avatar-btn p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-2xl transition active:scale-90">🎯</button>
+          <button type="button" onclick="selectPresetAvatar('🦈')" class="preset-avatar-btn p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-2xl transition active:scale-90">🦈</button>
+          <button type="button" onclick="selectPresetAvatar('🐼')" class="preset-avatar-btn p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-2xl transition active:scale-90">🐼</button>
+        </div>
+
+        <!-- Custom Photo Upload -->
+        <div class="pt-1">
+          <input type="file" id="edit-avatar-upload" accept="image/*" class="hidden" onchange="handleAvatarFileUpload(event)">
+          <button type="button" onclick="document.getElementById('edit-avatar-upload').click()" class="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition border border-slate-700 flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-cloud-arrow-up text-amber-400"></i>
+            <span>อัพโหลดรูปภาพของตัวเองจากเครื่อง (Custom Avatar)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Avatar Frame Selection -->
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-slate-400 uppercase">
+          <i class="fa-solid fa-ring text-amber-400 mr-1"></i> เลือกกรอบอวาตาร์ (Avatar Frame)
+        </label>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <button type="button" onclick="selectAvatarFrame('frame-none', 'ไม่มีกรอบ')" class="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-left transition flex items-center space-x-2.5">
+            <div class="w-6 h-6 rounded-lg bg-slate-800 frame-none"></div>
+            <span class="text-xs font-bold text-slate-300">ไม่มีกรอบ</span>
+          </button>
+          <button type="button" onclick="selectAvatarFrame('frame-gold', 'Gold Champion')" class="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-left transition flex items-center space-x-2.5">
+            <div class="w-6 h-6 rounded-lg bg-amber-900/40 frame-gold"></div>
+            <span class="text-xs font-bold text-amber-400">Gold Champion</span>
+          </button>
+          <button type="button" onclick="selectAvatarFrame('frame-neon', 'Cyber Neon')" class="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-left transition flex items-center space-x-2.5">
+            <div class="w-6 h-6 rounded-lg bg-cyan-900/40 frame-neon"></div>
+            <span class="text-xs font-bold text-cyan-400">Cyber Neon</span>
+          </button>
+          <button type="button" onclick="selectAvatarFrame('frame-fire', 'Fire Dragon')" class="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-left transition flex items-center space-x-2.5">
+            <div class="w-6 h-6 rounded-lg bg-rose-900/40 frame-fire"></div>
+            <span class="text-xs font-bold text-rose-400">Fire Dragon</span>
+          </button>
+          <button type="button" onclick="selectAvatarFrame('frame-diamond', 'Diamond VIP')" class="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-left transition flex items-center space-x-2.5">
+            <div class="w-6 h-6 rounded-lg bg-blue-900/40 frame-diamond"></div>
+            <span class="text-xs font-bold text-blue-400">Diamond VIP</span>
+          </button>
+          <button type="button" onclick="selectAvatarFrame('frame-emerald', 'Emerald Master')" class="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-left transition flex items-center space-x-2.5">
+            <div class="w-6 h-6 rounded-lg bg-emerald-900/40 frame-emerald"></div>
+            <span class="text-xs font-bold text-emerald-400">Emerald Master</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pt-2 flex space-x-3">
+        <button type="button" onclick="closeEditProfileModal()" class="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition">
+          ยกเลิก
+        </button>
+        <button type="button" onclick="saveProfileCustomization()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-lg shadow-amber-500/25 active:scale-95">
+          <i class="fa-solid fa-floppy-disk mr-1.5"></i> บันทึกข้อมูล
         </button>
       </div>
 
