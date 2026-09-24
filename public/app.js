@@ -1368,7 +1368,7 @@ function renderPokerTable() {
       `;
     }
 
-    const isTopSeat = (idx === 4 || idx === 5);
+    const isTopSeat = (idx === 3 || idx === 4);
 
     if (isTopSeat) {
       seatEl.innerHTML = `
@@ -1523,11 +1523,11 @@ function requestTakeAnySeat() {
 }
 
 function sitDownAtSeat(seatIdx) {
-  if (seatIdx < 0 || seatIdx >= activeTable.seats.length) return;
-  const targetSeat = activeTable.seats[seatIdx];
+  // User MUST always be seated at Seat 0 (exact horizontal center of the screen)
+  const targetSeat = activeTable.seats[0];
 
   if (!targetSeat.empty && !targetSeat.isHero) {
-    const emptyIdx = activeTable.seats.findIndex((s, idx) => s.empty && idx !== seatIdx);
+    const emptyIdx = activeTable.seats.findIndex((s, idx) => s.empty && idx !== 0);
     if (emptyIdx !== -1) {
       activeTable.seats[emptyIdx] = { ...targetSeat, seatNumber: emptyIdx };
     }
