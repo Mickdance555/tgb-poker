@@ -47,36 +47,47 @@
       </nav>
     </div>
 
-    <!-- Right Controls: Balance, Level, Profile -->
-    <div class="flex items-center space-x-3 sm:space-x-4">
+    <!-- Right Controls: Balance, Level, Profile & Auth -->
+    <div class="flex items-center space-x-2 sm:space-x-4">
+      
+      <!-- Login / Register Trigger Button (Visible when logged out) -->
+      <button id="nav-login-btn" onclick="openAuthModal()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs transition shadow-md shadow-amber-500/20 flex items-center">
+        <i class="fa-solid fa-user-plus mr-1.5"></i> เข้าสู่ระบบ / สมัคร
+      </button>
+
       <!-- TGB Balance Pill -->
       <div class="flex items-center bg-slate-800/80 border border-amber-500/30 rounded-xl px-3 py-1.5 shadow-inner">
         <span class="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black text-xs flex items-center justify-center mr-2 shadow">
           ₮
         </span>
         <div class="text-right">
-          <div class="text-xs text-amber-400/80 font-medium leading-none">TGB BALANCE</div>
+          <div class="text-[10px] text-amber-400/80 font-bold leading-none">TGB BALANCE</div>
           <div id="top-tgb-balance" class="text-sm font-black text-amber-300 font-mono tracking-tight leading-none mt-0.5">12,500.00</div>
         </div>
       </div>
 
-      <!-- Player Level & Avatar -->
-      <div class="flex items-center space-x-2 pl-2 border-l border-slate-800">
-        <div class="relative">
-          <div id="nav-user-avatar" class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center font-bold text-white shadow overflow-hidden">
+      <!-- User Profile Pill (Visible when logged in) -->
+      <div id="nav-user-container" class="flex items-center space-x-2 pl-2 border-l border-slate-800">
+        <div class="relative cursor-pointer" onclick="switchView('profile')">
+          <div id="nav-user-avatar" class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center font-bold text-white shadow overflow-hidden text-sm">
             H
           </div>
-          <span class="absolute -bottom-1 -right-1 text-[10px] font-black bg-amber-500 text-slate-950 px-1 rounded-md leading-tight">
-            Lv.9
+          <span id="nav-user-level-badge" class="absolute -bottom-1 -right-1 text-[9px] font-black bg-amber-500 text-slate-950 px-1 rounded-md leading-tight">
+            Lv.1
           </span>
         </div>
-        <div class="hidden lg:block text-left">
+        <div class="hidden lg:block text-left cursor-pointer" onclick="switchView('profile')">
           <div id="nav-user-name" class="text-xs font-bold text-slate-200">HeroAce</div>
-          <div class="text-[10px] text-emerald-400 font-semibold flex items-center">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>Elite Rank
+          <div id="nav-user-rank-title" class="text-[10px] text-emerald-400 font-semibold flex items-center">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>Novice Rank
           </div>
         </div>
+        <!-- Logout Button -->
+        <button onclick="handleLogout()" title="ออกจากระบบ" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300 flex items-center justify-center text-xs transition ml-1">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
       </div>
+
     </div>
   </header>
 
@@ -607,6 +618,124 @@
           <i class="fa-solid fa-circle-info mr-1"></i> The server seed is securely generated with 256 bits of CSPRNG entropy. Its SHA-256 hash was locked before any player made a decision.
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ACCOUNT AUTHENTICATION (LOGIN & REGISTER) -->
+  <div id="account-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 max-w-md w-full rounded-3xl p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in duration-200">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-sm">
+            TGB
+          </div>
+          <h3 id="auth-modal-title" class="text-base font-black text-white">เข้าสู่ระบบ TGB POKER</h3>
+        </div>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-white text-base">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Tab Switcher: Login vs Register -->
+      <div class="flex rounded-xl bg-slate-950 p-1 border border-slate-800">
+        <button id="tab-btn-login" onclick="switchAuthTab('login')" class="flex-1 py-2 rounded-lg text-xs font-bold transition bg-amber-500 text-slate-950">
+          เข้าสู่ระบบ (Sign In)
+        </button>
+        <button id="tab-btn-register" onclick="switchAuthTab('register')" class="flex-1 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white">
+          สมัครสมาชิกใหม่ (Register)
+        </button>
+      </div>
+
+      <!-- Inline Feedback Alert (Green/Red) -->
+      <div id="auth-alert" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
+
+      <!-- FORM 1: LOGIN -->
+      <form id="form-login" onsubmit="handleFormLogin(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">อีเมล หรือ ชื่อผู้เล่น</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 text-xs">
+              <i class="fa-solid fa-user"></i>
+            </span>
+            <input id="login-username-input" type="text" required placeholder="เช่น HeroAce หรือ email@domain.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 font-medium">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">รหัสผ่าน</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 text-xs">
+              <i class="fa-solid fa-lock"></i>
+            </span>
+            <input id="login-password-input" type="password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 font-medium">
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-lg shadow-amber-500/25 active:scale-95">
+          <i class="fa-solid fa-right-to-bracket mr-1.5"></i> เข้าสู่ระบบ
+        </button>
+      </form>
+
+      <!-- FORM 2: REGISTER -->
+      <form id="form-register" onsubmit="handleFormRegister(event)" class="space-y-3 hidden">
+        <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] flex items-center space-x-2">
+          <i class="fa-solid fa-gift text-sm text-amber-400"></i>
+          <span>สมัครสมาชิกใหม่วันนี้ รับฟรี <strong>12,500 TGB</strong> เริ่มต้นทันที!</span>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">ชื่อผู้เล่น (Username)</label>
+          <input id="reg-username-input" type="text" required placeholder="เช่น HeroPro, AceKing" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">อีเมล (Email)</label>
+          <input id="reg-email-input" type="email" required placeholder="yourname@gmail.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">รหัสผ่าน</label>
+            <input id="reg-password-input" type="password" required minlength="4" placeholder="ขั้นต่ำ 4 ตัวอักษร" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">ยืนยันรหัสผ่าน</label>
+            <input id="reg-confirm-password-input" type="password" required minlength="4" placeholder="กรอกซ้ำอีกครั้ง" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500">
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-lg shadow-amber-500/25 active:scale-95">
+          <i class="fa-solid fa-user-plus mr-1.5"></i> ยืนยันการสมัครสมาชิก
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="flex items-center space-x-2 text-slate-600 text-[10px] font-bold uppercase justify-center pt-1">
+        <div class="h-px bg-slate-800 flex-1"></div>
+        <span>หรือเลือกช่องทางลัด</span>
+        <div class="h-px bg-slate-800 flex-1"></div>
+      </div>
+
+      <!-- Quick Options: Google & Instant Guest -->
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="handleQuickGoogleLogin()" type="button" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition flex items-center justify-center space-x-2 border border-slate-700">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Google Sign-In</span>
+        </button>
+
+        <button onclick="handleGuestPlay()" type="button" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition flex items-center justify-center space-x-1.5 border border-slate-700">
+          <i class="fa-solid fa-gamepad text-emerald-400"></i>
+          <span>เล่นเป็น Guest</span>
+        </button>
+      </div>
+
     </div>
   </div>
 

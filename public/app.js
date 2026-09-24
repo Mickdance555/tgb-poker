@@ -734,6 +734,304 @@ async function tryInitFirebase() {
 }
 
 // ============================================================================
+// 12. ACCOUNT AUTHENTICATION (LOGIN, REGISTER, SESSION MANAGEMENT)
+// ============================================================================
+const USERS_STORAGE_KEY = 'TGB_REGISTERED_USERS';
+const SESSION_STORAGE_KEY = 'TGB_CURRENT_USER';
+
+function getStoredUsers() {
+  try {
+    const raw = localStorage.getItem(USERS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveStoredUsers(users) {
+  try {
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+  } catch (e) {}
+}
+
+function openAuthModal(defaultTab = 'login') {
+  const modal = document.getElementById('account-modal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    switchAuthTab(defaultTab);
+    clearAuthAlert();
+  }
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById('account-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function switchAuthTab(tab) {
+  const tabLogin = document.getElementById('tab-btn-login');
+  const tabReg = document.getElementById('tab-btn-register');
+  const formLogin = document.getElementById('form-login');
+  const formReg = document.getElementById('form-register');
+  const modalTitle = document.getElementById('auth-modal-title');
+
+  clearAuthAlert();
+
+  if (tab === 'login') {
+    if (tabLogin) {
+      tabLogin.className = 'flex-1 py-2 rounded-lg text-xs font-bold transition bg-amber-500 text-slate-950';
+    }
+    if (tabReg) {
+      tabReg.className = 'flex-1 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white';
+    }
+    if (formLogin) formLogin.classList.remove('hidden');
+    if (formReg) formReg.classList.add('hidden');
+    if (modalTitle) modalTitle.innerText = 'เข้าสู่ระบบ TGB POKER';
+  } else {
+    if (tabLogin) {
+      tabLogin.className = 'flex-1 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white';
+    }
+    if (tabReg) {
+      tabReg.className = 'flex-1 py-2 rounded-lg text-xs font-bold transition bg-amber-500 text-slate-950';
+    }
+    if (formLogin) formLogin.classList.add('hidden');
+    if (formReg) formReg.classList.remove('hidden');
+    if (modalTitle) modalTitle.innerText = 'สมัครสมาชิกใหม่ TGB POKER';
+  }
+}
+
+function showAuthAlert(msg, type = 'error') {
+  const alertEl = document.getElementById('auth-alert');
+  if (!alertEl) return;
+  alertEl.classList.remove('hidden');
+  if (type === 'success') {
+    alertEl.className = 'p-3 rounded-xl text-xs font-bold bg-emerald-950/60 border border-emerald-500/50 text-emerald-300';
+    alertEl.innerHTML = `<i class="fa-solid fa-circle-check mr-1.5"></i> ${msg}`;
+  } else {
+    alertEl.className = 'p-3 rounded-xl text-xs font-bold bg-rose-950/60 border border-rose-500/50 text-rose-300';
+    alertEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1.5"></i> ${msg}`;
+  }
+}
+
+function clearAuthAlert() {
+  const alertEl = document.getElementById('auth-alert');
+  if (alertEl) {
+    alertEl.classList.add('hidden');
+    alertEl.innerText = '';
+  }
+}
+
+function handleFormRegister(event) {
+  event.preventDefault();
+  const username = document.getElementById('reg-username-input').value.trim();
+  const email = document.getElementById('reg-email-input').value.trim();
+  const password = document.getElementById('reg-password-input').value;
+  const confirmPassword = document.getElementById('reg-confirm-password-input').value;
+
+  if (!username || !email || !password) {
+    showAuthAlert('กรุณากรอกข้อมูลให้ครบถ้วน');
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    showAuthAlert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน');
+    return;
+  }
+
+  const users = getStoredUsers();
+  const existingUser = users.find(u => u.username.toLowerCase() === username.toLowerCase() || u.email.toLowerCase() === email.toLowerCase());
+  if (existingUser) {
+    showAuthAlert('ชื่อผู้ใช้หรืออีเมลนี้มีอยู่ในระบบแล้ว กรุณาเข้าสู่ระบบ');
+    return;
+  }
+
+  // Create new player account
+  const newUser = {
+    id: `user_${Date.now()}`,
+    username,
+    email,
+    password,
+    tgbBalance: 12500, // 12,500 TGB Starting Bonus
+    level: 1,
+    exp: 0,
+    tournamentsPlayed: 0,
+    tournamentsWon: 0,
+    itmCount: 0,
+    registeredAt: new Date().toISOString(),
+  };
+
+  users.push(newUser);
+  saveStoredUsers(users);
+
+  // Set session and update state
+  setLoggedInUser(newUser);
+  showAuthAlert('🎉 สมัครสมาชิกสำเร็จ! ได้รับโบนัส 12,500 TGB ทันที', 'success');
+  playSound('win');
+
+  setTimeout(() => {
+    closeAuthModal();
+  }, 900);
+}
+
+function handleFormLogin(event) {
+  event.preventDefault();
+  const identifier = document.getElementById('login-username-input').value.trim().toLowerCase();
+  const password = document.getElementById('login-password-input').value;
+
+  if (!identifier || !password) {
+    showAuthAlert('กรุณากรอกชื่อผู้ใช้/อีเมล และรหัสผ่าน');
+    return;
+  }
+
+  const users = getStoredUsers();
+  const user = users.find(u => (u.username.toLowerCase() === identifier || u.email.toLowerCase() === identifier) && u.password === password);
+
+  if (!user) {
+    // If not found in custom registered users, check if trying default demo account
+    if ((identifier === 'hero' || identifier === 'heroace' || identifier.includes('hero')) && password.length >= 4) {
+      const demoUser = {
+        id: 'user_hero',
+        username: 'HeroAce',
+        email: 'hero@tgbpoker.com',
+        tgbBalance: 12500,
+        level: 9,
+        exp: 36800,
+        tournamentsPlayed: 428,
+        tournamentsWon: 37,
+      };
+      setLoggedInUser(demoUser);
+      showAuthAlert('เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับกลับ HeroAce', 'success');
+      playSound('win');
+      setTimeout(closeAuthModal, 700);
+      return;
+    }
+
+    showAuthAlert('ชื่อผู้ใช้/อีเมล หรือรหัสผ่านไม่ถูกต้อง');
+    return;
+  }
+
+  setLoggedInUser(user);
+  showAuthAlert(`เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับ ${user.username}`, 'success');
+  playSound('win');
+
+  setTimeout(() => {
+    closeAuthModal();
+  }, 700);
+}
+
+function handleQuickGoogleLogin() {
+  const googleUser = {
+    id: `g_user_${Date.now()}`,
+    username: 'Google_Player',
+    email: 'player@gmail.com',
+    tgbBalance: 12500,
+    level: 2,
+    exp: 1500,
+    tournamentsPlayed: 5,
+    tournamentsWon: 1,
+  };
+  setLoggedInUser(googleUser);
+  showAuthAlert('เข้าสู่ระบบด้วย Google สำเร็จ!', 'success');
+  playSound('win');
+  setTimeout(closeAuthModal, 600);
+}
+
+function handleGuestPlay() {
+  const guestUser = {
+    id: `guest_${Date.now()}`,
+    username: `Guest_${Math.floor(1000 + Math.random() * 9000)}`,
+    email: 'guest@tgbpoker.local',
+    tgbBalance: 12500,
+    level: 1,
+    exp: 0,
+    tournamentsPlayed: 0,
+  };
+  setLoggedInUser(guestUser);
+  closeAuthModal();
+  playSound('chips');
+}
+
+function setLoggedInUser(user) {
+  try {
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(user));
+  } catch (e) {}
+
+  userProfile.id = user.id;
+  userProfile.username = user.username;
+  userProfile.tgbBalance = user.tgbBalance || 12500;
+  userProfile.level = user.level || 1;
+  userProfile.exp = user.exp || 0;
+
+  // Update Hero seat on table
+  if (activeTable && activeTable.seats && activeTable.seats[0]) {
+    activeTable.seats[0].name = `${user.username} (You)`;
+  }
+
+  updateAuthUI(true, user);
+}
+
+function handleLogout() {
+  try {
+    localStorage.removeItem(SESSION_STORAGE_KEY);
+  } catch (e) {}
+
+  userProfile.username = 'Guest';
+  userProfile.tgbBalance = 12500;
+  userProfile.level = 1;
+
+  if (activeTable && activeTable.seats && activeTable.seats[0]) {
+    activeTable.seats[0].name = 'Guest (You)';
+  }
+
+  updateAuthUI(false);
+  playSound('fold');
+}
+
+function updateAuthUI(isLoggedIn, user = null) {
+  const navLoginBtn = document.getElementById('nav-login-btn');
+  const navUserContainer = document.getElementById('nav-user-container');
+  const navName = document.getElementById('nav-user-name');
+  const navAvatar = document.getElementById('nav-user-avatar');
+  const navLevelBadge = document.getElementById('nav-user-level-badge');
+  const navRankTitle = document.getElementById('nav-user-rank-title');
+  const topBalance = document.getElementById('top-tgb-balance');
+
+  if (topBalance) {
+    topBalance.innerText = (userProfile.tgbBalance || 12500).toLocaleString() + '.00';
+  }
+
+  if (isLoggedIn && user) {
+    if (navLoginBtn) navLoginBtn.classList.add('hidden');
+    if (navUserContainer) navUserContainer.classList.remove('hidden');
+    if (navName) navName.innerText = user.username;
+    if (navAvatar) navAvatar.innerText = user.username.charAt(0).toUpperCase();
+    if (navLevelBadge) navLevelBadge.innerText = `Lv.${user.level || 1}`;
+    if (navRankTitle) {
+      navRankTitle.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>${user.level >= 5 ? 'Elite Rank' : 'Active Player'}`;
+    }
+  } else {
+    if (navLoginBtn) navLoginBtn.classList.remove('hidden');
+    if (navUserContainer) navUserContainer.classList.add('hidden');
+  }
+
+  renderPokerTable();
+}
+
+function restoreUserSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (raw) {
+      const user = JSON.parse(raw);
+      setLoggedInUser(user);
+      return;
+    }
+  } catch (e) {}
+
+  // If no saved user, default to guest with login button visible
+  updateAuthUI(false);
+}
+
+// ============================================================================
 // EXPOSE ALL HANDLERS TO WINDOW IMMEDIATELY
 // ============================================================================
 window.switchView = switchView;
@@ -749,11 +1047,20 @@ window.submitExamChoice = submitExamChoice;
 window.openSeedModal = openSeedModal;
 window.closeSeedModal = closeSeedModal;
 window.runManualVerification = runManualVerification;
+window.openAuthModal = openAuthModal;
+window.closeAuthModal = closeAuthModal;
+window.switchAuthTab = switchAuthTab;
+window.handleFormLogin = handleFormLogin;
+window.handleFormRegister = handleFormRegister;
+window.handleQuickGoogleLogin = handleQuickGoogleLogin;
+window.handleGuestPlay = handleGuestPlay;
+window.handleLogout = handleLogout;
 
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
 function initApp() {
+  restoreUserSession();
   renderTournamentCards();
   renderPokerTable();
   renderLedgerTable();
