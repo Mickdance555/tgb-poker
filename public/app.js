@@ -680,102 +680,11 @@ function runManualVerification() {
 }
 
 // ============================================================================
-// 11. FIREBASE AUTHENTICATION & CLOUD SYNC (Non-blocking Asynchronous)
+// 11. FIREBASE INTEGRATION (Silent Background Sync, No Popups)
 // ============================================================================
 let firebaseAuth = null;
 let firestoreDb = null;
 
-function openAuthModal() {
-  const modal = document.getElementById('auth-modal');
-  if (modal) modal.classList.remove('hidden');
-}
-
-function closeAuthModal() {
-  const modal = document.getElementById('auth-modal');
-  if (modal) modal.classList.add('hidden');
-}
-
-async function handleGoogleSignIn() {
-  if (!firebaseAuth) {
-    alert("Firebase is not initialized or running in local demo mode. To connect, paste your Firebase config in 'Custom Firebase Credentials'.");
-    return;
-  }
-  try {
-    const { signInWithPopup, GoogleAuthProvider } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js");
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(firebaseAuth, provider);
-    alert(`Welcome, ${result.user.displayName || result.user.email}! Connected via Google.`);
-    closeAuthModal();
-  } catch (err) {
-    alert(`Google Sign-In: ${err.message}`);
-  }
-}
-
-async function handleEmailLogin() {
-  const email = document.getElementById('auth-email-input').value.trim();
-  const password = document.getElementById('auth-pass-input').value;
-  if (!email || !password) {
-    alert('Please enter both email and password.');
-    return;
-  }
-  if (!firebaseAuth) {
-    alert("Firebase is in local guest mode. Please configure your Firebase keys.");
-    return;
-  }
-  try {
-    const { signInWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js");
-    const result = await signInWithEmailAndPassword(firebaseAuth, email, password);
-    alert(`Signed in as ${result.user.email}`);
-    closeAuthModal();
-  } catch (err) {
-    alert(`Login failed: ${err.message}`);
-  }
-}
-
-async function handleEmailRegister() {
-  const email = document.getElementById('auth-email-input').value.trim();
-  const password = document.getElementById('auth-pass-input').value;
-  if (!email || password.length < 6) {
-    alert('Please enter a valid email and password with at least 6 characters.');
-    return;
-  }
-  if (!firebaseAuth) {
-    alert("Firebase is in local guest mode. Please configure your Firebase keys.");
-    return;
-  }
-  try {
-    const { createUserWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js");
-    const result = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-    alert(`Account created for ${result.user.email}!`);
-    closeAuthModal();
-  } catch (err) {
-    alert(`Registration failed: ${err.message}`);
-  }
-}
-
-async function handleFirebaseSignOut() {
-  if (firebaseAuth) {
-    const { signOut } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js");
-    await signOut(firebaseAuth);
-    alert('Signed out successfully.');
-    window.location.reload();
-  }
-}
-
-function saveCustomFirebaseConfig() {
-  const rawJson = document.getElementById('custom-firebase-json').value.trim();
-  if (!rawJson) return;
-  try {
-    const parsed = JSON.parse(rawJson);
-    localStorage.setItem('TGB_CUSTOM_FIREBASE_CONFIG', JSON.stringify(parsed));
-    alert('Custom Firebase configuration saved! Reloading application...');
-    window.location.reload();
-  } catch (e) {
-    alert('Invalid JSON configuration. Please check the syntax.');
-  }
-}
-
-// Background Firebase Initializer
 async function tryInitFirebase() {
   try {
     let savedConfig = null;
@@ -786,7 +695,6 @@ async function tryInitFirebase() {
 
     const config = savedConfig || window.FIREBASE_CONFIG;
     if (!config || !config.apiKey || config.apiKey.includes('Placeholder')) {
-      console.log('[TGB Poker] Running in Standalone / Guest Mode');
       return;
     }
 
@@ -799,36 +707,17 @@ async function tryInitFirebase() {
     firestoreDb = getFirestore(app);
 
     onAuthStateChanged(firebaseAuth, (user) => {
-      const statusText = document.getElementById('firebase-status-text');
-      const authBtn = document.getElementById('firebase-auth-btn');
-      const navName = document.getElementById('nav-user-name');
-      const navAvatar = document.getElementById('nav-user-avatar');
-      const boxName = document.getElementById('auth-box-name');
-      const boxEmail = document.getElementById('auth-box-email');
-      const boxStatus = document.getElementById('auth-box-status');
-      const logoutBtn = document.getElementById('auth-logout-btn');
-
       if (user) {
         userProfile.id = user.uid;
         userProfile.username = user.displayName || user.email.split('@')[0];
-        if (statusText) statusText.innerText = userProfile.username;
-        if (authBtn) {
-          authBtn.className = 'flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold hover:bg-emerald-500/20 transition shadow-sm';
-        }
-        if (navName) navName.innerText = userProfile.username;
-        if (boxName) boxName.innerText = userProfile.username;
-        if (boxEmail) boxEmail.innerText = user.email;
-        if (boxStatus) {
-          boxStatus.className = 'text-[10px] text-emerald-400 font-semibold mt-0.5';
-          boxStatus.innerText = 'Connected to Firebase Cloud';
-        }
-        if (logoutBtn) logoutBtn.classList.remove('hidden');
 
+        const navName = document.getElementById('nav-user-name');
+        const navAvatar = document.getElementById('nav-user-avatar');
+        if (navName) navName.innerText = userProfile.username;
         if (user.photoURL && navAvatar) {
           navAvatar.innerHTML = `<img src="${user.photoURL}" class="w-full h-full object-cover">`;
         }
 
-        // Realtime balance listener
         const userRef = doc(firestoreDb, "users", user.uid);
         onSnapshot(userRef, (snap) => {
           if (snap.exists() && snap.data().tgbBalance !== undefined) {
@@ -839,10 +728,8 @@ async function tryInitFirebase() {
         });
       }
     });
-
-    console.log('[Firebase] Successfully connected to Firebase cloud');
   } catch (err) {
-    console.warn('[Firebase] Non-blocking init notice:', err);
+    // Fail silently in background
   }
 }
 
@@ -862,13 +749,6 @@ window.submitExamChoice = submitExamChoice;
 window.openSeedModal = openSeedModal;
 window.closeSeedModal = closeSeedModal;
 window.runManualVerification = runManualVerification;
-window.openAuthModal = openAuthModal;
-window.closeAuthModal = closeAuthModal;
-window.handleGoogleSignIn = handleGoogleSignIn;
-window.handleEmailLogin = handleEmailLogin;
-window.handleEmailRegister = handleEmailRegister;
-window.handleFirebaseSignOut = handleFirebaseSignOut;
-window.saveCustomFirebaseConfig = saveCustomFirebaseConfig;
 
 // ============================================================================
 // INITIALIZATION
