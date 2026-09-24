@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TGB POKER — Provably Fair MTT Poker Platform</title>
+  <title>TGB POKER — Provably Fair TGB Poker Platform</title>
   <!-- Tailwind CSS via CDN for rapid responsive modern styling -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -20,7 +20,7 @@
         </div>
         <div>
           <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">POKER</span>
-          <span class="hidden sm:inline-block ml-1 text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 font-semibold">MTT ENGINE</span>
+          <span class="hidden sm:inline-block ml-1 text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 font-semibold">TGB ENGINE</span>
         </div>
       </div>
 
@@ -120,7 +120,7 @@
           <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
         </div>
 
-        <!-- Dropdown Popup Menu (Matching MTT SPORTS Image 1) -->
+        <!-- Dropdown Popup Menu (Matching TGB POKER Image 1) -->
         <div id="user-dropdown-menu" class="hidden absolute right-0 top-12 w-64 bg-slate-900/95 backdrop-blur-xl border border-slate-800 rounded-3xl p-3 shadow-2xl z-50 space-y-2">
           <!-- Top Card -->
           <div onclick="switchView('profile'); closeUserDropdown();" class="p-3 rounded-2xl bg-slate-950/80 hover:bg-slate-800/80 transition cursor-pointer flex items-center justify-between border border-slate-800">
@@ -241,10 +241,10 @@
               Open A New Table, <br class="hidden sm:inline">Get <span class="bg-gradient-to-r from-amber-300 to-yellow-400 bg-clip-text text-transparent">+5BB Bonus</span>
             </h1>
             <p class="text-xs sm:text-sm text-slate-300 font-medium">
-              Win 50,000 MTT / TGB For Day (Limits To 5000-1000). Deep stack sitting with certified cryptographic fair-shuffle.
+              Win 50,000 TGB For Day (Limits To 5000-1000). Deep stack sitting with certified cryptographic fair-shuffle.
             </p>
             <div class="pt-2">
-              <button onclick="launchTable('mtt_001')" class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-sm transition-all shadow-xl shadow-amber-500/25 flex items-center gap-2 transform active:scale-95">
+              <button onclick="launchTable('tgb_001')" class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-sm transition-all shadow-xl shadow-amber-500/25 flex items-center gap-2 transform active:scale-95">
                 <i class="fa-solid fa-bolt"></i>
                 <span>Fast Open</span>
               </button>
@@ -260,7 +260,7 @@
               <div class="text-left">
                 <div class="text-xs text-amber-400 font-bold uppercase tracking-wider">Tournament & Cash</div>
                 <div class="text-lg font-black text-white">Daily Deposit Bonus</div>
-                <div class="text-xs text-slate-400">Claim up to 50,000 MTT instantly</div>
+                <div class="text-xs text-slate-400">Claim up to 50,000 TGB instantly</div>
               </div>
             </div>
           </div>
@@ -317,12 +317,12 @@
           <span class="text-xs font-bold text-slate-300 group-hover:text-white">NFT's</span>
         </div>
 
-        <!-- 6. MTT Points -->
+        <!-- 6. TGB Points -->
         <div onclick="openPointsModal()" class="group cursor-pointer flex flex-col items-center space-y-2">
           <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-900 border border-slate-800 group-hover:border-yellow-500/50 group-hover:bg-slate-800 transition flex items-center justify-center text-xl text-yellow-400 shadow-md">
             <i class="fa-solid fa-star"></i>
           </div>
-          <span class="text-xs font-bold text-slate-300 group-hover:text-white">MTT Points</span>
+          <span class="text-xs font-bold text-slate-300 group-hover:text-white">TGB Points</span>
         </div>
 
         <!-- 7. Tickets -->
@@ -350,7 +350,7 @@
             <div class="text-2xl font-black text-white">Tournaments</div>
             <div class="text-xs text-slate-400">Online Gaming Tournaments • High Guarantee</div>
             <div class="text-xs font-bold text-indigo-400">Join 25,000+ Players</div>
-            <button onclick="launchTable('mtt_001')" class="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs transition shadow-lg shadow-rose-600/30">
+            <button onclick="launchTable('tgb_001')" class="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs transition shadow-lg shadow-rose-600/30">
               Register
             </button>
           </div>
@@ -434,10 +434,10 @@
             <div class="text-sm font-black font-mono text-white">$5.49</div>
             <div class="text-[10px] text-slate-500">Vol 3.2M • 10 ₮ Bet</div>
           </div>
-          <!-- MTT/TGB -->
-          <div onclick="openFutureGuessModal('MTT', '90.22', '+12.45%')" class="bg-slate-900/90 border border-amber-500/40 p-3 rounded-2xl cursor-pointer transition space-y-1">
+          <!-- TGB -->
+          <div onclick="openFutureGuessModal('TGB', '90.22', '+12.45%')" class="bg-slate-900/90 border border-amber-500/40 p-3 rounded-2xl cursor-pointer transition space-y-1">
             <div class="flex items-center justify-between text-xs font-bold">
-              <span class="text-amber-400">MTT/TGB</span>
+              <span class="text-amber-400">TGB / USDT</span>
               <span class="text-emerald-400">+12.45%</span>
             </div>
             <div class="text-sm font-black font-mono text-amber-300">$90.22</div>
@@ -507,7 +507,7 @@
             <i class="fa-solid fa-trophy text-amber-400"></i>
             <span>Tournaments</span>
           </div>
-          <button onclick="launchTable('mtt_001')" class="text-xs font-bold text-amber-400 hover:text-amber-300">View All</button>
+          <button onclick="launchTable('tgb_001')" class="text-xs font-bold text-amber-400 hover:text-amber-300">View All</button>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -515,18 +515,18 @@
           <div class="bg-slate-900/90 border border-slate-800 rounded-3xl overflow-hidden hover:border-amber-500/40 transition shadow-lg flex flex-col justify-between">
             <div class="h-32 bg-gradient-to-tr from-amber-950 to-slate-900 p-4 relative flex flex-col justify-between">
               <span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 text-[10px] font-black w-max border border-amber-500/30">Guaranteed 25M</span>
-              <div class="font-black text-base text-white">Tickets to 25M MTT Pass</div>
+              <div class="font-black text-base text-white">Tickets to 25M TGB Pass</div>
             </div>
             <div class="p-4 space-y-3">
               <div class="flex items-center justify-between text-xs">
                 <span class="text-slate-400">Prize Pool</span>
-                <span class="font-black text-amber-400">25M MTT</span>
+                <span class="font-black text-amber-400">25M TGB</span>
               </div>
               <div class="flex items-center justify-between text-xs">
                 <span class="text-slate-400">Buy-In</span>
                 <span class="font-bold text-white">100 ₮</span>
               </div>
-              <button onclick="launchTable('mtt_001')" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition">
+              <button onclick="launchTable('tgb_001')" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition">
                 Register
               </button>
             </div>
@@ -536,18 +536,18 @@
           <div class="bg-slate-900/90 border border-slate-800 rounded-3xl overflow-hidden hover:border-amber-500/40 transition shadow-lg flex flex-col justify-between">
             <div class="h-32 bg-gradient-to-tr from-indigo-950 to-slate-900 p-4 relative flex flex-col justify-between">
               <span class="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-400 text-[10px] font-black w-max border border-blue-500/30">Starts in 25:00</span>
-              <div class="font-black text-base text-white">Tournament - 110MTT</div>
+              <div class="font-black text-base text-white">Tournament - 110 TGB</div>
             </div>
             <div class="p-4 space-y-3">
               <div class="flex items-center justify-between text-xs">
                 <span class="text-slate-400">Prize Pool</span>
-                <span class="font-black text-amber-400">110 MTT</span>
+                <span class="font-black text-amber-400">110 TGB</span>
               </div>
               <div class="flex items-center justify-between text-xs">
                 <span class="text-slate-400">Buy-In</span>
                 <span class="font-bold text-white">10 ₮</span>
               </div>
-              <button onclick="launchTable('mtt_001')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition">
+              <button onclick="launchTable('tgb_001')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition">
                 Register
               </button>
             </div>
@@ -557,18 +557,18 @@
           <div class="bg-slate-900/90 border border-slate-800 rounded-3xl overflow-hidden hover:border-amber-500/40 transition shadow-lg flex flex-col justify-between">
             <div class="h-32 bg-gradient-to-tr from-purple-950 to-slate-900 p-4 relative flex flex-col justify-between">
               <span class="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-400 text-[10px] font-black w-max border border-purple-500/30">Starts in 1h 15m</span>
-              <div class="font-black text-base text-white">Tournament - 440MTT</div>
+              <div class="font-black text-base text-white">Tournament - 440 TGB</div>
             </div>
             <div class="p-4 space-y-3">
               <div class="flex items-center justify-between text-xs">
                 <span class="text-slate-400">Prize Pool</span>
-                <span class="font-black text-amber-400">440 MTT</span>
+                <span class="font-black text-amber-400">440 TGB</span>
               </div>
               <div class="flex items-center justify-between text-xs">
                 <span class="text-slate-400">Buy-In</span>
                 <span class="font-bold text-white">25 ₮</span>
               </div>
-              <button onclick="launchTable('mtt_001')" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs transition">
+              <button onclick="launchTable('tgb_001')" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs transition">
                 Register
               </button>
             </div>
@@ -578,18 +578,18 @@
           <div class="bg-slate-900/90 border border-slate-800 rounded-3xl overflow-hidden hover:border-amber-500/40 transition shadow-lg flex flex-col justify-between">
             <div class="h-32 bg-gradient-to-tr from-emerald-950 to-slate-900 p-4 relative flex flex-col justify-between">
               <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[10px] font-black w-max border border-emerald-500/30">Starts in 10:00</span>
-              <div class="font-black text-base text-white">Tournament - 11MTT</div>
+              <div class="font-black text-base text-white">Tournament - 11 TGB</div>
             </div>
             <div class="p-4 space-y-3">
               <div class="flex items-center justify-between text-xs">
                 <span class="text-slate-400">Prize Pool</span>
-                <span class="font-black text-amber-400">11 MTT</span>
+                <span class="font-black text-amber-400">11 TGB</span>
               </div>
               <div class="flex items-center justify-between text-xs">
                 <span class="text-slate-400">Buy-In</span>
                 <span class="font-bold text-white">1 ₮</span>
               </div>
-              <button onclick="launchTable('mtt_001')" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition">
+              <button onclick="launchTable('tgb_001')" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition">
                 Register
               </button>
             </div>
@@ -613,7 +613,7 @@
             </div>
             <div class="text-xs font-black text-white truncate max-w-full">Younggod12</div>
             <div class="text-[10px] text-slate-400 font-mono">14,250 ₮</div>
-            <button onclick="launchTable('mtt_001')" class="w-full py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] transition">Focus</button>
+            <button onclick="launchTable('tgb_001')" class="w-full py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] transition">Focus</button>
           </div>
 
           <!-- BO456 -->
@@ -624,7 +624,7 @@
             </div>
             <div class="text-xs font-black text-white truncate max-w-full">BO456</div>
             <div class="text-[10px] text-slate-400 font-mono">38,100 ₮</div>
-            <button onclick="launchTable('mtt_001')" class="w-full py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] transition">Focus</button>
+            <button onclick="launchTable('tgb_001')" class="w-full py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] transition">Focus</button>
           </div>
 
           <!-- DEAD11 -->
@@ -635,7 +635,7 @@
             </div>
             <div class="text-xs font-black text-white truncate max-w-full">DEAD11</div>
             <div class="text-[10px] text-slate-400 font-mono">22,800 ₮</div>
-            <button onclick="launchTable('mtt_001')" class="w-full py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] transition">Focus</button>
+            <button onclick="launchTable('tgb_001')" class="w-full py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] transition">Focus</button>
           </div>
 
           <!-- miran95 -->
@@ -646,7 +646,7 @@
             </div>
             <div class="text-xs font-black text-white truncate max-w-full">miran95</div>
             <div class="text-[10px] text-slate-400 font-mono">19,400 ₮</div>
-            <button onclick="launchTable('mtt_001')" class="w-full py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] transition">Focus</button>
+            <button onclick="launchTable('tgb_001')" class="w-full py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] transition">Focus</button>
           </div>
 
           <!-- JG -->
@@ -657,7 +657,7 @@
             </div>
             <div class="text-xs font-black text-white truncate max-w-full">JG</div>
             <div class="text-[10px] text-slate-400 font-mono">51,000 ₮</div>
-            <button onclick="launchTable('mtt_001')" class="w-full py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] transition">Focus</button>
+            <button onclick="launchTable('tgb_001')" class="w-full py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] transition">Focus</button>
           </div>
 
           <!-- Ali -->
@@ -668,7 +668,7 @@
             </div>
             <div class="text-xs font-black text-white truncate max-w-full">Ali</div>
             <div class="text-[10px] text-slate-400 font-mono">31,500 ₮</div>
-            <button onclick="launchTable('mtt_001')" class="w-full py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] transition">Focus</button>
+            <button onclick="launchTable('tgb_001')" class="w-full py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] transition">Focus</button>
           </div>
         </div>
       </div>
@@ -687,13 +687,13 @@
           <!-- News 1 -->
           <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-4 space-y-2 hover:border-slate-700 transition">
             <span class="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-400 text-[10px] font-black">Tournament</span>
-            <div class="font-bold text-xs text-white line-clamp-2">Vietnam Poker Tourney announced with 200,000 MTT guaranteed prize pool</div>
+            <div class="font-bold text-xs text-white line-clamp-2">Vietnam Poker Tourney announced with 200,000 TGB guaranteed prize pool</div>
             <div class="text-[10px] text-slate-500">2026-09-24 • 1,280 views</div>
           </div>
           <!-- News 2 -->
           <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-4 space-y-2 hover:border-slate-700 transition">
             <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[10px] font-black">Rewards</span>
-            <div class="font-bold text-xs text-white line-clamp-2">Millions of MTT tokens distributed to Season 1 champions and leaderboard masters</div>
+            <div class="font-bold text-xs text-white line-clamp-2">Millions of TGB tokens distributed to Season 1 champions and leaderboard masters</div>
             <div class="text-[10px] text-slate-500">2026-09-23 • 2,450 views</div>
           </div>
           <!-- News 3 -->
@@ -723,7 +723,7 @@
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <!-- Room 1 -->
-          <div onclick="launchTable('mtt_001')" class="bg-slate-900/90 border border-slate-800 p-4 rounded-3xl hover:border-amber-500/40 cursor-pointer transition space-y-2">
+          <div onclick="launchTable('tgb_001')" class="bg-slate-900/90 border border-slate-800 p-4 rounded-3xl hover:border-amber-500/40 cursor-pointer transition space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-xl">🇹🇭</span>
               <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">Open</span>
@@ -733,7 +733,7 @@
           </div>
 
           <!-- Room 2 -->
-          <div onclick="launchTable('mtt_001')" class="bg-slate-900/90 border border-slate-800 p-4 rounded-3xl hover:border-amber-500/40 cursor-pointer transition space-y-2">
+          <div onclick="launchTable('tgb_001')" class="bg-slate-900/90 border border-slate-800 p-4 rounded-3xl hover:border-amber-500/40 cursor-pointer transition space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-xl">🇻🇳</span>
               <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">Open</span>
@@ -743,7 +743,7 @@
           </div>
 
           <!-- Room 3 -->
-          <div onclick="launchTable('mtt_001')" class="bg-slate-900/90 border border-slate-800 p-4 rounded-3xl hover:border-amber-500/40 cursor-pointer transition space-y-2">
+          <div onclick="launchTable('tgb_001')" class="bg-slate-900/90 border border-slate-800 p-4 rounded-3xl hover:border-amber-500/40 cursor-pointer transition space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-xl">🇹🇼</span>
               <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">Open</span>
@@ -753,7 +753,7 @@
           </div>
 
           <!-- Room 4 -->
-          <div onclick="launchTable('mtt_001')" class="bg-slate-900/90 border border-slate-800 p-4 rounded-3xl hover:border-amber-500/40 cursor-pointer transition space-y-2">
+          <div onclick="launchTable('tgb_001')" class="bg-slate-900/90 border border-slate-800 p-4 rounded-3xl hover:border-amber-500/40 cursor-pointer transition space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-xl">🇯🇵</span>
               <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">Open</span>
@@ -959,10 +959,10 @@
         </div>
       </div>
 
-      <!-- 12. INFO BANNER: What is MTT Sports / TGB Poker? -->
+      <!-- 12. INFO BANNER: What is TGB Poker? -->
       <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-950/50 via-slate-900 to-indigo-950/50 border border-amber-500/20 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
         <div class="space-y-2 max-w-3xl">
-          <div class="text-lg font-black text-amber-400">What is TGB POKER & MTT SPORTS?</div>
+          <div class="text-lg font-black text-amber-400">What is TGB POKER?</div>
           <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
             TGB POKER is the next-generation decentralized Web3 tournament poker platform. Every single hand is dealt with mathematically Provably Fair SHA-256 Commit-Reveal cryptography. Players enjoy zero house tampering, instant token settlements, and cross-platform desktop & mobile play.
           </p>
@@ -972,12 +972,12 @@
         </div>
       </div>
 
-      <!-- 13. MTT STAR (Champions / Hall of Fame) -->
+      <!-- 13. TGB STAR (Champions / Hall of Fame) -->
       <div class="space-y-3">
         <div class="flex items-center justify-between">
           <div class="text-sm font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
             <i class="fa-solid fa-star text-amber-400"></i>
-            <span>MTT Star</span>
+            <span>TGB Star</span>
           </div>
           <div class="flex items-center space-x-1.5">
             <button class="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs"><i class="fa-solid fa-chevron-left"></i></button>
@@ -1034,11 +1034,11 @@
         </div>
       </div>
 
-      <!-- 14. MTT FEATURES (4 Cards) -->
+      <!-- 14. TGB FEATURES (4 Cards) -->
       <div class="space-y-3">
         <div class="text-sm font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
           <i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i>
-          <span>MTT Features</span>
+          <span>TGB Features</span>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1088,16 +1088,16 @@
         </div>
       </div>
 
-      <!-- 16. MTT SPORTS & TGB FOOTER -->
+      <!-- 16. TGB POKER FOOTER -->
       <footer class="pt-8 pb-12 border-t border-slate-800 text-xs text-slate-400 space-y-8">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div class="space-y-3 md:col-span-2">
             <div class="flex items-center space-x-2">
               <div class="w-7 h-7 rounded-lg bg-amber-500 flex items-center justify-center font-black text-slate-950 text-xs">TGB</div>
-              <span class="font-black text-white text-sm">MTT SPORTS</span>
+              <span class="font-black text-white text-sm">TGB POKER</span>
             </div>
             <p class="text-[11px] leading-relaxed text-slate-500 max-w-md">
-              MTT SPORTS is an international Provably Fair online tournament platform. Operated under strict fair-play standards with GLI (Gaming Laboratories International) certified RNG algorithms and Web3 smart contract automated prize settlement.
+              TGB POKER is an international Provably Fair online tournament platform. Operated under strict fair-play standards with GLI (Gaming Laboratories International) certified RNG algorithms and Web3 smart contract automated prize settlement.
             </p>
             <div class="flex items-center space-x-3 pt-2">
               <span class="px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-[10px] flex items-center gap-1">
@@ -1128,7 +1128,7 @@
               <a href="#" class="hover:text-amber-400"><i class="fa-brands fa-youtube"></i></a>
             </div>
             <div class="text-[10px] text-slate-500 pt-2">
-              © 2026 TGB MTT SPORTS. All rights reserved.
+              © 2026 TGB POKER. All rights reserved.
             </div>
           </div>
         </div>
@@ -1137,7 +1137,7 @@
     </section>
 
     <!-- ========================================================================= -->
-    <!-- VIEW 2: MTT SPORTS POKER ARENA (Matching Image media_1790237221725.png)   -->
+    <!-- VIEW 2: TGB POKER ARENA (Full Live Felt & Game Engine)                      -->
     <!-- ========================================================================= -->
     <section id="view-table" class="poker-arena-bg min-h-screen flex-1 flex flex-col justify-between w-full relative overflow-hidden select-none hidden p-2 sm:p-4">
       
@@ -1182,7 +1182,7 @@
           <!-- Quick Chips Stack Add Button -->
           <div onclick="claimFaucet()" title="Quick Reload / Faucet" class="relative cursor-pointer group flex items-center justify-center">
             <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 border border-emerald-300 flex items-center justify-center text-slate-950 font-black text-xs shadow-lg group-hover:scale-105 transition">
-              MTT
+              TGB
             </div>
             <span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border border-slate-950 text-white flex items-center justify-center text-[10px] font-black">+</span>
           </div>
@@ -1234,21 +1234,21 @@
         </div>
 
         <!-- THE FELT OVAL TABLE (Spacious center) -->
-        <div class="mtt-poker-felt w-[88%] sm:w-[86%] lg:w-[84%] h-[340px] sm:h-[380px] lg:h-[420px] flex flex-col items-center justify-center select-none overflow-hidden relative">
+        <div class="tgb-poker-felt w-[88%] sm:w-[86%] lg:w-[84%] h-[340px] sm:h-[380px] lg:h-[420px] flex flex-col items-center justify-center select-none overflow-hidden relative">
           
-          <!-- Dual MTT SPORTS Watermarks on Left & Right Felt -->
+          <!-- Dual TGB POKER Watermarks on Left & Right Felt -->
           <div class="absolute left-10 sm:left-20 top-1/2 -translate-y-1/2 pointer-events-none select-none text-emerald-300/10 font-black text-3xl sm:text-5xl font-mono tracking-widest text-center">
-            MTT<br><span class="text-xl sm:text-3xl">SPORTS</span>
+            TGB<br><span class="text-xl sm:text-3xl">POKER</span>
           </div>
           <div class="absolute right-10 sm:right-20 top-1/2 -translate-y-1/2 pointer-events-none select-none text-emerald-300/10 font-black text-3xl sm:text-5xl font-mono tracking-widest text-center">
-            MTT<br><span class="text-xl sm:text-3xl">SPORTS</span>
+            TGB<br><span class="text-xl sm:text-3xl">POKER</span>
           </div>
 
           <!-- Felt Center Table Metadata (Players: 6-Max, Blinds: 0.5/1/2, Newbie) -->
           <div class="absolute bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2 text-center pointer-events-none space-y-0.5 opacity-40">
             <div class="text-[9px] font-bold text-emerald-200 uppercase tracking-widest">Players: <span class="text-white">6 - Max</span></div>
             <div class="text-[9px] font-bold text-emerald-200 uppercase tracking-widest">Blinds: <span class="text-white">0.5 / 1 / 2</span></div>
-            <div class="text-xs sm:text-sm font-black text-emerald-100 font-mono tracking-wider">Newbie 0.5/1 MTT</div>
+            <div class="text-xs sm:text-sm font-black text-emerald-100 font-mono tracking-wider">Newbie 0.5/1 TGB</div>
           </div>
 
           <!-- Pot Badge (Placed directly below Dealer) -->
@@ -1476,7 +1476,7 @@
     </section>
 
     <!-- ========================================================================= -->
-    <!-- VIEW 4: USER PROFILE (Exact MTT SPORTS Design matching Image 2) -->
+    <!-- VIEW 4: USER PROFILE (TGB POKER Design) -->
     <!-- ========================================================================= -->
     <section id="view-profile" class="p-4 lg:p-8 max-w-5xl mx-auto w-full space-y-6 hidden">
       
@@ -1634,7 +1634,7 @@
             </div>
             <div class="text-xs text-slate-400">No Tournament Records Yet</div>
             <button onclick="switchView('lobby')" class="px-4 py-1.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold hover:bg-amber-500/20 transition">
-              Play Daily MTT Tournament
+              Play Daily TGB Tournament
             </button>
           </div>
         </div>
@@ -1699,7 +1699,7 @@
               <i class="fa-solid fa-ticket"></i>
               <span>เข้าแข่งชิงตั๋ว (5 TGB)</span>
             </button>
-            <button onclick="launchTable('mtt_satellite_2000')" class="px-4 py-3 rounded-2xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-300 hover:text-white font-bold text-xs transition border border-slate-700 flex items-center justify-center gap-1.5">
+            <button onclick="launchTable('tgb_satellite_2000')" class="px-4 py-3 rounded-2xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-300 hover:text-white font-bold text-xs transition border border-slate-700 flex items-center justify-center gap-1.5">
               <i class="fa-regular fa-eye"></i>
               <span>ดูสดฟรี</span>
             </button>
@@ -1900,7 +1900,7 @@
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Salt (Tournament:Hand)</label>
-              <input id="verify-salt" type="text" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-slate-300" placeholder="mtt_001:1">
+              <input id="verify-salt" type="text" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-slate-300" placeholder="tgb_001:1">
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Client Seed</label>
@@ -2447,10 +2447,10 @@
       <div class="space-y-3">
         <div class="p-3.5 rounded-2xl bg-slate-950 border border-amber-500/30 flex items-center justify-between">
           <div>
-            <div class="font-black text-xs text-amber-400">🎫 25M MTT Pass Ticket</div>
+            <div class="font-black text-xs text-amber-400">🎫 25M TGB Pass Ticket</div>
             <div class="text-[10px] text-slate-400">Valid until 2026-10-01 • Free Entry</div>
           </div>
-          <button onclick="launchTable('mtt_001'); closeTicketsModal();" class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition">
+          <button onclick="launchTable('tgb_001'); closeTicketsModal();" class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition">
             Use
           </button>
         </div>

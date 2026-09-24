@@ -313,7 +313,7 @@ function evaluateBestHand(cards) {
 // 4. USER PROFILE & CAREER METRICS (Strictly 0 for new players)
 // ============================================================================
 // ============================================================================
-// 4. USER PROFILE & CAREER METRICS (Exact MTT SPORTS Model)
+// 4. USER PROFILE & CAREER METRICS (TGB POKER Model)
 // ============================================================================
 let userProfile = {
   id: 'user_mickdance',
@@ -351,8 +351,8 @@ let userProfile = {
 let isSpectatorMode = true;
 
 let activeTable = {
-  id: 'table_daily_mtt_01',
-  title: 'Newbie 0.5/1 MTT • 6-Max',
+  id: 'table_daily_tgb_01',
+  title: 'Newbie 0.5/1 TGB • 6-Max',
   smallBlind: 0.5,
   bigBlind: 1,
   ante: 0,
@@ -1814,9 +1814,9 @@ function onRaiseInputChange(val) {
 // ============================================================================
 const TOURNAMENTS_DATA = [
   {
-    id: 'mtt_001',
-    title: '#001 Daily Standard MTT',
-    type: 'Daily MTT',
+    id: 'tgb_001',
+    title: '#001 Daily Standard TGB',
+    type: 'Daily TGB',
     buyIn: 500,
     prizePool: 50000,
     players: '82 / 100',
@@ -1825,7 +1825,7 @@ const TOURNAMENTS_DATA = [
     badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
   },
   {
-    id: 'mtt_002',
+    id: 'tgb_002',
     title: '#002 Sunday Major Championship',
     type: 'Major',
     buyIn: 2500,
@@ -1836,7 +1836,7 @@ const TOURNAMENTS_DATA = [
     badge: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
   },
   {
-    id: 'mtt_003',
+    id: 'tgb_003',
     title: '#003 Turbo Knockout Bounty',
     type: 'Turbo KO',
     buyIn: 300,
@@ -1847,7 +1847,7 @@ const TOURNAMENTS_DATA = [
     badge: 'bg-rose-500/10 text-rose-400 border-rose-500/30',
   },
   {
-    id: 'mtt_004',
+    id: 'tgb_004',
     title: '#004 Academy Freeroll',
     type: 'Freeroll',
     buyIn: 0,
@@ -2814,13 +2814,13 @@ const CARD_SKINS_DATA = [
     previewClass: 'skin-gold_royale',
   },
   {
-    id: 'emerald_mtt',
-    name: 'MTT Emerald Championship',
-    nameTh: 'เอ็มทีที เอเมอรัลด์ แชมเปียนชิป',
+    id: 'emerald_tgb',
+    name: 'TGB Emerald Championship',
+    nameTh: 'ทีจีบี เอเมอรัลด์ แชมเปียนชิป',
     priceGtb: 500,
     priceTgb: 2000,
     desc: 'ลายเคฟล่าคาร์บอนขลิบทองมรกตเฉพาะแชมป์ทัวร์นาเมนต์',
-    previewClass: 'skin-emerald_mtt',
+    previewClass: 'skin-emerald_tgb',
   },
 ];
 
@@ -3547,7 +3547,7 @@ function closeTicketsModal() {
 }
 
 function openPointsModal() {
-  alert('⭐ MTT Points Shop: คุณมี 1,250 Points สามารถแลกชิปหรือกรอบรูปพิเศษได้ใน Season 2!');
+  alert('⭐ TGB Points Shop: คุณมี 1,250 Points สามารถแลกชิปหรือกรอบรูปพิเศษได้ใน Season 2!');
 }
 
 // ============================================================================
