@@ -2155,6 +2155,11 @@ function updateAuthUI(isLoggedIn, user = null) {
     topBalance.innerText = (userProfile.tgbBalance || 12500).toLocaleString() + '.00';
   }
 
+  const homeWelcome = document.getElementById('home-welcome-name');
+  if (homeWelcome) {
+    homeWelcome.innerText = userProfile.username || 'MICKDANCE';
+  }
+
   if (isLoggedIn && user) {
     if (navLoginBtn) navLoginBtn.classList.add('hidden');
     if (navUserContainer) navUserContainer.classList.remove('hidden');
@@ -2200,6 +2205,346 @@ function restoreUserSession() {
 }
 
 // ============================================================================
+// 10. MINI-GAMES & HOME INTERACTIVITY (Slots, Mines, Future Guess, Tickets, Activity)
+// ============================================================================
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
+}
+
+function openMiniGame(type) {
+  if (type === 'slots') {
+    const modal = document.getElementById('modal-slots');
+    const balEl = document.getElementById('slot-user-balance');
+    if (balEl) balEl.innerText = (userProfile.tgbBalance || 0).toLocaleString();
+    if (modal) modal.classList.remove('hidden');
+  } else if (type === 'mines') {
+    const modal = document.getElementById('modal-mines');
+    if (modal) modal.classList.remove('hidden');
+    initMinesGrid();
+  } else if (type === 'plinko' || type === 'crash') {
+    alert(`🎮 มินิเกม ${type.toUpperCase()} กำลังเตรียมเปิดในอัปเดตถัดไป! ขณะนี้สามารถเล่น SLOTS และ MINES ได้ทันทีครับ`);
+  }
+}
+
+function closeMiniGame(type) {
+  const modal = document.getElementById(`modal-${type}`);
+  if (modal) modal.classList.add('hidden');
+}
+
+// SLOTS LOGIC
+let currentSlotBet = 10;
+let isSlotSpinning = false;
+const slotSymbols = ['🍒', '🍋', '⭐', '7️⃣', '💎', '🔔'];
+
+function setSlotBet(amt) {
+  currentSlotBet = amt;
+  document.querySelectorAll('.slot-bet-btn').forEach(btn => {
+    if (parseInt(btn.getAttribute('data-bet'), 10) === amt) {
+      btn.classList.add('bg-purple-950/60', 'border-purple-500/40', 'text-purple-300');
+      btn.classList.remove('bg-slate-950', 'border-slate-800', 'text-slate-300');
+    } else {
+      btn.classList.remove('bg-purple-950/60', 'border-purple-500/40', 'text-purple-300');
+      btn.classList.add('bg-slate-950', 'border-slate-800', 'text-slate-300');
+    }
+  });
+}
+
+function spinSlots() {
+  if (isSlotSpinning) return;
+  if ((userProfile.tgbBalance || 0) < currentSlotBet) {
+    alert('ยอดคงเหลือ TGB ไม่เพียงพอ กรุณากดรับโบนัส Faucet ใน Activity Center!');
+    return;
+  }
+
+  isSlotSpinning = true;
+  userProfile.tgbBalance -= currentSlotBet;
+  updateAuthUI(true, userProfile);
+  playSound('chips');
+
+  const r1 = document.getElementById('slot-reel-1');
+  const r2 = document.getElementById('slot-reel-2');
+  const r3 = document.getElementById('slot-reel-3');
+  const msg = document.getElementById('slot-result-msg');
+  const btn = document.getElementById('btn-spin-slots');
+  const balEl = document.getElementById('slot-user-balance');
+
+  if (balEl) balEl.innerText = userProfile.tgbBalance.toLocaleString();
+  if (msg) msg.innerText = 'Spinning... Good luck! 🎰';
+  if (btn) btn.disabled = true;
+
+  let spins = 0;
+  const spinInterval = setInterval(() => {
+    r1.innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+    r2.innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+    r3.innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+    spins++;
+    if (spins > 10) {
+      clearInterval(spinInterval);
+      finalizeSlotSpin(r1, r2, r3, msg, btn);
+    }
+  }, 70);
+}
+
+function finalizeSlotSpin(r1, r2, r3, msg, btn) {
+  // Fair generous odds
+  const roll = Math.random();
+  let s1, s2, s3;
+  if (roll < 0.08) {
+    s1 = s2 = s3 = '7️⃣'; // 100x Jackpot
+  } else if (roll < 0.20) {
+    s1 = s2 = s3 = '💎'; // 50x
+  } else if (roll < 0.40) {
+    s1 = s2 = s3 = '⭐'; // 20x
+  } else if (roll < 0.65) {
+    s1 = s2 = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+    s3 = slotSymbols[Math.floor(Math.random() * slotSymbols.length)]; // 2 of a kind
+  } else {
+    s1 = slotSymbols[0];
+    s2 = slotSymbols[1];
+    s3 = slotSymbols[2];
+  }
+
+  r1.innerText = s1;
+  r2.innerText = s2;
+  r3.innerText = s3;
+
+  let multiplier = 0;
+  if (s1 === s2 && s2 === s3) {
+    if (s1 === '7️⃣') multiplier = 100;
+    else if (s1 === '💎') multiplier = 50;
+    else if (s1 === '⭐') multiplier = 20;
+    else multiplier = 10;
+  } else if (s1 === s2 || s2 === s3 || s1 === s3) {
+    multiplier = 2;
+  }
+
+  if (multiplier > 0) {
+    const won = currentSlotBet * multiplier;
+    userProfile.tgbBalance += won;
+    updateAuthUI(true, userProfile);
+    playSound('win');
+    if (msg) msg.innerHTML = `🎉 <span class="text-amber-300 font-black">BIG WIN! ${multiplier}X (+${won.toLocaleString()} ₮)</span>`;
+  } else {
+    playSound('fold');
+    if (msg) msg.innerText = 'Better luck next spin! Try again.';
+  }
+
+  const balEl = document.getElementById('slot-user-balance');
+  if (balEl) balEl.innerText = userProfile.tgbBalance.toLocaleString();
+  isSlotSpinning = false;
+  if (btn) btn.disabled = false;
+}
+
+// MINES LOGIC
+let minesGameState = {
+  active: false,
+  bet: 50,
+  mineIndices: [],
+  revealedCount: 0,
+  multiplier: 1.0,
+};
+
+function initMinesGrid() {
+  const grid = document.getElementById('mines-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (let i = 0; i < 25; i++) {
+    const tile = document.createElement('button');
+    tile.className = 'mine-tile h-12 rounded-xl bg-slate-900 border border-slate-800 text-lg flex items-center justify-center hover:bg-slate-800 transition font-bold';
+    tile.setAttribute('data-idx', i);
+    tile.onclick = () => clickMineTile(i);
+    grid.appendChild(tile);
+  }
+  document.getElementById('mines-multiplier').innerText = '1.00x';
+  document.getElementById('mines-next-win').innerText = '0 ₮';
+  document.getElementById('btn-cashout-mines').disabled = true;
+  document.getElementById('btn-cashout-mines').classList.add('opacity-50', 'cursor-not-allowed');
+  document.getElementById('btn-start-mines').disabled = false;
+  document.getElementById('btn-start-mines').classList.remove('opacity-50');
+}
+
+function startMinesGame() {
+  if (minesGameState.active) return;
+  if ((userProfile.tgbBalance || 0) < 50) {
+    alert('ยอดคงเหลือ TGB ไม่เพียงพอ (ต้องการ 50 ₮)');
+    return;
+  }
+
+  userProfile.tgbBalance -= 50;
+  updateAuthUI(true, userProfile);
+  playSound('chips');
+
+  // Randomly place 3 mines
+  const mines = [];
+  while (mines.length < 3) {
+    const idx = Math.floor(Math.random() * 25);
+    if (!mines.includes(idx)) mines.push(idx);
+  }
+
+  minesGameState = {
+    active: true,
+    bet: 50,
+    mineIndices: mines,
+    revealedCount: 0,
+    multiplier: 1.0,
+  };
+
+  initMinesGrid();
+
+  document.getElementById('btn-start-mines').disabled = true;
+  document.getElementById('btn-start-mines').classList.add('opacity-50');
+  const cashBtn = document.getElementById('btn-cashout-mines');
+  cashBtn.disabled = false;
+  cashBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+  cashBtn.innerText = 'Cash Out (50 ₮)';
+}
+
+function clickMineTile(idx) {
+  if (!minesGameState.active) return;
+  const grid = document.getElementById('mines-grid');
+  const tile = grid.children[idx];
+  if (!tile || tile.disabled) return;
+
+  tile.disabled = true;
+
+  if (minesGameState.mineIndices.includes(idx)) {
+    // BOOM!
+    tile.innerHTML = '💣';
+    tile.classList.add('bg-rose-950', 'border-rose-500');
+    playSound('fold');
+    minesGameState.active = false;
+
+    // Reveal other mines
+    minesGameState.mineIndices.forEach(mIdx => {
+      const mTile = grid.children[mIdx];
+      if (mTile) {
+        mTile.innerHTML = '💣';
+        mTile.classList.add('bg-rose-950/60', 'border-rose-500/50');
+      }
+    });
+
+    document.getElementById('btn-cashout-mines').disabled = true;
+    document.getElementById('btn-cashout-mines').classList.add('opacity-50', 'cursor-not-allowed');
+    document.getElementById('btn-start-mines').disabled = false;
+    document.getElementById('btn-start-mines').classList.remove('opacity-50');
+    alert('💥 โดนระเบิด! ไม่เป็นไร ลองเล่นรอบใหม่ได้เลย');
+  } else {
+    // GEM!
+    tile.innerHTML = '💎';
+    tile.classList.add('bg-emerald-950', 'border-emerald-500', 'text-emerald-400');
+    playSound('chips');
+
+    minesGameState.revealedCount++;
+    const multipliers = [1.25, 1.65, 2.15, 2.85, 3.80, 5.20, 7.50, 11.0, 17.5, 29.0];
+    minesGameState.multiplier = multipliers[Math.min(minesGameState.revealedCount - 1, multipliers.length - 1)];
+
+    const curWin = Math.round(minesGameState.bet * minesGameState.multiplier);
+    document.getElementById('mines-multiplier').innerText = `${minesGameState.multiplier}x`;
+    document.getElementById('mines-next-win').innerText = `${curWin} ₮`;
+    document.getElementById('btn-cashout-mines').innerText = `Cash Out (${curWin} ₮)`;
+  }
+}
+
+function cashoutMines() {
+  if (!minesGameState.active) return;
+  const won = Math.round(minesGameState.bet * minesGameState.multiplier);
+  userProfile.tgbBalance += won;
+  updateAuthUI(true, userProfile);
+  playSound('win');
+  minesGameState.active = false;
+
+  document.getElementById('btn-cashout-mines').disabled = true;
+  document.getElementById('btn-cashout-mines').classList.add('opacity-50', 'cursor-not-allowed');
+  document.getElementById('btn-start-mines').disabled = false;
+  document.getElementById('btn-start-mines').classList.remove('opacity-50');
+
+  alert(`🎉 Cash Out สำเร็จ! คุณได้รับ +${won.toLocaleString()} ₮ (${minesGameState.multiplier}x)`);
+}
+
+// FUTURE GUESS LOGIC
+let fgCurrentAsset = 'BTC';
+function openFutureGuessModal(asset, price, change) {
+  fgCurrentAsset = asset;
+  document.getElementById('fg-asset-title').innerText = `${asset} / USDT`;
+  document.getElementById('fg-asset-price').innerText = `$${price}`;
+  document.getElementById('fg-asset-change').innerText = `24h Change: ${change}`;
+  document.getElementById('fg-countdown-display').innerText = 'Ready';
+  const modal = document.getElementById('modal-future-guess');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeFutureGuessModal() {
+  const modal = document.getElementById('modal-future-guess');
+  if (modal) modal.classList.add('hidden');
+}
+
+function executeFutureGuess(dir) {
+  if ((userProfile.tgbBalance || 0) < 10) {
+    alert('ยอดคงเหลือ TGB ไม่เพียงพอ (ต้องการ 10 ₮)');
+    return;
+  }
+  userProfile.tgbBalance -= 10;
+  updateAuthUI(true, userProfile);
+  playSound('chips');
+
+  const display = document.getElementById('fg-countdown-display');
+  let count = 5;
+  display.innerText = `Predicting ${dir}... Result in ${count}s`;
+
+  const timer = setInterval(() => {
+    count--;
+    if (count > 0) {
+      display.innerText = `Predicting ${dir}... Result in ${count}s`;
+    } else {
+      clearInterval(timer);
+      const isWin = Math.random() < 0.55;
+      if (isWin) {
+        userProfile.tgbBalance += 20;
+        updateAuthUI(true, userProfile);
+        playSound('win');
+        display.innerHTML = `🎉 <span class="text-emerald-400 font-black">ถูกต้อง! ได้รับ +20 ₮</span>`;
+      } else {
+        playSound('fold');
+        display.innerHTML = `❌ <span class="text-rose-400 font-black">ราคาแกว่งไปทิศทางตรงข้าม</span>`;
+      }
+    }
+  }, 1000);
+}
+
+// ACTIVITY & TICKETS & POINTS MODALS
+function openActivityCenterModal() {
+  const modal = document.getElementById('modal-activity-center');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeActivityCenterModal() {
+  const modal = document.getElementById('modal-activity-center');
+  if (modal) modal.classList.add('hidden');
+}
+
+function claimActivityBonus(type, amount) {
+  userProfile.tgbBalance = (userProfile.tgbBalance || 0) + amount;
+  updateAuthUI(true, userProfile);
+  playSound('win');
+  alert(`🎉 รับโบนัสสำเร็จ! +${amount.toLocaleString()} ₮ เพิ่มเข้ากระเป๋าเรียบร้อย`);
+}
+
+function openTicketsModal() {
+  const modal = document.getElementById('modal-tickets');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeTicketsModal() {
+  const modal = document.getElementById('modal-tickets');
+  if (modal) modal.classList.add('hidden');
+}
+
+function openPointsModal() {
+  alert('⭐ MTT Points Shop: คุณมี 1,250 Points สามารถแลกชิปหรือกรอบรูปพิเศษได้ใน Season 2!');
+}
+
+// ============================================================================
 // EXPOSE ALL HANDLERS TO WINDOW IMMEDIATELY
 // ============================================================================
 window.switchView = switchView;
@@ -2231,6 +2576,23 @@ window.handleAvatarFileUpload = handleAvatarFileUpload;
 window.selectAvatarFrame = selectAvatarFrame;
 window.updateProfilePreview = updateProfilePreview;
 window.saveProfileCustomization = saveProfileCustomization;
+window.scrollToSection = scrollToSection;
+window.openMiniGame = openMiniGame;
+window.closeMiniGame = closeMiniGame;
+window.setSlotBet = setSlotBet;
+window.spinSlots = spinSlots;
+window.startMinesGame = startMinesGame;
+window.clickMineTile = clickMineTile;
+window.cashoutMines = cashoutMines;
+window.openFutureGuessModal = openFutureGuessModal;
+window.closeFutureGuessModal = closeFutureGuessModal;
+window.executeFutureGuess = executeFutureGuess;
+window.openActivityCenterModal = openActivityCenterModal;
+window.closeActivityCenterModal = closeActivityCenterModal;
+window.claimActivityBonus = claimActivityBonus;
+window.openTicketsModal = openTicketsModal;
+window.closeTicketsModal = closeTicketsModal;
+window.openPointsModal = openPointsModal;
 
 // ============================================================================
 // INITIALIZATION
