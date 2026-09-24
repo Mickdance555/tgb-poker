@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TGB POKER — Provably Fair MTT Poker Platform</title>
+  <!-- Tailwind CSS via CDN for rapid responsive modern styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-slate-950">
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-4 lg:px-8 py-3 flex items-center justify-between shadow-xl">
+    <div class="flex items-center space-x-6">
+      <div class="flex items-center space-x-2 cursor-pointer" onclick="switchView('lobby')">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 via-yellow-500 to-amber-300 flex items-center justify-center shadow-lg shadow-amber-500/20 font-black text-slate-950 text-xl tracking-wider">
+          TGB
+        </div>
+        <div>
+          <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">POKER</span>
+          <span class="hidden sm:inline-block ml-1 text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 font-semibold">MTT ENGINE</span>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="hidden md:flex items-center space-x-1">
+        <button onclick="switchView('lobby')" id="nav-lobby" class="nav-btn active px-3.5 py-2 rounded-lg text-sm font-semibold transition-all">
+          <i class="fa-solid fa-trophy mr-1.5 text-amber-400"></i>Lobby
+        </button>
+        <button onclick="switchView('table')" id="nav-table" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all">
+          <i class="fa-solid fa-gamepad mr-1.5 text-emerald-400"></i>Poker Table
+        </button>
+        <button onclick="switchView('academy')" id="nav-academy" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all">
+          <i class="fa-solid fa-graduation-cap mr-1.5 text-blue-400"></i>AI Academy & Exam
+        </button>
+        <button onclick="switchView('profile')" id="nav-profile" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all">
+          <i class="fa-solid fa-chart-pie mr-1.5 text-purple-400"></i>Profile & Style
+        </button>
+        <button onclick="switchView('wallet')" id="nav-wallet" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all">
+          <i class="fa-solid fa-wallet mr-1.5 text-yellow-400"></i>TGB Ledger
+        </button>
+        <button onclick="switchView('verifier')" id="nav-verifier" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all">
+          <i class="fa-solid fa-shield-halved mr-1.5 text-cyan-400"></i>Provably Fair
+        </button>
+      </nav>
+    </div>
+
+    <!-- Right Controls: Balance, Level, Profile -->
+    <div class="flex items-center space-x-3 sm:space-x-4">
+      <!-- TGB Balance Pill -->
+      <div class="flex items-center bg-slate-800/80 border border-amber-500/30 rounded-xl px-3 py-1.5 shadow-inner">
+        <span class="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black text-xs flex items-center justify-center mr-2 shadow">
+          ₮
+        </span>
+        <div class="text-right">
+          <div class="text-xs text-amber-400/80 font-medium leading-none">TGB BALANCE</div>
+          <div id="top-tgb-balance" class="text-sm font-black text-amber-300 font-mono tracking-tight leading-none mt-0.5">12,500.00</div>
+        </div>
+      </div>
+
+      <!-- Player Level & Avatar -->
+      <div class="flex items-center space-x-2 pl-2 border-l border-slate-800">
+        <div class="relative">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center font-bold text-white shadow">
+            H
+          </div>
+          <span class="absolute -bottom-1 -right-1 text-[10px] font-black bg-amber-500 text-slate-950 px-1 rounded-md leading-tight">
+            Lv.9
+          </span>
+        </div>
+        <div class="hidden lg:block text-left">
+          <div class="text-xs font-bold text-slate-200">HeroAce</div>
+          <div class="text-[10px] text-emerald-400 font-semibold flex items-center">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>Elite Rank
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN APPLICATION CONTAINER -->
+  <main class="flex-1 flex flex-col overflow-x-hidden relative">
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 1: LOBBY & TOURNAMENTS -->
+    <!-- ========================================================================= -->
+    <section id="view-lobby" class="p-4 lg:p-8 max-w-7xl mx-auto w-full space-y-8 active-view">
+      
+      <!-- HERO QUICK PLAY BANNER -->
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-950/60 via-slate-900 to-indigo-950/60 border border-amber-500/20 p-6 lg:p-8 shadow-2xl">
+        <div class="absolute -right-12 -bottom-12 opacity-15 pointer-events-none text-amber-400 text-[180px]">
+          <i class="fa-solid fa-trophy"></i>
+        </div>
+        <div class="relative z-10 max-w-2xl space-y-4">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-wider">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+            Featured MTT Event
+          </div>
+          <h1 class="text-3xl lg:text-4xl font-black tracking-tight text-white">
+            TGB SUNDAY MAJOR CHAMPIONSHIP
+          </h1>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            500,000 TGB Guaranteed Prize Pool. Deep stack 15,000 chips, 15-minute blind levels, and Provably Fair cryptographic shuffle verification.
+          </p>
+          <div class="flex flex-wrap gap-3 pt-2">
+            <button onclick="launchTable('mtt_001')" class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black text-sm hover:from-amber-400 hover:to-yellow-400 transition-all shadow-lg shadow-amber-500/25 flex items-center">
+              <i class="fa-solid fa-play mr-2"></i> PLAY NOW (TABLE #01)
+            </button>
+            <button onclick="switchView('academy')" class="px-5 py-3 rounded-xl bg-slate-800/80 border border-slate-700 text-slate-300 font-bold text-sm hover:bg-slate-700/80 transition-all flex items-center">
+              <i class="fa-solid fa-graduation-cap mr-2 text-blue-400"></i> AI Practice Exam
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TOURNAMENT LISTINGS -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <h2 class="text-xl font-black tracking-tight text-slate-100 flex items-center">
+              <i class="fa-solid fa-layer-group text-amber-400 mr-2.5"></i> TOURNAMENT LOBBY
+            </h2>
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 font-bold border border-slate-700">MTT Engine</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition">All</button>
+            <button class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/30">MTT</button>
+            <button class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition">Turbo</button>
+          </div>
+        </div>
+
+        <div id="tournament-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- QUICK STATS FOOTER -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-users"></i>
+          </div>
+          <div>
+            <div class="text-xs text-slate-400 font-semibold">Active Players</div>
+            <div class="text-lg font-black text-slate-200">1,482</div>
+          </div>
+        </div>
+        <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-coins"></i>
+          </div>
+          <div>
+            <div class="text-xs text-slate-400 font-semibold">24h Prize Pool</div>
+            <div class="text-lg font-black text-slate-200">1,250,000 ₮</div>
+          </div>
+        </div>
+        <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-shield-check"></i>
+          </div>
+          <div>
+            <div class="text-xs text-slate-400 font-semibold">Provably Fair Hands</div>
+            <div class="text-lg font-black text-slate-200">98,410</div>
+          </div>
+        </div>
+        <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-robot"></i>
+          </div>
+          <div>
+            <div class="text-xs text-slate-400 font-semibold">Anti-Cheat Engine</div>
+            <div class="text-lg font-black text-emerald-400 flex items-center">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>100% Active
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 2: INTERACTIVE POKER TABLE -->
+    <!-- ========================================================================= -->
+    <section id="view-table" class="p-2 sm:p-4 lg:p-6 flex-1 flex flex-col justify-between max-w-7xl mx-auto w-full hidden">
+      
+      <!-- Table Header Bar -->
+      <div class="flex items-center justify-between bg-slate-900/80 border border-slate-800 px-4 py-2 rounded-2xl mb-3 shadow-md">
+        <div class="flex items-center space-x-3">
+          <button onclick="switchView('lobby')" class="text-xs font-bold text-slate-400 hover:text-white transition flex items-center">
+            <i class="fa-solid fa-arrow-left mr-1.5"></i> Lobby
+          </button>
+          <span class="text-slate-700">|</span>
+          <div class="text-xs font-extrabold text-amber-400 font-mono tracking-wide" id="table-info-title">
+            #001 Daily Standard MTT • Table 01
+          </div>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono" id="table-blinds-info">
+            Blinds: 25 / 50 • Ante: 0
+          </span>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <!-- Provably Fair Seed Verification Indicator -->
+          <button onclick="openSeedModal()" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-bold hover:bg-cyan-500/20 transition">
+            <i class="fa-solid fa-lock text-[10px]"></i>
+            <span>Commit-Reveal Hash</span>
+          </button>
+
+          <!-- Sound Toggle -->
+          <button id="sound-btn" onclick="toggleAudio()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-xs">
+            <i class="fa-solid fa-volume-high"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- MAIN POKER TABLE CONTAINER -->
+      <div class="relative flex-1 flex items-center justify-center min-h-[500px] lg:min-h-[560px]">
+        
+        <!-- THE FELT OVAL TABLE -->
+        <div class="poker-table-felt w-full max-w-5xl h-[440px] sm:h-[480px] lg:h-[500px] relative rounded-[200px] sm:rounded-[240px] border-[14px] sm:border-[18px] border-[#2c1d11] shadow-[0_0_60px_rgba(0,0,0,0.85),inset_0_0_80px_rgba(0,0,0,0.7)] flex flex-col items-center justify-center select-none overflow-hidden">
+          
+          <!-- Inner Felt Texture & Watermark -->
+          <div class="absolute inset-0 bg-radial from-emerald-800/90 via-emerald-950 to-[#032014] opacity-95"></div>
+          <div class="absolute inset-4 rounded-[180px] sm:rounded-[220px] border border-emerald-600/20 pointer-events-none flex items-center justify-center">
+            <div class="text-emerald-700/10 font-black text-6xl lg:text-8xl tracking-widest font-mono uppercase select-none">
+              TGB POKER
+            </div>
+          </div>
+
+          <!-- TABLE CENTER: Community Cards & Pot -->
+          <div class="relative z-10 flex flex-col items-center space-y-3">
+            
+            <!-- Pot Badge -->
+            <div class="bg-black/60 backdrop-blur-md border border-amber-500/40 rounded-full px-5 py-1.5 shadow-2xl flex items-center space-x-2">
+              <span class="text-amber-400 text-xs font-black tracking-wider uppercase">MAIN POT:</span>
+              <span id="table-pot-amount" class="text-amber-300 font-mono font-black text-base lg:text-lg">0</span>
+              <span class="text-xs text-amber-500 font-bold">₮</span>
+            </div>
+
+            <!-- Community 5 Cards Container -->
+            <div id="community-cards" class="flex items-center space-x-2 sm:space-x-2.5 h-24">
+              <!-- Rendered by JS -->
+            </div>
+
+            <!-- Stage & Hand Notice -->
+            <div id="table-stage-banner" class="text-xs font-black tracking-wider uppercase px-3 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300">
+              PREFLOP
+            </div>
+          </div>
+
+          <!-- 6 RADIAL SEATS AROUND THE TABLE -->
+          <div id="seat-0" class="poker-seat absolute bottom-4 left-1/2 -translate-x-1/2 z-20"></div>
+          <div id="seat-1" class="poker-seat absolute bottom-14 left-4 sm:left-12 z-20"></div>
+          <div id="seat-2" class="poker-seat absolute top-14 left-4 sm:left-12 z-20"></div>
+          <div id="seat-3" class="poker-seat absolute top-4 left-1/2 -translate-x-1/2 z-20"></div>
+          <div id="seat-4" class="poker-seat absolute top-14 right-4 sm:right-12 z-20"></div>
+          <div id="seat-5" class="poker-seat absolute bottom-14 right-4 sm:right-12 z-20"></div>
+
+        </div>
+      </div>
+
+      <!-- BOTTOM ACTION CONSOLE & HAND RANK INDICATOR -->
+      <div class="bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-3xl p-3 sm:p-4 mt-3 shadow-2xl space-y-3">
+        
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+          <!-- Hero Hand Ranking Description -->
+          <div class="flex items-center space-x-2.5">
+            <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">YOUR HAND:</span>
+            <div id="hero-hand-rank-text" class="text-sm font-black text-amber-400 font-mono">
+              Waiting for next hand...
+            </div>
+          </div>
+
+          <!-- Quick Raise Bet Presets -->
+          <div id="raise-presets-container" class="flex items-center space-x-1.5 overflow-x-auto w-full sm:w-auto justify-end">
+            <button onclick="setRaisePreset('min')" class="bet-preset-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">Min</button>
+            <button onclick="setRaisePreset('2.5bb')" class="bet-preset-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">2.5 BB</button>
+            <button onclick="setRaisePreset('half_pot')" class="bet-preset-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">1/2 Pot</button>
+            <button onclick="setRaisePreset('pot')" class="bet-preset-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">Pot</button>
+            <button onclick="setRaisePreset('allin')" class="bet-preset-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-950/80 border border-rose-600/40 text-rose-300 hover:bg-rose-900">All-in</button>
+          </div>
+        </div>
+
+        <!-- Action Buttons Row & Raise Slider -->
+        <div class="flex flex-col md:flex-row items-center justify-between gap-3">
+          
+          <!-- Raise Slider & Number Input -->
+          <div class="w-full md:w-5/12 flex items-center space-x-3 bg-slate-950/60 border border-slate-800 p-2 rounded-2xl">
+            <span class="text-xs font-black text-amber-400 font-mono">₮</span>
+            <input id="raise-range-slider" type="range" min="100" max="5000" step="25" class="w-full accent-amber-500 cursor-pointer" oninput="onRaiseSliderChange(this.value)">
+            <input id="raise-amount-input" type="number" class="w-24 bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1 text-center font-mono font-bold text-amber-300 text-sm focus:outline-none focus:border-amber-500" value="100" onchange="onRaiseInputChange(this.value)">
+          </div>
+
+          <!-- Main 3 Decision Action Buttons -->
+          <div class="flex items-center space-x-2 sm:space-x-3 w-full md:w-7/12 justify-end">
+            <!-- FOLD -->
+            <button id="action-fold-btn" onclick="takeAction('FOLD')" class="flex-1 py-3 sm:py-3.5 rounded-2xl bg-gradient-to-b from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-black text-sm uppercase tracking-wider shadow-lg shadow-rose-900/30 transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none">
+              Fold
+            </button>
+            
+            <!-- CHECK / CALL -->
+            <button id="action-call-btn" onclick="takeAction('CALL')" class="flex-1 py-3 sm:py-3.5 rounded-2xl bg-gradient-to-b from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-900/30 transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none">
+              Check
+            </button>
+
+            <!-- BET / RAISE -->
+            <button id="action-raise-btn" onclick="takeAction('RAISE')" class="flex-1 py-3 sm:py-3.5 rounded-2xl bg-gradient-to-b from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-sm uppercase tracking-wider shadow-lg shadow-amber-900/30 transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none">
+              Raise to 100
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 3: AI ACADEMY & PROMOTION EXAM -->
+    <!-- ========================================================================= -->
+    <section id="view-academy" class="p-4 lg:p-8 max-w-5xl mx-auto w-full space-y-6 hidden">
+      <div class="border-b border-slate-800 pb-4 flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-black text-white flex items-center">
+            <i class="fa-solid fa-graduation-cap text-blue-400 mr-3"></i> TGB POKER ACADEMY
+          </h2>
+          <p class="text-sm text-slate-400 mt-1">Level Promotion Exam & Strategic GTO Coach Simulation</p>
+        </div>
+        <span class="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30 font-bold text-xs">
+          Rank Requirement: 85% Score
+        </span>
+      </div>
+
+      <!-- Active Exam Scenario Box -->
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div class="flex items-center space-x-2">
+            <span class="px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-bold text-xs uppercase">Question 14 of 20</span>
+            <span class="text-xs text-slate-400 font-semibold">• Intermediate Level 5 Exam</span>
+          </div>
+          <div class="text-xs font-mono font-bold text-rose-400 flex items-center">
+            <i class="fa-regular fa-clock mr-1.5"></i> 02:45 remaining
+          </div>
+        </div>
+
+        <!-- Scenario Description -->
+        <div class="space-y-4">
+          <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="space-y-1">
+              <div class="text-xs text-slate-400 font-bold uppercase">HERO HAND (CUTOFF)</div>
+              <div class="flex items-center space-x-2">
+                <div class="poker-mini-card bg-white text-slate-950 font-black rounded-lg px-2.5 py-1 text-sm shadow">A♠</div>
+                <div class="poker-mini-card bg-white text-slate-950 font-black rounded-lg px-2.5 py-1 text-sm shadow">K♠</div>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <div class="text-xs text-slate-400 font-bold uppercase">FLOP BOARD</div>
+              <div class="flex items-center space-x-2">
+                <div class="poker-mini-card bg-white text-rose-600 font-black rounded-lg px-2.5 py-1 text-sm shadow">K♥</div>
+                <div class="poker-mini-card bg-white text-slate-950 font-black rounded-lg px-2.5 py-1 text-sm shadow">7♣</div>
+                <div class="poker-mini-card bg-white text-rose-600 font-black rounded-lg px-2.5 py-1 text-sm shadow">2♦</div>
+              </div>
+            </div>
+
+            <div class="space-y-1 text-right">
+              <div class="text-xs text-slate-400 font-bold uppercase">POT SIZE & STACK</div>
+              <div class="text-sm font-black text-amber-400 font-mono">Pot: 1,800 ₮ • Hero: 12,400 ₮</div>
+            </div>
+          </div>
+
+          <p class="text-slate-300 text-sm leading-relaxed">
+            <strong>Situation:</strong> You open-raised 2.5 BB preflop from the Cutoff with A♠ K♠. The Big Blind (a tight-aggressive regular with 22% VPIP) called. On the dry flop K♥ 7♣ 2♦, the Big Blind checks to you. What is the game-theoretically optimal (GTO) play?
+          </p>
+
+          <!-- Choices -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="exam-choices-container">
+            <button onclick="submitExamChoice('check')" class="exam-choice-btn p-4 rounded-2xl bg-slate-800/60 border border-slate-700/80 hover:border-blue-500 hover:bg-slate-800 text-left transition space-y-1">
+              <div class="text-xs font-bold text-slate-400">OPTION A</div>
+              <div class="text-sm font-extrabold text-white">Check behind for pot control</div>
+            </button>
+            <button onclick="submitExamChoice('bet_small')" class="exam-choice-btn p-4 rounded-2xl bg-slate-800/60 border border-slate-700/80 hover:border-blue-500 hover:bg-slate-800 text-left transition space-y-1">
+              <div class="text-xs font-bold text-slate-400">OPTION B (Recommended)</div>
+              <div class="text-sm font-extrabold text-white">Bet 33% Pot (600 ₮) for range value</div>
+            </button>
+            <button onclick="submitExamChoice('bet_pot')" class="exam-choice-btn p-4 rounded-2xl bg-slate-800/60 border border-slate-700/80 hover:border-blue-500 hover:bg-slate-800 text-left transition space-y-1">
+              <div class="text-xs font-bold text-slate-400">OPTION C</div>
+              <div class="text-sm font-extrabold text-white">Overbet / Pot-size bet (1,800 ₮)</div>
+            </button>
+            <button onclick="submitExamChoice('allin')" class="exam-choice-btn p-4 rounded-2xl bg-slate-800/60 border border-slate-700/80 hover:border-blue-500 hover:bg-slate-800 text-left transition space-y-1">
+              <div class="text-xs font-bold text-slate-400">OPTION D</div>
+              <div class="text-sm font-extrabold text-white">Shove All-in to protect against draws</div>
+            </button>
+          </div>
+
+          <!-- Coach Feedback Box (Hidden until answered) -->
+          <div id="exam-feedback-box" class="hidden p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-sm space-y-2">
+            <div class="flex items-center text-emerald-400 font-black">
+              <i class="fa-solid fa-circle-check mr-2"></i> CORRECT! (+0.85 EV Decision)
+            </div>
+            <p class="text-slate-300 text-xs leading-relaxed">
+              <strong>AI Coach Analysis:</strong> On an asymmetrical dry board like K-7-2 rainbow, Hero has a massive range advantage and nut advantage. A small bet (25-33% pot) targets the opponent's wide BB defense range (88-JJ, second pairs, floats) while maintaining high fold equity against undercards.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 4: PLAYER PROFILE & PLAY STYLE -->
+    <!-- ========================================================================= -->
+    <section id="view-profile" class="p-4 lg:p-8 max-w-5xl mx-auto w-full space-y-6 hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 lg:p-8 shadow-2xl space-y-6">
+        <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 border-b border-slate-800 pb-6">
+          <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center font-black text-3xl text-white shadow-xl shadow-purple-900/40">
+            H
+          </div>
+          <div class="text-center sm:text-left space-y-1 flex-1">
+            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+              <h2 class="text-2xl font-black text-white">HeroAce</h2>
+              <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">Level 9 — Elite</span>
+              <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">Tight Aggressive (TAG)</span>
+            </div>
+            <p class="text-xs text-slate-400">Account ID: c1f1a547-494b-4f93-b26a-912c93847e11 • Registered 2026</p>
+            <!-- EXP Progress Bar -->
+            <div class="w-full max-w-md bg-slate-950 h-2.5 rounded-full overflow-hidden mt-3 border border-slate-800">
+              <div class="bg-gradient-to-r from-amber-500 to-yellow-400 h-full w-[78%]"></div>
+            </div>
+            <div class="text-[10px] text-slate-400 font-mono">36,800 / 47,200 EXP to Level 10 (Legend)</div>
+          </div>
+        </div>
+
+        <!-- Career Statistics Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
+            <div class="text-xs text-slate-400 font-semibold">Tournaments Played</div>
+            <div class="text-xl font-black text-white mt-1">428</div>
+          </div>
+          <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
+            <div class="text-xs text-slate-400 font-semibold">MTT 1st Wins</div>
+            <div class="text-xl font-black text-amber-400 mt-1">37 <span class="text-xs text-slate-500">(8.6%)</span></div>
+          </div>
+          <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
+            <div class="text-xs text-slate-400 font-semibold">In The Money (ITM)</div>
+            <div class="text-xl font-black text-emerald-400 mt-1">188 <span class="text-xs text-slate-500">(43.9%)</span></div>
+          </div>
+          <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
+            <div class="text-xs text-slate-400 font-semibold">Net TGB Profit</div>
+            <div class="text-xl font-black text-amber-300 mt-1">+142,500 ₮</div>
+          </div>
+        </div>
+
+        <!-- Play Style Analysis Indicators (VPIP / PFR / 3-Bet / Aggression) -->
+        <div class="space-y-3">
+          <h3 class="text-sm font-black text-slate-200 uppercase tracking-wider flex items-center">
+            <i class="fa-solid fa-radar text-purple-400 mr-2"></i> Real Gameplay Style Metrics
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+              <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
+                <span>VPIP (Voluntarily Put $ In Pot)</span>
+                <span class="text-amber-400">24%</span>
+              </div>
+              <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
+                <div class="bg-amber-500 h-full w-[24%]"></div>
+              </div>
+              <div class="text-[10px] text-slate-500 mt-1">Optimal Range: 20% - 28%</div>
+            </div>
+
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+              <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
+                <span>PFR (Pre-Flop Raise)</span>
+                <span class="text-blue-400">19%</span>
+              </div>
+              <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
+                <div class="bg-blue-500 h-full w-[19%]"></div>
+              </div>
+              <div class="text-[10px] text-slate-500 mt-1">Tight-Aggressive benchmark</div>
+            </div>
+
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+              <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
+                <span>3-Bet Frequency</span>
+                <span class="text-emerald-400">9.2%</span>
+              </div>
+              <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
+                <div class="bg-emerald-500 h-full w-[35%]"></div>
+              </div>
+              <div class="text-[10px] text-slate-500 mt-1">Healthy re-raise pressure</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 5: TGB WALLET & TAMPER-EVIDENT LEDGER -->
+    <!-- ========================================================================= -->
+    <section id="view-wallet" class="p-4 lg:p-8 max-w-5xl mx-auto w-full space-y-6 hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div>
+            <h2 class="text-2xl font-black text-white flex items-center">
+              <i class="fa-solid fa-wallet text-amber-400 mr-3"></i> TGB VIRTUAL LEDGER
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Append-only cryptographic transaction chain with server signatures</p>
+          </div>
+          <button onclick="claimFaucet()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition shadow-lg shadow-amber-500/20 flex items-center">
+            <i class="fa-solid fa-gift mr-1.5"></i> Claim Daily Faucet (+1,000 ₮)
+          </button>
+        </div>
+
+        <!-- Ledger Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="text-slate-400 border-b border-slate-800 uppercase font-mono tracking-wider">
+                <th class="pb-3">Tx ID</th>
+                <th class="pb-3">Type</th>
+                <th class="pb-3 text-right">Amount</th>
+                <th class="pb-3 text-right">Balance</th>
+                <th class="pb-3">Signature & Prev Hash</th>
+                <th class="pb-3 text-right">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="ledger-rows-container" class="divide-y divide-slate-800/60 font-mono">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 6: PROVABLY FAIR VERIFIER SUITE -->
+    <!-- ========================================================================= -->
+    <section id="view-verifier" class="p-4 lg:p-8 max-w-4xl mx-auto w-full space-y-6 hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 lg:p-8 shadow-2xl space-y-6">
+        <div>
+          <h2 class="text-2xl font-black text-white flex items-center">
+            <i class="fa-solid fa-shield-halved text-cyan-400 mr-3"></i> PROVABLY FAIR VERIFIER
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">Independent cryptographic verification of any past table hand</p>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Server Seed (Hex 64)</label>
+            <input id="verify-server-seed" type="text" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-500" placeholder="e.g. 7f9a2b...">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Published Commitment Hash: HMAC-SHA256(ServerSeed, Salt)</label>
+            <input id="verify-commitment-hash" type="text" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-slate-300 focus:outline-none focus:border-cyan-500" placeholder="e.g. d48a7...">
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Salt (Tournament:Hand)</label>
+              <input id="verify-salt" type="text" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-slate-300" placeholder="mtt_001:1">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Client Seed</label>
+              <input id="verify-client-seed" type="text" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-slate-300" value="0000000000000000">
+            </div>
+          </div>
+
+          <button onclick="runManualVerification()" class="px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs transition shadow-lg shadow-cyan-500/25">
+            VERIFY CRYPTOGRAPHIC PROOF
+          </button>
+
+          <div id="verify-result-box" class="hidden p-4 rounded-2xl border text-xs"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: PROVABLY FAIR COMMITMENT INSPECTOR -->
+  <div id="seed-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 max-w-lg w-full rounded-3xl p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-black text-cyan-400 flex items-center">
+          <i class="fa-solid fa-lock mr-2"></i> Hand Cryptographic Commitment
+        </h3>
+        <button onclick="closeSeedModal()" class="text-slate-400 hover:text-white text-sm">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <div class="text-[10px] text-slate-500 uppercase font-bold">1. Pre-Deal Commitment Hash (Broadcast Before Cards Dealt)</div>
+          <div id="modal-commit-hash" class="p-2 rounded-xl bg-slate-950 border border-slate-800 font-mono text-cyan-300 break-all select-all">
+            Loading...
+          </div>
+        </div>
+
+        <div>
+          <div class="text-[10px] text-slate-500 uppercase font-bold">2. Server Seed (Revealed Upon Hand Completion)</div>
+          <div id="modal-server-seed" class="p-2 rounded-xl bg-slate-950 border border-slate-800 font-mono text-amber-300 break-all select-all">
+            Revealed at showdown
+          </div>
+        </div>
+
+        <div class="p-3 rounded-2xl bg-cyan-950/30 border border-cyan-500/30 text-cyan-300 text-[11px] leading-relaxed">
+          <i class="fa-solid fa-circle-info mr-1"></i> The server seed is securely generated with 256 bits of CSPRNG entropy. Its SHA-256 hash was locked before any player made a decision.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

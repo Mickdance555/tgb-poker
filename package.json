@@ -1,0 +1,15 @@
+{
+  "name": "tgb-poker",
+  "version": "1.0.0",
+  "description": "TGB Poker — Server-Authoritative Real-Time MTT Poker Platform",
+  "private": true,
+  "scripts": {
+    "test": "node --test dist/tests/**/*.test.js",
+    "build:engine": "tsc -p tsconfig.json",
+    "dev:server": "tsx watch src/server/index.ts",
+    "dev:client": "npm run dev --prefix client"
+  },
+  "keywords": ["poker", "mtt", "provably-fair", "texas-holdem", "realtime", "websocket"],
+  "author": "TGB Poker Team",
+  "license": "UNLICENSED"
+}
