@@ -1103,149 +1103,249 @@
     </section>
 
     <!-- ========================================================================= -->
-    <!-- VIEW 2: INTERACTIVE POKER TABLE -->
+    <!-- VIEW 2: MTT SPORTS POKER ARENA (Matching Image media_1790237221725.png)   -->
     <!-- ========================================================================= -->
-    <section id="view-table" class="p-2 sm:p-4 lg:p-6 flex-1 flex flex-col justify-between max-w-7xl mx-auto w-full hidden">
+    <section id="view-table" class="poker-arena-bg min-h-screen flex-1 flex flex-col justify-between w-full relative overflow-hidden select-none hidden p-2 sm:p-4">
       
-      <!-- Table Header Bar -->
-      <div class="flex items-center justify-between bg-slate-900/80 border border-slate-800 px-4 py-2 rounded-2xl mb-3 shadow-md">
-        <div class="flex items-center space-x-3">
-          <button onclick="switchView('lobby')" class="text-xs font-bold text-slate-400 hover:text-white transition flex items-center">
-            <i class="fa-solid fa-arrow-left mr-1.5"></i> Lobby
+      <!-- 1. TOP HEADER & STATUS BAR -->
+      <div class="flex items-center justify-between z-30 px-2 py-1">
+        <!-- Top Left Controls -->
+        <div class="flex items-center space-x-2">
+          <!-- 9 Dots Menu (Lobby) -->
+          <button onclick="switchView('lobby')" title="Return to Lobby" class="w-9 h-9 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-sm transition shadow-lg hover:border-slate-700">
+            <i class="fa-solid fa-braille text-base"></i>
           </button>
-          <span class="text-slate-700">|</span>
-          <div class="text-xs font-extrabold text-amber-400 font-mono tracking-wide" id="table-info-title">
-            #001 Daily Standard MTT • Table 01
+
+          <!-- Finish Pill -->
+          <button onclick="switchView('lobby')" class="px-3.5 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 font-bold text-xs hover:bg-emerald-900/80 transition">
+            Finish
+          </button>
+
+          <!-- Spectating / Playing Pill Toggle -->
+          <div id="table-mode-toggle" onclick="toggleSpectatorMode()" class="px-3.5 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/50 text-amber-400 font-black text-xs cursor-pointer flex items-center space-x-1.5 shadow-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+            <span id="table-mode-text">Spectating</span>
           </div>
-          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono" id="table-blinds-info">
-            Blinds: 25 / 50 • Ante: 0
-          </span>
+
+          <!-- Add Table Button (+) -->
+          <button onclick="alert('Multi-Table Mode: Up to 4 tables available on desktop!')" class="w-7 h-7 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center text-xs font-bold transition shadow">
+            <i class="fa-solid fa-plus"></i>
+          </button>
         </div>
 
+        <!-- Top Right Controls (Blind Info & Quick Reload Chips) -->
         <div class="flex items-center space-x-3">
-          <!-- Provably Fair Seed Verification Indicator -->
-          <button onclick="openSeedModal()" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-bold hover:bg-cyan-500/20 transition">
-            <i class="fa-solid fa-lock text-[10px]"></i>
-            <span>Commit-Reveal Hash</span>
-          </button>
+          <!-- Blinds Pill -->
+          <div class="px-4 py-1.5 rounded-2xl bg-gradient-to-r from-blue-950 via-indigo-950 to-blue-950 border border-blue-500/30 text-center shadow-lg">
+            <div class="text-[10px] text-blue-400 font-black leading-none flex items-center justify-center gap-1">
+              <span>∞</span> <span>Blind</span>
+            </div>
+            <div id="table-blinds-pill" class="text-xs font-black font-mono text-white mt-0.5">
+              0.5 / 1
+            </div>
+          </div>
 
-          <!-- Sound Toggle -->
-          <button id="sound-btn" onclick="toggleAudio()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-xs">
-            <i class="fa-solid fa-volume-high"></i>
-          </button>
+          <!-- Quick Chips Stack Add Button -->
+          <div onclick="claimFaucet()" title="Quick Reload / Faucet" class="relative cursor-pointer group flex items-center justify-center">
+            <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 border border-emerald-300 flex items-center justify-center text-slate-950 font-black text-xs shadow-lg group-hover:scale-105 transition">
+              MTT
+            </div>
+            <span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border border-slate-950 text-white flex items-center justify-center text-[10px] font-black">+</span>
+          </div>
         </div>
       </div>
 
-      <!-- MAIN POKER TABLE ARENA -->
-      <div class="relative flex-1 flex items-center justify-center my-auto min-h-[480px] lg:min-h-[530px] px-2 sm:px-6">
+      <!-- 2. LEFT VERTICAL TOOLBAR -->
+      <div class="absolute left-3 top-20 z-30 flex flex-col space-y-2.5">
+        <!-- Spectator Count -->
+        <button onclick="alert('Current Spectators: 1 (You)')" class="w-8 h-8 rounded-full bg-slate-900/80 border border-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs relative transition">
+          <i class="fa-solid fa-user"></i>
+          <span class="absolute -top-1 -right-1 px-1 rounded-full bg-emerald-500 text-[8px] font-black text-slate-950 leading-tight">1</span>
+        </button>
+
+        <!-- Multi-Table Tile View -->
+        <button onclick="alert('Tile Multi-Table: Activated')" class="w-8 h-8 rounded-full bg-slate-900/80 border border-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs transition">
+          <i class="fa-solid fa-table-cells-large"></i>
+        </button>
+
+        <!-- Leave Table Door -->
+        <button onclick="switchView('lobby')" title="Leave Table" class="w-8 h-8 rounded-full bg-slate-900/80 border border-slate-800 text-slate-400 hover:text-rose-400 flex items-center justify-center text-xs transition">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        </button>
+      </div>
+
+      <!-- 3. MAIN POKER TABLE ARENA -->
+      <div class="relative flex-1 flex items-center justify-center my-auto min-h-[500px] lg:min-h-[560px] w-full px-2 sm:px-6">
         
+        <!-- TOP CENTER DEALER (Blonde in Emerald High-back Armchair) -->
+        <div class="absolute top-1 sm:top-2 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center pointer-events-none">
+          <!-- 3D Dealer Portrait -->
+          <div class="relative flex flex-col items-center">
+            <!-- Emerald High-Back Armchair -->
+            <div class="w-20 sm:w-24 h-24 sm:h-28 rounded-t-full bg-gradient-to-b from-emerald-800 via-emerald-950 to-slate-950 border-2 border-emerald-500/40 shadow-2xl flex items-center justify-center relative overflow-hidden">
+              <div class="absolute inset-1 rounded-t-full border border-emerald-400/20"></div>
+              <!-- Blonde Dealer Avatar Art -->
+              <div class="w-16 sm:w-20 h-20 sm:h-24 rounded-t-full flex items-center justify-center text-4xl sm:text-5xl drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]">
+                👱‍♀️
+              </div>
+            </div>
+            
+            <!-- Red Bicycle Deck on Felt directly in front of Dealer -->
+            <div class="w-8 h-10 rounded-sm bg-gradient-to-br from-rose-700 via-red-800 to-rose-900 border border-white/40 shadow-lg -mt-3 z-30 flex items-center justify-center transform rotate-6">
+              <div class="w-6 h-8 border border-white/30 rounded-xs flex items-center justify-center text-[8px] font-black text-white/80">
+                🂠
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- THE FELT OVAL TABLE (Spacious center) -->
-        <div class="poker-table-felt w-[82%] sm:w-[84%] lg:w-[86%] h-[320px] sm:h-[350px] lg:h-[380px] relative rounded-[160px] sm:rounded-[200px] border-[14px] sm:border-[18px] border-[#2c1d11] shadow-[0_0_60px_rgba(0,0,0,0.85),inset_0_0_80px_rgba(0,0,0,0.7)] flex flex-col items-center justify-center select-none overflow-hidden">
+        <div class="mtt-poker-felt w-[88%] sm:w-[86%] lg:w-[84%] h-[340px] sm:h-[380px] lg:h-[420px] flex flex-col items-center justify-center select-none overflow-hidden relative">
           
-          <!-- Inner Felt Texture & Watermark -->
-          <div class="absolute inset-0 bg-radial from-emerald-800/90 via-emerald-950 to-[#032014] opacity-95"></div>
-          <div class="absolute inset-3 rounded-[140px] sm:rounded-[180px] border border-emerald-600/20 pointer-events-none flex items-center justify-center">
-            <div class="text-emerald-700/10 font-black text-5xl lg:text-7xl tracking-widest font-mono uppercase select-none">
-              TGB POKER
+          <!-- Dual MTT SPORTS Watermarks on Left & Right Felt -->
+          <div class="absolute left-10 sm:left-20 top-1/2 -translate-y-1/2 pointer-events-none select-none text-emerald-300/10 font-black text-3xl sm:text-5xl font-mono tracking-widest text-center">
+            MTT<br><span class="text-xl sm:text-3xl">SPORTS</span>
+          </div>
+          <div class="absolute right-10 sm:right-20 top-1/2 -translate-y-1/2 pointer-events-none select-none text-emerald-300/10 font-black text-3xl sm:text-5xl font-mono tracking-widest text-center">
+            MTT<br><span class="text-xl sm:text-3xl">SPORTS</span>
+          </div>
+
+          <!-- Felt Center Table Metadata (Players: 6-Max, Blinds: 0.5/1/2, Newbie) -->
+          <div class="absolute bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2 text-center pointer-events-none space-y-0.5 opacity-40">
+            <div class="text-[9px] font-bold text-emerald-200 uppercase tracking-widest">Players: <span class="text-white">6 - Max</span></div>
+            <div class="text-[9px] font-bold text-emerald-200 uppercase tracking-widest">Blinds: <span class="text-white">0.5 / 1 / 2</span></div>
+            <div class="text-xs sm:text-sm font-black text-emerald-100 font-mono tracking-wider">Newbie 0.5/1 MTT</div>
+          </div>
+
+          <!-- Pot Badge (Placed directly below Dealer) -->
+          <div class="absolute top-10 sm:top-12 left-1/2 -translate-x-1/2 z-20">
+            <div class="bg-black/75 backdrop-blur-md border border-amber-500/50 rounded-full px-5 py-1 shadow-2xl flex items-center space-x-1.5">
+              <span class="text-slate-300 text-xs font-bold">Pot:</span>
+              <span id="table-pot-amount" class="text-amber-400 font-mono font-black text-sm sm:text-base">3</span>
             </div>
           </div>
 
-          <!-- TABLE CENTER: Community Cards & Pot -->
-          <div class="relative z-10 flex flex-col items-center space-y-2.5">
-            
-            <!-- Pot Badge -->
-            <div class="bg-black/65 backdrop-blur-md border border-amber-500/40 rounded-full px-5 py-1.5 shadow-2xl flex items-center space-x-2">
-              <span class="text-amber-400 text-xs font-black tracking-wider uppercase">MAIN POT:</span>
-              <span id="table-pot-amount" class="text-amber-300 font-mono font-black text-base lg:text-lg">0</span>
-              <span class="text-xs text-amber-500 font-bold">₮</span>
-            </div>
-
-            <!-- Community 5 Cards Container -->
+          <!-- Community 5 Cards Container -->
+          <div class="relative z-10 flex flex-col items-center space-y-2 mt-4">
             <div id="community-cards" class="flex items-center space-x-1.5 sm:space-x-2 h-20 sm:h-22">
               <!-- Rendered by JS -->
             </div>
-
-            <!-- Stage & Hand Notice -->
-            <div id="table-stage-banner" class="text-[11px] font-black tracking-wider uppercase px-3 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300">
+            <!-- Stage Banner -->
+            <div id="table-stage-banner" class="text-[10px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300">
               PREFLOP
             </div>
           </div>
 
+          <!-- Light Spotlight Beam Shining from center to active player -->
+          <div id="table-spotlight" class="table-spotlight-beam w-64 h-64 rounded-full pointer-events-none opacity-30"></div>
+
         </div>
 
-        <!-- 6 SEATS PLACED ON THE OUTER PERIMETER (OUTSIDE THE FELT) -->
-        <!-- Seat 0: Hero (Bottom Center Outside) -->
-        <div id="seat-0" class="poker-seat absolute -bottom-3 sm:-bottom-5 left-1/2 -translate-x-1/2 z-30"></div>
-        
-        <!-- Seat 3: Top Center (Outside) -->
-        <div id="seat-3" class="poker-seat absolute -top-3 sm:-top-5 left-1/2 -translate-x-1/2 z-30"></div>
-        
-        <!-- Seat 1: Bottom Left (Outside rail) -->
-        <div id="seat-1" class="poker-seat absolute bottom-8 sm:bottom-10 left-0 sm:left-2 lg:left-4 z-30"></div>
-        
-        <!-- Seat 2: Top Left (Outside rail) -->
-        <div id="seat-2" class="poker-seat absolute top-8 sm:top-10 left-0 sm:left-2 lg:left-4 z-30"></div>
-        
-        <!-- Seat 4: Top Right (Outside rail) -->
-        <div id="seat-4" class="poker-seat absolute top-8 sm:top-10 right-0 sm:right-2 lg:right-4 z-30"></div>
-        
-        <!-- Seat 5: Bottom Right (Outside rail) -->
-        <div id="seat-5" class="poker-seat absolute bottom-8 sm:bottom-10 right-0 sm:right-2 lg:right-4 z-30"></div>
+        <!-- 8 SEATS AROUND THE PERIMETER (OUTSIDE THE FELT RAIL) -->
+        <!-- Seat 0: Bottom Center-Left (Hero or seated) -->
+        <div id="seat-0" class="poker-seat absolute bottom-0 sm:bottom-1 left-[40%] -translate-x-1/2 z-30"></div>
+
+        <!-- Seat 1: Bottom Center-Right -->
+        <div id="seat-1" class="poker-seat absolute bottom-0 sm:bottom-1 left-[60%] -translate-x-1/2 z-30"></div>
+
+        <!-- Seat 2: Bottom Right -->
+        <div id="seat-2" class="poker-seat absolute bottom-8 sm:bottom-10 right-8 sm:right-16 z-30"></div>
+
+        <!-- Seat 3: Right Mid -->
+        <div id="seat-3" class="poker-seat absolute top-1/2 -translate-y-1/2 right-1 sm:right-4 z-30"></div>
+
+        <!-- Seat 4: Top Right -->
+        <div id="seat-4" class="poker-seat absolute top-6 sm:top-8 right-16 sm:right-28 z-30"></div>
+
+        <!-- Seat 5: Top Left -->
+        <div id="seat-5" class="poker-seat absolute top-6 sm:top-8 left-16 sm:left-28 z-30"></div>
+
+        <!-- Seat 6: Left Mid -->
+        <div id="seat-6" class="poker-seat absolute top-1/2 -translate-y-1/2 left-1 sm:left-4 z-30"></div>
+
+        <!-- Seat 7: Bottom Left -->
+        <div id="seat-7" class="poker-seat absolute bottom-8 sm:bottom-10 left-8 sm:left-16 z-30"></div>
 
       </div>
 
-      <!-- BOTTOM ACTION CONSOLE & HAND RANK INDICATOR -->
-      <div class="bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-3xl p-3 sm:p-4 mt-3 shadow-2xl space-y-3">
-        
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
-          <!-- Hero Hand Ranking Description -->
-          <div class="flex items-center space-x-2.5">
-            <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">YOUR HAND:</span>
-            <div id="hero-hand-rank-text" class="text-sm font-black text-amber-400 font-mono">
-              Waiting for next hand...
+      <!-- 4. FLOATING LIVE TABLE CHAT (Bottom Left - Matching Reference) -->
+      <div class="absolute bottom-3 left-3 sm:left-5 z-40 max-w-[280px] sm:max-w-xs w-full space-y-2 pointer-events-auto">
+        <!-- Chat Messages Log -->
+        <div id="table-chat-messages" class="h-28 overflow-y-auto space-y-1.5 p-2 rounded-2xl bg-black/40 backdrop-blur-sm text-[11px] font-sans scrollbar-none">
+          <div class="text-teal-400 font-medium">channel: Those who verify the information will receive corresponding rewards.</div>
+          <div><span class="text-cyan-400 font-bold">ysjgg547049210:</span> <span class="text-white">🙋</span></div>
+          <div><span class="text-cyan-400 font-bold">6pattalant:</span> <span class="text-white">😂</span></div>
+        </div>
+
+        <!-- Chat Input Bar -->
+        <form onsubmit="handleSendTableChat(event)" class="flex items-center space-x-1.5 bg-slate-900/90 border border-slate-800 p-1.5 rounded-2xl shadow-lg">
+          <input id="table-chat-input" type="text" placeholder="Say Something..." class="flex-1 bg-transparent px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:outline-none">
+          <button type="button" onclick="insertTableEmoji('👏')" class="text-slate-400 hover:text-white px-1"><i class="fa-regular fa-face-smile"></i></button>
+          <button type="submit" class="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition">
+            Send
+          </button>
+        </form>
+      </div>
+
+      <!-- 5. BOTTOM SPECTATOR OR ACTION CONSOLE (Center Bottom) -->
+      <div id="table-bottom-console" class="z-40 flex flex-col items-center space-y-2 pb-2">
+        <!-- Floating Spectator Mode Bar (Visible when spectating) -->
+        <div id="spectator-controls-bar" class="flex items-center space-x-4">
+          <button onclick="alert('Hand History Tracker')" class="w-10 h-10 rounded-full bg-slate-900/90 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-lg shadow-lg">
+            🂡
+          </button>
+          <button onclick="insertTableEmoji('🔥')" class="w-10 h-10 rounded-full bg-slate-900/90 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-lg shadow-lg">
+            😊
+          </button>
+          <div class="text-xs font-bold text-slate-400">Spectating</div>
+          <button onclick="sitDownAtSeat(0)" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs transition shadow-lg flex items-center gap-1.5">
+            <i class="fa-solid fa-chair"></i>
+            <span>Take Seat #0</span>
+          </button>
+        </div>
+
+        <!-- Seated Player Action Console (Visible when seated Hero) -->
+        <div id="hero-action-console" class="hidden bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-3xl p-3 sm:p-4 max-w-2xl w-full shadow-2xl space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+            <div class="flex items-center space-x-2">
+              <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">YOUR HAND:</span>
+              <div id="hero-hand-rank-text" class="text-sm font-black text-amber-400 font-mono">Pair of Aces</div>
             </div>
+            <button onclick="standUpToSpectate()" class="text-[11px] font-bold text-slate-400 hover:text-rose-400 transition">
+              <i class="fa-solid fa-person-walking-arrow-right mr-1"></i> Stand Up
+            </button>
           </div>
 
-          <!-- Quick Raise Bet Presets -->
-          <div id="raise-presets-container" class="flex items-center space-x-1.5 overflow-x-auto w-full sm:w-auto justify-end">
+          <!-- Quick Raise Presets -->
+          <div class="flex items-center space-x-1.5 overflow-x-auto justify-end">
             <button onclick="setRaisePreset('min')" class="bet-preset-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">Min</button>
             <button onclick="setRaisePreset('2.5bb')" class="bet-preset-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">2.5 BB</button>
             <button onclick="setRaisePreset('half_pot')" class="bet-preset-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">1/2 Pot</button>
             <button onclick="setRaisePreset('pot')" class="bet-preset-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">Pot</button>
             <button onclick="setRaisePreset('allin')" class="bet-preset-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-950/80 border border-rose-600/40 text-rose-300 hover:bg-rose-900">All-in</button>
           </div>
-        </div>
 
-        <!-- Action Buttons Row & Raise Slider -->
-        <div class="flex flex-col md:flex-row items-center justify-between gap-3">
-          
-          <!-- Raise Slider & Number Input -->
-          <div class="w-full md:w-5/12 flex items-center space-x-3 bg-slate-950/60 border border-slate-800 p-2 rounded-2xl">
-            <span class="text-xs font-black text-amber-400 font-mono">₮</span>
-            <input id="raise-range-slider" type="range" min="100" max="5000" step="25" class="w-full accent-amber-500 cursor-pointer" oninput="onRaiseSliderChange(this.value)">
-            <input id="raise-amount-input" type="number" class="w-24 bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1 text-center font-mono font-bold text-amber-300 text-sm focus:outline-none focus:border-amber-500" value="100" onchange="onRaiseInputChange(this.value)">
+          <!-- Raise Slider & Action Buttons -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="w-full sm:w-5/12 flex items-center space-x-2 bg-slate-950/60 border border-slate-800 p-2 rounded-2xl">
+              <span class="text-xs font-black text-amber-400 font-mono">₮</span>
+              <input id="raise-range-slider" type="range" min="2" max="1000" step="1" class="w-full accent-amber-500 cursor-pointer" oninput="onRaiseSliderChange(this.value)">
+              <input id="raise-amount-input" type="number" class="w-20 bg-slate-900 border border-slate-700 rounded-xl px-2 py-1 text-center font-mono font-bold text-amber-300 text-xs focus:outline-none focus:border-amber-500" value="2" onchange="onRaiseInputChange(this.value)">
+            </div>
+
+            <div class="flex items-center space-x-2 w-full sm:w-7/12 justify-end">
+              <button id="action-fold-btn" onclick="takeAction('FOLD')" class="flex-1 py-3 rounded-2xl bg-gradient-to-b from-rose-600 to-rose-700 hover:from-rose-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-rose-900/30 transition active:scale-95 disabled:opacity-30">
+                Fold
+              </button>
+              <button id="action-call-btn" onclick="takeAction('CALL')" class="flex-1 py-3 rounded-2xl bg-gradient-to-b from-emerald-600 to-emerald-700 hover:from-emerald-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-900/30 transition active:scale-95 disabled:opacity-30">
+                Check
+              </button>
+              <button id="action-raise-btn" onclick="takeAction('RAISE')" class="flex-1 py-3 rounded-2xl bg-gradient-to-b from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-900/30 transition active:scale-95 disabled:opacity-30">
+                Bet 2
+              </button>
+            </div>
           </div>
-
-          <!-- Main 3 Decision Action Buttons -->
-          <div class="flex items-center space-x-2 sm:space-x-3 w-full md:w-7/12 justify-end">
-            <!-- FOLD -->
-            <button id="action-fold-btn" onclick="takeAction('FOLD')" class="flex-1 py-3 sm:py-3.5 rounded-2xl bg-gradient-to-b from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-black text-sm uppercase tracking-wider shadow-lg shadow-rose-900/30 transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none">
-              Fold
-            </button>
-            
-            <!-- CHECK / CALL -->
-            <button id="action-call-btn" onclick="takeAction('CALL')" class="flex-1 py-3 sm:py-3.5 rounded-2xl bg-gradient-to-b from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-900/30 transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none">
-              Check
-            </button>
-
-            <!-- BET / RAISE -->
-            <button id="action-raise-btn" onclick="takeAction('RAISE')" class="flex-1 py-3 sm:py-3.5 rounded-2xl bg-gradient-to-b from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-sm uppercase tracking-wider shadow-lg shadow-amber-900/30 transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none">
-              Raise to 100
-            </button>
-          </div>
-
         </div>
-
       </div>
 
     </section>

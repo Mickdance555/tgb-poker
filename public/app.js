@@ -342,30 +342,34 @@ let userProfile = {
   registeredAt: new Date().toLocaleDateString('th-TH'),
 };
 
+let isSpectatorMode = true;
+
 let activeTable = {
   id: 'table_daily_mtt_01',
-  title: '#001 Daily Standard MTT • Table 01',
-  smallBlind: 25,
-  bigBlind: 50,
+  title: 'Newbie 0.5/1 MTT • 6-Max',
+  smallBlind: 0.5,
+  bigBlind: 1,
   ante: 0,
-  pot: 0,
+  pot: 3,
   stage: 'PREFLOP',
-  dealerSeat: 0,
-  turnSeat: 1,
+  dealerSeat: 1,
+  turnSeat: 0,
   communityCards: [],
-  handNumber: 0,
+  handNumber: 1,
   deck: [],
-  handActive: false,
+  handActive: true,
   tableNotice: 'READY',
   serverSeedHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
   serverSeed: '',
   seats: [
-    { seatNumber: 0, name: 'MICKDANCE (You)', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: true, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-amber-600 to-yellow-500' },
-    { seatNumber: 1, name: 'Viper (TAG)', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-blue-600 to-indigo-500' },
-    { seatNumber: 2, name: 'BluffMaster', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-rose-600 to-red-500' },
-    { seatNumber: 3, name: 'The Rock', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-emerald-600 to-teal-500' },
-    { seatNumber: 4, name: 'CallingStation', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-purple-600 to-violet-500' },
-    { seatNumber: 5, name: 'GTO_Bot', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-cyan-600 to-blue-500' },
+    { seatNumber: 0, name: '蘇察哈爾燦', chips: 497, currentBet: 1, totalBetThisHand: 1, isHero: false, cards: ['Kh', 'Qs'], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-amber-600 to-red-600', avatarEmoji: '🐻', empty: false, turnTimeLeft: 4 },
+    { seatNumber: 1, name: 'jryep117179...', chips: 48.5, currentBet: 2, totalBetThisHand: 2, isHero: false, cards: ['Jc', '10d'], isFolded: false, isAllIn: false, actedThisStreet: true, avatarBg: 'from-slate-700 to-slate-900', avatarEmoji: '👤', empty: false, turnTimeLeft: 0 },
+    { seatNumber: 2, name: '', chips: 0, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: true, isAllIn: false, actedThisStreet: true, empty: true },
+    { seatNumber: 3, name: '', chips: 0, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: true, isAllIn: false, actedThisStreet: true, empty: true },
+    { seatNumber: 4, name: '', chips: 0, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: true, isAllIn: false, actedThisStreet: true, empty: true },
+    { seatNumber: 5, name: '', chips: 0, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: true, isAllIn: false, actedThisStreet: true, empty: true },
+    { seatNumber: 6, name: '', chips: 0, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: true, isAllIn: false, actedThisStreet: true, empty: true },
+    { seatNumber: 7, name: '', chips: 0, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: true, isAllIn: false, actedThisStreet: true, empty: true },
   ],
 };
 
@@ -1060,55 +1064,105 @@ function renderPokerTable() {
   const potEl = document.getElementById('table-pot-amount');
   const bannerEl = document.getElementById('table-stage-banner');
   const blindsEl = document.getElementById('table-blinds-info');
+  const blindsPill = document.getElementById('table-blinds-pill');
 
   if (potEl) potEl.innerText = activeTable.pot.toLocaleString();
   if (bannerEl) bannerEl.innerText = activeTable.tableNotice || activeTable.stage;
   if (blindsEl) blindsEl.innerText = `Blinds: ${activeTable.smallBlind} / ${activeTable.bigBlind} • Ante: ${activeTable.ante}`;
+  if (blindsPill) blindsPill.innerText = `${activeTable.smallBlind} / ${activeTable.bigBlind}`;
+
+  // Spectator vs Seated console mode toggle
+  const modeText = document.getElementById('table-mode-text');
+  const modeToggle = document.getElementById('table-mode-toggle');
+  const spectatorBar = document.getElementById('spectator-controls-bar');
+  const heroActionConsole = document.getElementById('hero-action-console');
+
+  if (isSpectatorMode) {
+    if (modeText) modeText.innerText = 'Spectating';
+    if (modeToggle) {
+      modeToggle.className = 'px-3.5 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/50 text-amber-400 font-black text-xs cursor-pointer flex items-center space-x-1.5 shadow-sm';
+    }
+    if (spectatorBar) {
+      spectatorBar.classList.remove('hidden');
+      spectatorBar.classList.add('flex');
+    }
+    if (heroActionConsole) {
+      heroActionConsole.classList.add('hidden');
+    }
+  } else {
+    if (modeText) modeText.innerText = 'Playing';
+    if (modeToggle) {
+      modeToggle.className = 'px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 font-black text-xs cursor-pointer flex items-center space-x-1.5 shadow-sm';
+    }
+    if (spectatorBar) {
+      spectatorBar.classList.add('hidden');
+      spectatorBar.classList.remove('flex');
+    }
+    if (heroActionConsole) {
+      heroActionConsole.classList.remove('hidden');
+    }
+  }
 
   // Community Cards
   const communityContainer = document.getElementById('community-cards');
   if (communityContainer) {
     if (activeTable.communityCards.length === 0) {
       communityContainer.innerHTML = `
-        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-12 sm:w-14 h-16 sm:h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">1</div>
-        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-12 sm:w-14 h-16 sm:h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">2</div>
-        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-12 sm:w-14 h-16 sm:h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">3</div>
-        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-12 sm:w-14 h-16 sm:h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">4</div>
-        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-12 sm:w-14 h-16 sm:h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">5</div>
+        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-10 sm:w-12 h-14 sm:h-18 flex items-center justify-center text-emerald-600/40 text-xs font-bold">1</div>
+        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-10 sm:w-12 h-14 sm:h-18 flex items-center justify-center text-emerald-600/40 text-xs font-bold">2</div>
+        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-10 sm:w-12 h-14 sm:h-18 flex items-center justify-center text-emerald-600/40 text-xs font-bold">3</div>
+        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-10 sm:w-12 h-14 sm:h-18 flex items-center justify-center text-emerald-600/40 text-xs font-bold">4</div>
+        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-10 sm:w-12 h-14 sm:h-18 flex items-center justify-center text-emerald-600/40 text-xs font-bold">5</div>
       `;
     } else {
       communityContainer.innerHTML = activeTable.communityCards.map(c => renderCardHTML(c, true)).join('');
     }
   }
 
-  // Render 6 Seats
+  // Active Spotlight Beam
+  const spotlightEl = document.getElementById('table-spotlight');
+  if (spotlightEl) {
+    spotlightEl.style.opacity = activeTable.handActive ? '0.35' : '0.1';
+  }
+
+  // Render 8 Seats
   activeTable.seats.forEach((seat, idx) => {
     const seatEl = document.getElementById(`seat-${idx}`);
     if (!seatEl) return;
 
+    // Check if empty seat
+    if (seat.empty) {
+      seatEl.innerHTML = `
+        <button onclick="sitDownAtSeat(${idx})" class="empty-seat-btn group" title="Take Seat #${idx}">
+          <i class="fa-solid fa-arrow-down text-teal-400 group-hover:scale-125 transition-transform"></i>
+        </button>
+      `;
+      return;
+    }
+
+    // Occupied seat
     const isTurn = activeTable.handActive && activeTable.turnSeat === idx;
     const isDealer = activeTable.dealerSeat === idx;
 
+    // Hole Cards HTML
     let cardsHtml = '';
     if (!seat.isFolded && seat.cards && seat.cards.length >= 2) {
       if (seat.isHero || activeTable.stage === 'SHOWDOWN') {
         cardsHtml = `
-          <div class="flex items-center -space-x-4 mb-1">
+          <div class="flex items-center -space-x-3 sm:-space-x-4 mb-0.5 filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]">
             ${seat.cards.map(c => renderCardHTML(c, true)).join('')}
           </div>
         `;
       } else {
         cardsHtml = `
-          <div class="flex items-center -space-x-4 mb-1">
+          <div class="flex items-center -space-x-3 sm:-space-x-4 mb-0.5 filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]">
             ${renderCardHTML(null, false)}
             ${renderCardHTML(null, false)}
           </div>
         `;
       }
     } else if (seat.isFolded) {
-      cardsHtml = `<div class="text-[10px] text-slate-500 font-bold uppercase mb-1">FOLDED</div>`;
-    } else {
-      cardsHtml = `<div class="text-[10px] text-slate-500 mb-1">Waiting...</div>`;
+      cardsHtml = `<div class="text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">FOLDED</div>`;
     }
 
     // Avatar styling & frame
@@ -1123,68 +1177,74 @@ function renderPokerTable() {
         avatarContentHtml = `<span class="text-xl sm:text-2xl">${userProfile.avatarEmoji || '🦁'}</span>`;
       }
     } else {
-      const botIcons = ['👤', '🐍', '🎭', '🗿', '🐴', '🤖'];
-      avatarContentHtml = `<span class="text-base sm:text-lg">${botIcons[idx] || seat.name.charAt(0)}</span>`;
+      avatarContentHtml = `<span class="text-lg sm:text-xl">${seat.avatarEmoji || '👤'}</span>`;
     }
 
-    if (idx === 3) {
-      // Top Center Seat: Avatar on top outside, cards below pointing into felt
+    // Turn countdown ring + badge (e.g. 4s)
+    const countdownBadge = isTurn ? `<div class="turn-countdown-badge">${seat.turnTimeLeft || 4}</div>` : '';
+
+    // Bet chip on felt
+    const betChipHtml = seat.currentBet > 0 ? `
+      <div class="felt-bet-chip mt-1 animate-pulse">
+        <span class="chip-icon"></span>
+        <span class="chip-val">${seat.currentBet}</span>
+      </div>
+    ` : '';
+
+    // Seats layout: top seats (4, 5) have cards below, others have cards above pointing into table
+    const isTopSeat = (idx === 4 || idx === 5);
+
+    if (isTopSeat) {
       seatEl.innerHTML = `
-        <div class="avatar-ring ${isTurn ? 'turn-active' : ''} ${frameClass} bg-gradient-to-tr ${seat.avatarBg}">
-          ${avatarContentHtml}
-          ${isDealer ? `<div class="dealer-button absolute -top-1 -right-1">D</div>` : ''}
-        </div>
-        <div class="text-center my-0.5">
-          <div class="text-[11px] font-extrabold text-white truncate max-w-[80px] sm:max-w-[100px]">${seat.name}</div>
-          <div class="chip-badge mt-0.5 justify-center">
-            <span>₮</span> ${seat.chips.toLocaleString()}
+        <div class="relative flex flex-col items-center">
+          <div class="avatar-ring ${isTurn ? 'turn-countdown-ring' : ''} ${frameClass} bg-gradient-to-tr ${seat.avatarBg || 'from-slate-700 to-slate-900'} relative">
+            ${avatarContentHtml}
+            ${isDealer ? `<div class="dealer-button absolute -bottom-1 -right-1">D</div>` : ''}
+            ${countdownBadge}
           </div>
-        </div>
-        ${cardsHtml}
-        ${seat.currentBet > 0 ? `
-          <div class="mt-0.5 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-mono font-bold animate-pulse">
-            Bet: ${seat.currentBet}
+          <div class="bg-slate-950/90 border border-slate-700/60 rounded-full px-2.5 py-0.5 mt-1 text-center shadow-lg min-w-[70px]">
+            <div class="text-[10px] font-bold text-white truncate max-w-[80px]">${seat.name}</div>
+            <div class="text-[10px] font-mono font-black text-amber-400">₮ ${seat.chips.toLocaleString()}</div>
           </div>
-        ` : ''}
+          ${cardsHtml}
+          ${betChipHtml}
+        </div>
       `;
     } else {
-      // Bottom & Side Seats
       seatEl.innerHTML = `
-        ${cardsHtml}
-        <div class="avatar-ring ${isTurn ? 'turn-active' : ''} ${frameClass} bg-gradient-to-tr ${seat.avatarBg}">
-          ${avatarContentHtml}
-          ${isDealer ? `<div class="dealer-button absolute -top-1 -right-1">D</div>` : ''}
-        </div>
-        <div class="text-center mt-1">
-          <div class="text-[11px] font-extrabold text-white truncate max-w-[80px] sm:max-w-[100px]">${seat.name}</div>
-          <div class="chip-badge mt-0.5 justify-center">
-            <span>₮</span> ${seat.chips.toLocaleString()}
+        <div class="relative flex flex-col items-center">
+          ${cardsHtml}
+          <div class="avatar-ring ${isTurn ? 'turn-countdown-ring' : ''} ${frameClass} bg-gradient-to-tr ${seat.avatarBg || 'from-slate-700 to-slate-900'} relative">
+            ${avatarContentHtml}
+            ${isDealer ? `<div class="dealer-button absolute -bottom-1 -right-1">D</div>` : ''}
+            ${countdownBadge}
           </div>
-        </div>
-        ${seat.currentBet > 0 ? `
-          <div class="mt-1 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-mono font-bold animate-pulse">
-            Bet: ${seat.currentBet}
+          <div class="bg-slate-950/90 border border-slate-700/60 rounded-full px-2.5 py-0.5 mt-1 text-center shadow-lg min-w-[70px]">
+            <div class="text-[10px] font-bold text-white truncate max-w-[80px]">${seat.name}</div>
+            <div class="text-[10px] font-mono font-black text-amber-400">₮ ${seat.chips.toLocaleString()}</div>
           </div>
-        ` : ''}
+          ${betChipHtml}
+        </div>
       `;
     }
   });
 
   // Action Buttons state for Hero
-  const heroSeat = activeTable.seats[0];
-  const isHeroTurn = activeTable.handActive && activeTable.turnSeat === 0 && !heroSeat.isFolded;
+  const heroSeat = activeTable.seats.find(s => s.isHero);
+  const heroIndex = heroSeat ? activeTable.seats.indexOf(heroSeat) : -1;
+  const isHeroTurn = heroSeat && activeTable.handActive && activeTable.turnSeat === heroIndex && !heroSeat.isFolded;
 
   const foldBtn = document.getElementById('action-fold-btn');
   const callBtn = document.getElementById('action-call-btn');
   const raiseBtn = document.getElementById('action-raise-btn');
 
-  if (foldBtn && callBtn && raiseBtn) {
+  if (foldBtn && callBtn && raiseBtn && heroSeat) {
     foldBtn.disabled = !isHeroTurn;
     callBtn.disabled = !isHeroTurn;
     raiseBtn.disabled = !isHeroTurn;
 
-    const highestBet = Math.max(...activeTable.seats.map(s => s.currentBet));
-    const toCall = highestBet - heroSeat.currentBet;
+    const highestBet = Math.max(...activeTable.seats.filter(s => !s.empty).map(s => s.currentBet || 0));
+    const toCall = highestBet - (heroSeat.currentBet || 0);
 
     if (toCall <= 0) {
       callBtn.innerText = 'Check';
@@ -1203,7 +1263,7 @@ function renderPokerTable() {
 }
 
 function evaluateHeroHandText() {
-  const hero = activeTable.seats[0];
+  const hero = activeTable.seats.find(s => s.isHero);
   if (!hero || hero.isFolded) return 'Folded';
   if (!hero.cards || hero.cards.length < 2) return 'Waiting for next hand...';
 
@@ -1223,6 +1283,108 @@ function evaluateHeroHandText() {
   return `${evaluation.desc} • ${activeTable.stage}`;
 }
 
+// Seat and Spectator Mode Handlers
+function sitDownAtSeat(seatIdx) {
+  if (seatIdx < 0 || seatIdx >= activeTable.seats.length) return;
+  const targetSeat = activeTable.seats[seatIdx];
+  if (!targetSeat.empty && !targetSeat.isHero) {
+    alert(`Seat #${seatIdx} is already taken!`);
+    return;
+  }
+
+  // Remove hero from any existing seat first
+  activeTable.seats.forEach(s => {
+    if (s.isHero) {
+      s.isHero = false;
+      s.empty = true;
+      s.name = '';
+      s.chips = 0;
+      s.cards = [];
+      s.isFolded = true;
+    }
+  });
+
+  // Sit Hero into seatIdx
+  targetSeat.empty = false;
+  targetSeat.isHero = true;
+  targetSeat.name = userProfile.nickname || 'Hero';
+  targetSeat.chips = userProfile.tgbBalance > 0 ? userProfile.tgbBalance : 1000;
+  targetSeat.currentBet = 0;
+  targetSeat.totalBetThisHand = 0;
+  targetSeat.isFolded = false;
+  targetSeat.isAllIn = false;
+  targetSeat.actedThisStreet = false;
+  targetSeat.avatarEmoji = userProfile.avatarEmoji || '🦁';
+  targetSeat.avatarBg = 'from-emerald-600 to-teal-700';
+
+  isSpectatorMode = false;
+  playSound('deal');
+  renderPokerTable();
+
+  // If hand not active or fewer than 2 players in hand, start a hand
+  const activePlayers = activeTable.seats.filter(s => !s.empty);
+  if (activePlayers.length >= 2 && !activeTable.handActive) {
+    setTimeout(startNewHand, 800);
+  }
+}
+
+function standUpToSpectate() {
+  activeTable.seats.forEach(s => {
+    if (s.isHero) {
+      s.isHero = false;
+      s.empty = true;
+      s.name = '';
+      s.chips = 0;
+      s.cards = [];
+      s.isFolded = true;
+    }
+  });
+  isSpectatorMode = true;
+  renderPokerTable();
+}
+
+function toggleSpectatorMode() {
+  if (isSpectatorMode) {
+    const emptyIdx = activeTable.seats.findIndex(s => s.empty);
+    if (emptyIdx !== -1) {
+      sitDownAtSeat(emptyIdx);
+    } else {
+      alert('All seats are currently full!');
+    }
+  } else {
+    standUpToSpectate();
+  }
+}
+
+function handleSendTableChat(e) {
+  if (e) e.preventDefault();
+  const input = document.getElementById('table-chat-input');
+  if (!input) return;
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  const chatContainer = document.getElementById('table-chat-messages');
+  if (chatContainer) {
+    const sender = userProfile.nickname || 'You';
+    const msgEl = document.createElement('div');
+    msgEl.innerHTML = `<span class="text-teal-400 font-bold">${escapeHtml(sender)}:</span> <span class="text-white">${escapeHtml(msg)}</span>`;
+    chatContainer.appendChild(msgEl);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+  input.value = '';
+}
+
+function insertTableEmoji(emoji) {
+  const chatContainer = document.getElementById('table-chat-messages');
+  if (chatContainer) {
+    const sender = userProfile.nickname || 'You';
+    const msgEl = document.createElement('div');
+    msgEl.innerHTML = `<span class="text-teal-400 font-bold">${escapeHtml(sender)}:</span> <span class="text-xl">${emoji}</span>`;
+    chatContainer.appendChild(msgEl);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+}
+
 // ============================================================================
 // 8. REAL TEXAS HOLD'EM POKER ENGINE
 // ============================================================================
@@ -1233,6 +1395,14 @@ function showTableBanner(text) {
 }
 
 function startNewHand() {
+  const occupiedSeats = activeTable.seats.filter(s => !s.empty);
+  if (occupiedSeats.length < 2) {
+    showTableBanner('Waiting for players...');
+    activeTable.handActive = false;
+    renderPokerTable();
+    return;
+  }
+
   playSound('deal');
   activeTable.handNumber = (activeTable.handNumber || 0) + 1;
   activeTable.stage = 'PREFLOP';
@@ -1243,18 +1413,23 @@ function startNewHand() {
   // Generate 52-card shuffled deck
   activeTable.deck = createFreshShuffledDeck();
 
-  // Rotate dealer
-  activeTable.dealerSeat = (activeTable.dealerSeat + 1) % activeTable.seats.length;
+  // Rotate dealer among non-empty seats
+  let nextDealer = (activeTable.dealerSeat + 1) % activeTable.seats.length;
+  while (activeTable.seats[nextDealer].empty) {
+    nextDealer = (nextDealer + 1) % activeTable.seats.length;
+  }
+  activeTable.dealerSeat = nextDealer;
 
-  // Reset player hand states & deal 2 hole cards to each active seat
+  // Reset player hand states & deal 2 hole cards to each occupied seat
   activeTable.seats.forEach((seat, idx) => {
-    // Top up chips if broke
-    if (seat.chips < 100) seat.chips = 5000;
+    if (seat.empty) return;
+    if (seat.chips < 10) seat.chips = 500;
     seat.currentBet = 0;
     seat.totalBetThisHand = 0;
     seat.isFolded = false;
     seat.isAllIn = false;
     seat.actedThisStreet = false;
+    seat.turnTimeLeft = 4;
     seat.cards = [activeTable.deck.pop(), activeTable.deck.pop()];
   });
 
@@ -1265,60 +1440,78 @@ function startNewHand() {
     hero3Bet: false,
   };
 
-  // Blinds
-  const sbSeatIdx = (activeTable.dealerSeat + 1) % 6;
-  const bbSeatIdx = (activeTable.dealerSeat + 2) % 6;
+  // Blinds among occupied seats
+  let sbSeatIdx = (activeTable.dealerSeat + 1) % activeTable.seats.length;
+  while (activeTable.seats[sbSeatIdx].empty) {
+    sbSeatIdx = (sbSeatIdx + 1) % activeTable.seats.length;
+  }
 
-  activeTable.seats[sbSeatIdx].chips -= 25;
-  activeTable.seats[sbSeatIdx].currentBet = 25;
-  activeTable.seats[sbSeatIdx].totalBetThisHand = 25;
+  let bbSeatIdx = (sbSeatIdx + 1) % activeTable.seats.length;
+  while (activeTable.seats[bbSeatIdx].empty) {
+    bbSeatIdx = (bbSeatIdx + 1) % activeTable.seats.length;
+  }
 
-  activeTable.seats[bbSeatIdx].chips -= 50;
-  activeTable.seats[bbSeatIdx].currentBet = 50;
-  activeTable.seats[bbSeatIdx].totalBetThisHand = 50;
+  const sbAmt = activeTable.smallBlind || 0.5;
+  const bbAmt = activeTable.bigBlind || 1;
 
-  activeTable.pot = 75;
+  activeTable.seats[sbSeatIdx].chips -= sbAmt;
+  activeTable.seats[sbSeatIdx].currentBet = sbAmt;
+  activeTable.seats[sbSeatIdx].totalBetThisHand = sbAmt;
 
-  // Preflop first to act is UTG (seat after BB)
-  const utgSeatIdx = (activeTable.dealerSeat + 3) % 6;
+  activeTable.seats[bbSeatIdx].chips -= bbAmt;
+  activeTable.seats[bbSeatIdx].currentBet = bbAmt;
+  activeTable.seats[bbSeatIdx].totalBetThisHand = bbAmt;
+
+  activeTable.pot = sbAmt + bbAmt;
+
+  // Preflop first to act is seat after BB
+  let utgSeatIdx = (bbSeatIdx + 1) % activeTable.seats.length;
+  while (activeTable.seats[utgSeatIdx].empty) {
+    utgSeatIdx = (utgSeatIdx + 1) % activeTable.seats.length;
+  }
   activeTable.turnSeat = utgSeatIdx;
 
   renderPokerTable();
 
-  // If bot turn first, schedule bot turns
-  if (activeTable.turnSeat !== 0) {
+  // If not hero's turn, schedule bot turns
+  const heroSeat = activeTable.seats.find(s => s.isHero);
+  const heroIdx = heroSeat ? activeTable.seats.indexOf(heroSeat) : -1;
+  if (activeTable.turnSeat !== heroIdx) {
     setTimeout(runBotTurns, 750);
   }
 }
 
 function takeAction(actionType) {
-  if (!activeTable.handActive || activeTable.turnSeat !== 0) return;
+  const heroSeat = activeTable.seats.find(s => s.isHero);
+  if (!heroSeat) return;
+  const heroIdx = activeTable.seats.indexOf(heroSeat);
 
-  const hero = activeTable.seats[0];
-  const highestBet = Math.max(...activeTable.seats.map(s => s.currentBet));
-  const toCall = highestBet - hero.currentBet;
+  if (!activeTable.handActive || activeTable.turnSeat !== heroIdx) return;
+
+  const highestBet = Math.max(...activeTable.seats.filter(s => !s.empty).map(s => s.currentBet));
+  const toCall = highestBet - heroSeat.currentBet;
 
   if (actionType === 'FOLD') {
-    hero.isFolded = true;
-    hero.actedThisStreet = true;
+    heroSeat.isFolded = true;
+    heroSeat.actedThisStreet = true;
     playSound('fold');
   } else if (actionType === 'CALL') {
     if (activeTable.stage === 'PREFLOP' && toCall > 0 && !currentHandStats.heroVpip) {
       currentHandStats.heroVpip = true;
       userProfile.vpipHands = (userProfile.vpipHands || 0) + 1;
     }
-    const actualCall = Math.min(toCall, hero.chips);
-    hero.chips -= actualCall;
-    hero.currentBet += actualCall;
-    hero.totalBetThisHand = (hero.totalBetThisHand || 0) + actualCall;
+    const actualCall = Math.min(toCall, heroSeat.chips);
+    heroSeat.chips -= actualCall;
+    heroSeat.currentBet += actualCall;
+    heroSeat.totalBetThisHand = (heroSeat.totalBetThisHand || 0) + actualCall;
     activeTable.pot += actualCall;
-    hero.actedThisStreet = true;
+    heroSeat.actedThisStreet = true;
     playSound('chips');
   } else if (actionType === 'RAISE') {
-    const inputVal = parseInt(document.getElementById('raise-amount-input').value, 10);
+    const inputVal = parseFloat(document.getElementById('raise-amount-input').value);
     const minRaise = highestBet > 0 ? highestBet * 2 : activeTable.bigBlind * 2;
     const raiseTarget = isNaN(inputVal) || inputVal < minRaise ? minRaise : inputVal;
-    const additional = Math.min(raiseTarget - hero.currentBet, hero.chips);
+    const additional = Math.min(raiseTarget - heroSeat.currentBet, heroSeat.chips);
 
     if (activeTable.stage === 'PREFLOP') {
       if (!currentHandStats.heroVpip) {
@@ -1335,11 +1528,11 @@ function takeAction(actionType) {
       }
     }
 
-    hero.chips -= additional;
-    hero.currentBet += additional;
-    hero.totalBetThisHand = (hero.totalBetThisHand || 0) + additional;
+    heroSeat.chips -= additional;
+    heroSeat.currentBet += additional;
+    heroSeat.totalBetThisHand = (heroSeat.totalBetThisHand || 0) + additional;
     activeTable.pot += additional;
-    hero.actedThisStreet = true;
+    heroSeat.actedThisStreet = true;
     playSound('chips');
   }
 
@@ -1348,22 +1541,23 @@ function takeAction(actionType) {
 }
 
 function runBotTurns() {
-  if (!activeTable.handActive || activeTable.turnSeat === 0) return;
+  const heroSeat = activeTable.seats.find(s => s.isHero);
+  const heroIdx = heroSeat ? activeTable.seats.indexOf(heroSeat) : -1;
+
+  if (!activeTable.handActive || activeTable.turnSeat === heroIdx) return;
 
   const bot = activeTable.seats[activeTable.turnSeat];
-  if (!bot || bot.isFolded || bot.chips <= 0) {
+  if (!bot || bot.empty || bot.isFolded || bot.chips <= 0) {
     advanceToNextPlayer();
     return;
   }
 
-  const highestBet = Math.max(...activeTable.seats.map(s => s.currentBet));
+  const highestBet = Math.max(...activeTable.seats.filter(s => !s.empty).map(s => s.currentBet));
   const diff = highestBet - bot.currentBet;
 
   if (diff === 0) {
-    // Check
     bot.actedThisStreet = true;
-  } else if (diff <= 100) {
-    // Call
+  } else if (diff <= 10) {
     const callAmt = Math.min(diff, bot.chips);
     bot.chips -= callAmt;
     bot.currentBet += callAmt;
@@ -1372,7 +1566,6 @@ function runBotTurns() {
     bot.actedThisStreet = true;
     playSound('chips');
   } else {
-    // Rational fold or call
     if (Math.random() > 0.4 && bot.chips >= diff) {
       const callAmt = Math.min(diff, bot.chips);
       bot.chips -= callAmt;
@@ -1395,22 +1588,27 @@ function runBotTurns() {
 function advanceToNextPlayer() {
   if (!activeTable.handActive) return;
 
+  const activeSeats = activeTable.seats.filter(s => !s.empty);
+  const nonFolded = activeSeats.filter(s => !s.isFolded);
+
   // 1. Check if only 1 player remains unfolded
-  const nonFolded = activeTable.seats.filter(s => !s.isFolded);
   if (nonFolded.length === 1) {
     concludeHand(nonFolded[0], 'uncontested');
     return;
   }
 
   // 2. Check if current street betting round is finished
-  const highestBet = Math.max(...activeTable.seats.map(s => s.currentBet));
+  const highestBet = Math.max(...activeSeats.map(s => s.currentBet));
   const activeUnfoldedWithChips = nonFolded.filter(s => s.chips > 0);
   const allActed = activeUnfoldedWithChips.every(s => s.actedThisStreet);
   const betsBalanced = activeUnfoldedWithChips.every(s => s.currentBet === highestBet);
 
+  const heroSeat = activeTable.seats.find(s => s.isHero);
+  const heroIdx = heroSeat ? activeTable.seats.indexOf(heroSeat) : -1;
+
   if (allActed && betsBalanced) {
     // Street Transition!
-    activeTable.seats.forEach(s => {
+    activeSeats.forEach(s => {
       s.currentBet = 0;
       s.actedThisStreet = false;
     });
@@ -1431,7 +1629,6 @@ function advanceToNextPlayer() {
       showTableBanner('RIVER');
       playSound('deal');
     } else if (activeTable.stage === 'RIVER') {
-      // SHOWDOWN!
       activeTable.stage = 'SHOWDOWN';
       renderPokerTable();
       evaluateShowdown();
@@ -1439,32 +1636,32 @@ function advanceToNextPlayer() {
     }
 
     // Set first to act in next street (player left of dealer)
-    let nextSeat = (activeTable.dealerSeat + 1) % 6;
-    while (activeTable.seats[nextSeat].isFolded || activeTable.seats[nextSeat].chips <= 0) {
-      nextSeat = (nextSeat + 1) % 6;
+    let nextSeat = (activeTable.dealerSeat + 1) % activeTable.seats.length;
+    while (activeTable.seats[nextSeat].empty || activeTable.seats[nextSeat].isFolded || activeTable.seats[nextSeat].chips <= 0) {
+      nextSeat = (nextSeat + 1) % activeTable.seats.length;
     }
     activeTable.turnSeat = nextSeat;
     renderPokerTable();
 
-    if (activeTable.turnSeat === 0) return; // Hero's turn
+    if (activeTable.turnSeat === heroIdx) return;
     setTimeout(runBotTurns, 700);
     return;
   }
 
   // 3. Move to next player in current street
-  let nextSeat = (activeTable.turnSeat + 1) % 6;
-  while (activeTable.seats[nextSeat].isFolded || activeTable.seats[nextSeat].chips <= 0) {
-    nextSeat = (nextSeat + 1) % 6;
+  let nextSeat = (activeTable.turnSeat + 1) % activeTable.seats.length;
+  while (activeTable.seats[nextSeat].empty || activeTable.seats[nextSeat].isFolded || activeTable.seats[nextSeat].chips <= 0) {
+    nextSeat = (nextSeat + 1) % activeTable.seats.length;
   }
   activeTable.turnSeat = nextSeat;
   renderPokerTable();
 
-  if (activeTable.turnSeat === 0) return; // Hero's turn
+  if (activeTable.turnSeat === heroIdx) return;
   setTimeout(runBotTurns, 650);
 }
 
 function evaluateShowdown() {
-  const nonFolded = activeTable.seats.filter(s => !s.isFolded);
+  const nonFolded = activeTable.seats.filter(s => !s.empty && !s.isFolded);
   let bestScore = -1;
   let winner = nonFolded[0];
   let winningDesc = '';
@@ -1485,40 +1682,44 @@ function evaluateShowdown() {
 function concludeHand(winner, reason, showdownDesc = '') {
   activeTable.handActive = false;
   const wonPot = activeTable.pot;
-  winner.chips += wonPot;
-
-  const desc = showdownDesc ? `ด้วย ${showdownDesc}` : '(Uncontested Pot)';
-  showTableBanner(`🏆 ${winner.name} ชนะ ${wonPot.toLocaleString()} ₮ ${desc}`);
+  if (winner) {
+    winner.chips += wonPot;
+    const desc = showdownDesc ? `ด้วย ${showdownDesc}` : '(Uncontested Pot)';
+    showTableBanner(`🏆 ${winner.name} ชนะ ${wonPot.toLocaleString()} ₮ ${desc}`);
+  }
 
   // Update Hero Stats & EXP
-  userProfile.totalHands = (userProfile.totalHands || 0) + 1;
-  const heroInvested = activeTable.seats[0].totalBetThisHand || 0;
+  const heroSeat = activeTable.seats.find(s => s.isHero);
+  if (heroSeat) {
+    userProfile.totalHands = (userProfile.totalHands || 0) + 1;
+    const heroInvested = heroSeat.totalBetThisHand || 0;
 
-  if (winner.isHero) {
-    const netProfit = wonPot - heroInvested;
-    userProfile.netTgb = (userProfile.netTgb || 0) + netProfit;
-    userProfile.tgbBalance = (userProfile.tgbBalance || 12500) + netProfit;
-    userProfile.exp = (userProfile.exp || 0) + 100;
-    playSound('win');
-  } else {
-    userProfile.netTgb = (userProfile.netTgb || 0) - heroInvested;
-    userProfile.tgbBalance = Math.max(0, (userProfile.tgbBalance || 12500) - heroInvested);
-    userProfile.exp = (userProfile.exp || 0) + 25;
+    if (winner && winner.isHero) {
+      const netProfit = wonPot - heroInvested;
+      userProfile.netTgb = (userProfile.netTgb || 0) + netProfit;
+      userProfile.tgbBalance = (userProfile.tgbBalance || 12500) + netProfit;
+      userProfile.exp = (userProfile.exp || 0) + 100;
+      playSound('win');
+    } else {
+      userProfile.netTgb = (userProfile.netTgb || 0) - heroInvested;
+      userProfile.tgbBalance = Math.max(0, (userProfile.tgbBalance || 12500) - heroInvested);
+      userProfile.exp = (userProfile.exp || 0) + 25;
+    }
+
+    // Level check
+    const neededExp = (userProfile.level || 1) * 500;
+    if ((userProfile.exp || 0) >= neededExp) {
+      userProfile.level = (userProfile.level || 1) + 1;
+    }
+
+    // Persist session
+    try {
+      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(userProfile));
+    } catch (e) {}
+
+    updateAuthUI(true, userProfile);
+    renderProfileView();
   }
-
-  // Level check
-  const neededExp = (userProfile.level || 1) * 500;
-  if ((userProfile.exp || 0) >= neededExp) {
-    userProfile.level = (userProfile.level || 1) + 1;
-  }
-
-  // Persist session
-  try {
-    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(userProfile));
-  } catch (e) {}
-
-  updateAuthUI(true, userProfile);
-  renderProfileView();
 
   activeTable.pot = 0;
   renderPokerTable();
@@ -2554,6 +2755,11 @@ window.takeAction = takeAction;
 window.setRaisePreset = setRaisePreset;
 window.onRaiseSliderChange = onRaiseSliderChange;
 window.onRaiseInputChange = onRaiseInputChange;
+window.sitDownAtSeat = sitDownAtSeat;
+window.standUpToSpectate = standUpToSpectate;
+window.toggleSpectatorMode = toggleSpectatorMode;
+window.handleSendTableChat = handleSendTableChat;
+window.insertTableEmoji = insertTableEmoji;
 window.toggleAudio = toggleAudio;
 window.claimFaucet = claimFaucet;
 window.submitExamChoice = submitExamChoice;
