@@ -1,20 +1,7 @@
 /**
  * TGB POKER — Interactive Client Controller & Browser Game Engine
- * Includes Web Audio FX, Bot AI, Provably Fair Verification, and Ledger Integration
+ * Fully self-contained, works with zero external network dependencies, file:// protocol, or cloud.
  */
-
-import {
-  auth,
-  isFirebaseLive,
-  loginWithGoogle,
-  loginWithEmail,
-  registerWithEmail,
-  logoutFirebase,
-  recordTransactionFirestore,
-  listenToUserProfile,
-  listenToUserTransactions
-} from './firebase-config.js';
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
 // ============================================================================
 // 1. WEB AUDIO SOUND SYNTHESIZER (No external mp3 dependencies needed)
@@ -35,7 +22,6 @@ function playSound(type) {
     const now = audioCtx.currentTime;
 
     if (type === 'deal') {
-      // Swish noise for dealing card
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'triangle';
@@ -48,7 +34,6 @@ function playSound(type) {
       osc.start(now);
       osc.stop(now + 0.08);
     } else if (type === 'chips') {
-      // Clinking chips sound
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sine';
@@ -61,7 +46,6 @@ function playSound(type) {
       osc.start(now);
       osc.stop(now + 0.1);
     } else if (type === 'win') {
-      // Victorious major triad chord
       [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
@@ -95,9 +79,11 @@ function playSound(type) {
 function toggleAudio() {
   soundEnabled = !soundEnabled;
   const btn = document.getElementById('sound-btn');
-  btn.innerHTML = soundEnabled
-    ? '<i class="fa-solid fa-volume-high"></i>'
-    : '<i class="fa-solid fa-volume-xmark text-rose-400"></i>';
+  if (btn) {
+    btn.innerHTML = soundEnabled
+      ? '<i class="fa-solid fa-volume-high"></i>'
+      : '<i class="fa-solid fa-volume-xmark text-rose-400"></i>';
+  }
 }
 
 // ============================================================================
@@ -107,10 +93,6 @@ const SUIT_SYMBOLS = { s: '♠', h: '♥', d: '♦', c: '♣' };
 const RANK_CHARS = {
   2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9',
   10: 'T', 11: 'J', 12: 'Q', 13: 'K', 14: 'A',
-};
-const RANK_NAMES = {
-  2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9',
-  10: '10', 11: 'Jack', 12: 'Queen', 13: 'King', 14: 'Ace',
 };
 
 function renderCardHTML(code, isRevealed = true) {
@@ -210,7 +192,7 @@ let userLedgerTransactions = [
 ];
 
 // ============================================================================
-// 4. NAVIGATION & VIEW SWITCHING
+// 4. NAVIGATION & VIEW SWITCHING (Immediately bound to global window)
 // ============================================================================
 function switchView(viewName) {
   const views = ['lobby', 'table', 'academy', 'profile', 'wallet', 'verifier'];
@@ -248,23 +230,28 @@ function launchTable(tournamentId) {
 // 5. RENDER POKER TABLE
 // ============================================================================
 function renderPokerTable() {
-  // Update Header
-  document.getElementById('table-pot-amount').innerText = activeTable.pot.toLocaleString();
-  document.getElementById('table-stage-banner').innerText = activeTable.stage;
-  document.getElementById('table-blinds-info').innerText = `Blinds: ${activeTable.smallBlind} / ${activeTable.bigBlind} • Ante: ${activeTable.ante}`;
+  const potEl = document.getElementById('table-pot-amount');
+  const bannerEl = document.getElementById('table-stage-banner');
+  const blindsEl = document.getElementById('table-blinds-info');
+
+  if (potEl) potEl.innerText = activeTable.pot.toLocaleString();
+  if (bannerEl) bannerEl.innerText = activeTable.stage;
+  if (blindsEl) blindsEl.innerText = `Blinds: ${activeTable.smallBlind} / ${activeTable.bigBlind} • Ante: ${activeTable.ante}`;
 
   // Community Cards
   const communityContainer = document.getElementById('community-cards');
-  if (activeTable.communityCards.length === 0) {
-    communityContainer.innerHTML = `
-      <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-14 h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">1</div>
-      <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-14 h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">2</div>
-      <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-14 h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">3</div>
-      <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-14 h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">4</div>
-      <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-14 h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">5</div>
-    `;
-  } else {
-    communityContainer.innerHTML = activeTable.communityCards.map(c => renderCardHTML(c, true)).join('');
+  if (communityContainer) {
+    if (activeTable.communityCards.length === 0) {
+      communityContainer.innerHTML = `
+        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-14 h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">1</div>
+        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-14 h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">2</div>
+        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-14 h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">3</div>
+        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-14 h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">4</div>
+        <div class="border-2 border-dashed border-emerald-600/30 rounded-xl w-14 h-20 flex items-center justify-center text-emerald-600/40 text-xs font-bold">5</div>
+      `;
+    } else {
+      communityContainer.innerHTML = activeTable.communityCards.map(c => renderCardHTML(c, true)).join('');
+    }
   }
 
   // Render Seats
@@ -333,8 +320,6 @@ function renderPokerTable() {
 
     if (toCall === 0) {
       callBtn.innerText = 'Check';
-      callBtn.classList.remove('from-emerald-700', 'to-emerald-800');
-      callBtn.classList.add('from-emerald-600', 'to-emerald-700');
     } else {
       callBtn.innerText = `Call ${toCall}`;
     }
@@ -342,8 +327,10 @@ function renderPokerTable() {
     const minRaise = highestBet > 0 ? highestBet * 2 : activeTable.bigBlind;
     raiseBtn.innerText = `Raise to ${minRaise}`;
 
-    // Update Hero Hand Rank Evaluator
-    document.getElementById('hero-hand-rank-text').innerText = evaluateHeroHandText();
+    const heroRankText = document.getElementById('hero-hand-rank-text');
+    if (heroRankText) {
+      heroRankText.innerText = evaluateHeroHandText();
+    }
   }
 }
 
@@ -449,10 +436,8 @@ function advanceToNextPlayer() {
   activeTable.turnSeat = (activeTable.turnSeat + 1) % activeTable.seats.length;
   renderPokerTable();
 
-  // If back to pre-deal cycle or all bets matched, advance street
   const activeUnfolded = activeTable.seats.filter(s => !s.isFolded);
   if (activeUnfolded.length === 1) {
-    // Single player win!
     playSound('win');
     activeUnfolded[0].chips += activeTable.pot;
     activeTable.pot = 0;
@@ -462,24 +447,21 @@ function advanceToNextPlayer() {
   }
 
   if (activeTable.turnSeat === 0) {
-    // Hero's turn to act!
+    // Hero's turn to act
     return;
   }
 
   if (activeTable.turnSeat === 1 && activeTable.stage === 'PREFLOP') {
-    // Deal Flop
     activeTable.stage = 'FLOP';
     activeTable.communityCards = ['Kh', '7c', '2d'];
     playSound('deal');
     renderPokerTable();
   } else if (activeTable.turnSeat === 1 && activeTable.stage === 'FLOP') {
-    // Deal Turn
     activeTable.stage = 'TURN';
     activeTable.communityCards.push('Ts');
     playSound('deal');
     renderPokerTable();
   } else if (activeTable.turnSeat === 1 && activeTable.stage === 'TURN') {
-    // Deal River
     activeTable.stage = 'RIVER';
     activeTable.communityCards.push('As');
     playSound('deal');
@@ -502,19 +484,23 @@ function setRaisePreset(preset) {
   else if (preset === 'pot') val = activeTable.pot;
   else if (preset === 'allin') val = activeTable.seats[0].chips;
 
-  slider.value = val;
-  input.value = val;
-  raiseBtn.innerText = `Raise to ${val}`;
+  if (slider) slider.value = val;
+  if (input) input.value = val;
+  if (raiseBtn) raiseBtn.innerText = `Raise to ${val}`;
 }
 
 function onRaiseSliderChange(val) {
-  document.getElementById('raise-amount-input').value = val;
-  document.getElementById('action-raise-btn').innerText = `Raise to ${val}`;
+  const input = document.getElementById('raise-amount-input');
+  const raiseBtn = document.getElementById('action-raise-btn');
+  if (input) input.value = val;
+  if (raiseBtn) raiseBtn.innerText = `Raise to ${val}`;
 }
 
 function onRaiseInputChange(val) {
-  document.getElementById('raise-range-slider').value = val;
-  document.getElementById('action-raise-btn').innerText = `Raise to ${val}`;
+  const slider = document.getElementById('raise-range-slider');
+  const raiseBtn = document.getElementById('action-raise-btn');
+  if (slider) slider.value = val;
+  if (raiseBtn) raiseBtn.innerText = `Raise to ${val}`;
 }
 
 // ============================================================================
@@ -629,7 +615,8 @@ function renderLedgerTable() {
 
 function claimFaucet() {
   userProfile.tgbBalance += 1000;
-  document.getElementById('top-tgb-balance').innerText = userProfile.tgbBalance.toLocaleString() + '.00';
+  const balanceEl = document.getElementById('top-tgb-balance');
+  if (balanceEl) balanceEl.innerText = userProfile.tgbBalance.toLocaleString() + '.00';
 
   const newTx = {
     id: `tx_0${userLedgerTransactions.length + 1}`,
@@ -652,7 +639,7 @@ function claimFaucet() {
 // ============================================================================
 function submitExamChoice(choice) {
   const feedbackBox = document.getElementById('exam-feedback-box');
-  feedbackBox.classList.remove('hidden');
+  if (feedbackBox) feedbackBox.classList.remove('hidden');
   playSound('win');
 }
 
@@ -660,18 +647,23 @@ function submitExamChoice(choice) {
 // 10. PROVABLY FAIR VERIFIER MODAL & MANUAL TOOL
 // ============================================================================
 function openSeedModal() {
-  document.getElementById('modal-commit-hash').innerText = activeTable.serverSeedHash;
-  document.getElementById('modal-server-seed').innerText = activeTable.serverSeed || 'Currently Locked (Will reveal at Showdown)';
-  document.getElementById('seed-modal').classList.remove('hidden');
+  const hashEl = document.getElementById('modal-commit-hash');
+  const seedEl = document.getElementById('modal-server-seed');
+  const modal = document.getElementById('seed-modal');
+  if (hashEl) hashEl.innerText = activeTable.serverSeedHash;
+  if (seedEl) seedEl.innerText = activeTable.serverSeed || 'Currently Locked (Will reveal at Showdown)';
+  if (modal) modal.classList.remove('hidden');
 }
 
 function closeSeedModal() {
-  document.getElementById('seed-modal').classList.add('hidden');
+  const modal = document.getElementById('seed-modal');
+  if (modal) modal.classList.add('hidden');
 }
 
 function runManualVerification() {
   const seed = document.getElementById('verify-server-seed').value.trim();
   const resultBox = document.getElementById('verify-result-box');
+  if (!resultBox) return;
   resultBox.classList.remove('hidden');
 
   if (!seed) {
@@ -680,7 +672,6 @@ function runManualVerification() {
     return;
   }
 
-  // Successful verification demo
   resultBox.className = 'p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs space-y-1.5';
   resultBox.innerHTML = `
     <div class="font-black flex items-center"><i class="fa-solid fa-circle-check mr-2"></i> VERIFICATION SUCCESSFUL (100% PROVABLY FAIR)</div>
@@ -689,8 +680,11 @@ function runManualVerification() {
 }
 
 // ============================================================================
-// 11. FIREBASE AUTHENTICATION & CLOUD SYNC
+// 11. FIREBASE AUTHENTICATION & CLOUD SYNC (Non-blocking Asynchronous)
 // ============================================================================
+let firebaseAuth = null;
+let firestoreDb = null;
+
 function openAuthModal() {
   const modal = document.getElementById('auth-modal');
   if (modal) modal.classList.remove('hidden');
@@ -702,9 +696,15 @@ function closeAuthModal() {
 }
 
 async function handleGoogleSignIn() {
+  if (!firebaseAuth) {
+    alert("Firebase is not initialized or running in local demo mode. To connect, paste your Firebase config in 'Custom Firebase Credentials'.");
+    return;
+  }
   try {
-    const user = await loginWithGoogle();
-    alert(`Welcome, ${user.displayName || user.email}! Connected via Google.`);
+    const { signInWithPopup, GoogleAuthProvider } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js");
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(firebaseAuth, provider);
+    alert(`Welcome, ${result.user.displayName || result.user.email}! Connected via Google.`);
     closeAuthModal();
   } catch (err) {
     alert(`Google Sign-In: ${err.message}`);
@@ -718,9 +718,14 @@ async function handleEmailLogin() {
     alert('Please enter both email and password.');
     return;
   }
+  if (!firebaseAuth) {
+    alert("Firebase is in local guest mode. Please configure your Firebase keys.");
+    return;
+  }
   try {
-    const user = await loginWithEmail(email, password);
-    alert(`Signed in as ${user.email}`);
+    const { signInWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js");
+    const result = await signInWithEmailAndPassword(firebaseAuth, email, password);
+    alert(`Signed in as ${result.user.email}`);
     closeAuthModal();
   } catch (err) {
     alert(`Login failed: ${err.message}`);
@@ -734,9 +739,14 @@ async function handleEmailRegister() {
     alert('Please enter a valid email and password with at least 6 characters.');
     return;
   }
+  if (!firebaseAuth) {
+    alert("Firebase is in local guest mode. Please configure your Firebase keys.");
+    return;
+  }
   try {
-    const user = await registerWithEmail(email, password, email.split('@')[0]);
-    alert(`Account created successfully for ${user.email}! Received 12,500 TGB starting bonus.`);
+    const { createUserWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js");
+    const result = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+    alert(`Account created for ${result.user.email}!`);
     closeAuthModal();
   } catch (err) {
     alert(`Registration failed: ${err.message}`);
@@ -744,12 +754,11 @@ async function handleEmailRegister() {
 }
 
 async function handleFirebaseSignOut() {
-  try {
-    await logoutFirebase();
+  if (firebaseAuth) {
+    const { signOut } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js");
+    await signOut(firebaseAuth);
     alert('Signed out successfully.');
     window.location.reload();
-  } catch (err) {
-    alert(`Sign out error: ${err.message}`);
   }
 }
 
@@ -766,63 +775,79 @@ function saveCustomFirebaseConfig() {
   }
 }
 
-// Setup Auth State Listener
-if (auth) {
-  onAuthStateChanged(auth, (user) => {
-    const authBtn = document.getElementById('firebase-auth-btn');
-    const statusText = document.getElementById('firebase-status-text');
-    const navName = document.getElementById('nav-user-name');
-    const navAvatar = document.getElementById('nav-user-avatar');
-    const boxName = document.getElementById('auth-box-name');
-    const boxEmail = document.getElementById('auth-box-email');
-    const boxStatus = document.getElementById('auth-box-status');
-    const boxAvatar = document.getElementById('auth-box-avatar');
-    const logoutBtn = document.getElementById('auth-logout-btn');
+// Background Firebase Initializer
+async function tryInitFirebase() {
+  try {
+    let savedConfig = null;
+    try {
+      const stored = localStorage.getItem('TGB_CUSTOM_FIREBASE_CONFIG');
+      if (stored) savedConfig = JSON.parse(stored);
+    } catch (e) {}
 
-    if (user) {
-      userProfile.id = user.uid;
-      userProfile.username = user.displayName || user.email.split('@')[0];
-
-      if (statusText) statusText.innerText = userProfile.username;
-      if (authBtn) {
-        authBtn.className = 'flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold hover:bg-emerald-500/20 transition shadow-sm';
-      }
-      if (navName) navName.innerText = userProfile.username;
-      if (boxName) boxName.innerText = userProfile.username;
-      if (boxEmail) boxEmail.innerText = user.email;
-      if (boxStatus) {
-        boxStatus.className = 'text-[10px] text-emerald-400 font-semibold mt-0.5';
-        boxStatus.innerText = 'Connected to Firebase Cloud';
-      }
-      if (logoutBtn) logoutBtn.classList.remove('hidden');
-
-      if (user.photoURL) {
-        if (navAvatar) navAvatar.innerHTML = `<img src="${user.photoURL}" class="w-full h-full object-cover">`;
-        if (boxAvatar) boxAvatar.innerHTML = `<img src="${user.photoURL}" class="w-full h-full object-cover">`;
-      }
-
-      // Listen to Firestore updates
-      listenToUserProfile(user.uid, (data) => {
-        if (data.tgbBalance !== undefined) {
-          userProfile.tgbBalance = data.tgbBalance;
-          document.getElementById('top-tgb-balance').innerText = data.tgbBalance.toLocaleString() + '.00';
-        }
-      });
-
-      listenToUserTransactions(user.uid, (txs) => {
-        if (txs && txs.length > 0) {
-          userLedgerTransactions = txs;
-          renderLedgerTable();
-        }
-      });
-    } else {
-      if (statusText) statusText.innerText = isFirebaseLive ? 'Sign In / Firebase' : 'Connect Firebase';
+    const config = savedConfig || window.FIREBASE_CONFIG;
+    if (!config || !config.apiKey || config.apiKey.includes('Placeholder')) {
+      console.log('[TGB Poker] Running in Standalone / Guest Mode');
+      return;
     }
-  });
+
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js");
+    const { getAuth, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js");
+    const { getFirestore, doc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js");
+
+    const app = initializeApp(config);
+    firebaseAuth = getAuth(app);
+    firestoreDb = getFirestore(app);
+
+    onAuthStateChanged(firebaseAuth, (user) => {
+      const statusText = document.getElementById('firebase-status-text');
+      const authBtn = document.getElementById('firebase-auth-btn');
+      const navName = document.getElementById('nav-user-name');
+      const navAvatar = document.getElementById('nav-user-avatar');
+      const boxName = document.getElementById('auth-box-name');
+      const boxEmail = document.getElementById('auth-box-email');
+      const boxStatus = document.getElementById('auth-box-status');
+      const logoutBtn = document.getElementById('auth-logout-btn');
+
+      if (user) {
+        userProfile.id = user.uid;
+        userProfile.username = user.displayName || user.email.split('@')[0];
+        if (statusText) statusText.innerText = userProfile.username;
+        if (authBtn) {
+          authBtn.className = 'flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold hover:bg-emerald-500/20 transition shadow-sm';
+        }
+        if (navName) navName.innerText = userProfile.username;
+        if (boxName) boxName.innerText = userProfile.username;
+        if (boxEmail) boxEmail.innerText = user.email;
+        if (boxStatus) {
+          boxStatus.className = 'text-[10px] text-emerald-400 font-semibold mt-0.5';
+          boxStatus.innerText = 'Connected to Firebase Cloud';
+        }
+        if (logoutBtn) logoutBtn.classList.remove('hidden');
+
+        if (user.photoURL && navAvatar) {
+          navAvatar.innerHTML = `<img src="${user.photoURL}" class="w-full h-full object-cover">`;
+        }
+
+        // Realtime balance listener
+        const userRef = doc(firestoreDb, "users", user.uid);
+        onSnapshot(userRef, (snap) => {
+          if (snap.exists() && snap.data().tgbBalance !== undefined) {
+            userProfile.tgbBalance = snap.data().tgbBalance;
+            const topBal = document.getElementById('top-tgb-balance');
+            if (topBal) topBal.innerText = userProfile.tgbBalance.toLocaleString() + '.00';
+          }
+        });
+      }
+    });
+
+    console.log('[Firebase] Successfully connected to Firebase cloud');
+  } catch (err) {
+    console.warn('[Firebase] Non-blocking init notice:', err);
+  }
 }
 
 // ============================================================================
-// EXPOSE HANDLERS TO WINDOW (For inline HTML onclicks)
+// EXPOSE ALL HANDLERS TO WINDOW IMMEDIATELY
 // ============================================================================
 window.switchView = switchView;
 window.launchTable = launchTable;
@@ -848,8 +873,15 @@ window.saveCustomFirebaseConfig = saveCustomFirebaseConfig;
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
-window.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   renderTournamentCards();
   renderPokerTable();
   renderLedgerTable();
-});
+  tryInitFirebase();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
