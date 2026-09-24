@@ -311,11 +311,20 @@ function evaluateBestHand(cards) {
 // ============================================================================
 // 4. USER PROFILE & CAREER METRICS (Strictly 0 for new players)
 // ============================================================================
+// ============================================================================
+// 4. USER PROFILE & CAREER METRICS (Exact MTT SPORTS Model)
+// ============================================================================
 let userProfile = {
-  id: 'guest_user',
-  username: 'HeroAce',
-  email: 'hero@tgbpoker.local',
-  tgbBalance: 12500, // Starting Welcome Chips
+  id: 'user_mickdance',
+  username: 'MICKDANCE',
+  handle: '@MICKDANCE',
+  bio: 'I have no bio yet',
+  gender: 'male',
+  country: '🇹🇭',
+  followers: 0,
+  following: 0,
+  likes: 0,
+  tgbBalance: 12500, // 12,500 TGB starting bonus
   level: 1,
   exp: 0,
   tournamentsPlayed: 0,
@@ -351,7 +360,7 @@ let activeTable = {
   serverSeedHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
   serverSeed: '',
   seats: [
-    { seatNumber: 0, name: 'Hero (You)', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: true, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-amber-600 to-yellow-500' },
+    { seatNumber: 0, name: 'MICKDANCE (You)', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: true, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-amber-600 to-yellow-500' },
     { seatNumber: 1, name: 'Viper (TAG)', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-blue-600 to-indigo-500' },
     { seatNumber: 2, name: 'BluffMaster', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-rose-600 to-red-500' },
     { seatNumber: 3, name: 'The Rock', chips: 5000, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-emerald-600 to-teal-500' },
@@ -363,12 +372,22 @@ let activeTable = {
 let userLedgerTransactions = [
   {
     id: 'tx_01',
-    type: 'WELCOME_BONUS',
+    game: 'Vault',
+    type: 'TGB Supply (Welcome)',
     amount: 12500,
     balance: 12500,
-    sig: 'hmac_sha256_9a4f21...',
-    prevHash: '0000000000000000...',
-    timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+    timestamp: '2026-09-24 13:56',
+  },
+];
+
+let gameHistorySessions = [
+  {
+    room: 'Daily Standard 25/50 TGB',
+    blinds: '25/50',
+    buyIn: 500,
+    hands: 12,
+    profit: 0,
+    timestamp: '2026-09-24 13:50:22',
   },
 ];
 
@@ -383,7 +402,7 @@ let currentHandStats = {
 // 5. NAVIGATION & VIEW SWITCHING
 // ============================================================================
 function switchView(viewName) {
-  const views = ['lobby', 'table', 'academy', 'profile', 'wallet', 'verifier'];
+  const views = ['lobby', 'table', 'academy', 'profile', 'career', 'history', 'wallet', 'verifier'];
   views.forEach(v => {
     const el = document.getElementById(`view-${v}`);
     const navBtn = document.getElementById(`nav-${v}`);
@@ -405,9 +424,13 @@ function switchView(viewName) {
   if (viewName === 'table') {
     renderPokerTable();
   } else if (viewName === 'wallet') {
-    renderLedgerTable();
+    renderWallet();
   } else if (viewName === 'profile') {
     renderProfileView();
+  } else if (viewName === 'career') {
+    renderCareer();
+  } else if (viewName === 'history') {
+    renderHistory();
   }
 }
 
@@ -416,120 +439,451 @@ function launchTable(tournamentId) {
   startNewHand();
 }
 
-// ============================================================================
-// 6. PROFILE VIEW & CUSTOMIZER MODAL
-// ============================================================================
-function renderProfileView() {
-  const avatarDisplay = document.getElementById('profile-avatar-display');
-  const nameEl = document.getElementById('profile-name');
-  const levelEl = document.getElementById('profile-level');
-  const styleEl = document.getElementById('profile-style');
-  const accountIdEl = document.getElementById('profile-account-id');
-  const expBar = document.getElementById('profile-exp-bar');
-  const expText = document.getElementById('profile-exp-text');
-
-  const tourneysEl = document.getElementById('profile-tournaments-count');
-  const winsEl = document.getElementById('profile-wins-count');
-  const itmEl = document.getElementById('profile-itm-count');
-  const profitEl = document.getElementById('profile-net-profit');
-
-  const vpipVal = document.getElementById('profile-vpip-val');
-  const vpipBar = document.getElementById('profile-vpip-bar');
-  const pfrVal = document.getElementById('profile-pfr-val');
-  const pfrBar = document.getElementById('profile-pfr-bar');
-  const threeBetVal = document.getElementById('profile-3bet-val');
-  const threeBetBar = document.getElementById('profile-3bet-bar');
-
-  // Avatar Display with frame
-  if (avatarDisplay) {
-    avatarDisplay.className = `w-20 h-20 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center font-black text-3xl text-white shadow-xl overflow-hidden select-none ${userProfile.frame || 'frame-none'}`;
-    if (userProfile.avatarType === 'image' && userProfile.avatarUrl) {
-      avatarDisplay.innerHTML = `<img src="${userProfile.avatarUrl}" class="w-full h-full object-cover">`;
-    } else {
-      avatarDisplay.innerHTML = `<span class="text-4xl">${userProfile.avatarEmoji || '🦁'}</span>`;
-    }
-  }
-
-  if (nameEl) nameEl.innerText = userProfile.username || 'HeroAce';
-  
-  if (levelEl) {
-    let rankDesc = 'Novice';
-    if (userProfile.level >= 10) rankDesc = 'Grand Master';
-    else if (userProfile.level >= 5) rankDesc = 'Elite Pro';
-    else if (userProfile.level >= 2) rankDesc = 'Apprentice';
-    levelEl.innerText = `Level ${userProfile.level || 1} — ${rankDesc}`;
-  }
-
-  // Play Style determination based on real hands played
-  if (styleEl) {
-    if (!userProfile.totalHands || userProfile.totalHands === 0) {
-      styleEl.innerText = 'New Player (0 Hands)';
-    } else {
-      const vpip = (userProfile.vpipHands / userProfile.totalHands) * 100;
-      const pfr = (userProfile.pfrHands / userProfile.totalHands) * 100;
-      if (vpip > 35) styleEl.innerText = 'Loose Passive';
-      else if (vpip >= 20 && pfr >= 15) styleEl.innerText = 'Tight Aggressive (TAG)';
-      else if (vpip > 28 && pfr > 20) styleEl.innerText = 'Loose Aggressive (LAG)';
-      else styleEl.innerText = 'Balanced Explorer';
-    }
-  }
-
-  if (accountIdEl) {
-    accountIdEl.innerText = `Account ID: ${userProfile.id || 'guest'} • Registered ${userProfile.registeredAt || '2026'}`;
-  }
-
-  // EXP Progress
-  const currentExp = userProfile.exp || 0;
-  const currentExpInLevel = currentExp % 500;
-  const expPct = Math.min(100, Math.round((currentExpInLevel / 500) * 100));
-  if (expBar) expBar.style.width = `${expPct}%`;
-  if (expText) expText.innerText = `${currentExpInLevel} / 500 EXP to Level ${(userProfile.level || 1) + 1}`;
-
-  // Career Statistics
-  const tPlayed = userProfile.tournamentsPlayed || 0;
-  const tWon = userProfile.tournamentsWon || 0;
-  const itm = userProfile.itmCount || 0;
-  const net = userProfile.netTgb || 0;
-
-  if (tourneysEl) tourneysEl.innerText = tPlayed;
-
-  const winRate = tPlayed > 0 ? Math.round((tWon / tPlayed) * 100) : 0;
-  if (winsEl) winsEl.innerHTML = `${tWon} <span class="text-xs text-slate-500">(${winRate}%)</span>`;
-
-  const itmRate = tPlayed > 0 ? Math.round((itm / tPlayed) * 100) : 0;
-  if (itmEl) itmEl.innerHTML = `${itm} <span class="text-xs text-slate-500">(${itmRate}%)</span>`;
-
-  if (profitEl) {
-    const sign = net > 0 ? '+' : '';
-    profitEl.innerText = `${sign}${net.toLocaleString()} ₮`;
-    if (net > 0) profitEl.className = 'text-xl font-black text-emerald-400 mt-1';
-    else if (net < 0) profitEl.className = 'text-xl font-black text-rose-400 mt-1';
-    else profitEl.className = 'text-xl font-black text-amber-300 mt-1';
-  }
-
-  // Play Style HUD percentages (Strictly 0% if totalHands === 0)
-  const totalHands = userProfile.totalHands || 0;
-  const vpipHands = userProfile.vpipHands || 0;
-  const pfrHands = userProfile.pfrHands || 0;
-  const threeBetHands = userProfile.threeBetHands || 0;
-
-  const vpipPct = totalHands > 0 ? Math.round((vpipHands / totalHands) * 100) : 0;
-  const pfrPct = totalHands > 0 ? Math.round((pfrHands / totalHands) * 100) : 0;
-  const threeBetPct = totalHands > 0 ? Math.round((threeBetHands / totalHands) * 100) : 0;
-
-  if (vpipVal) vpipVal.innerText = `${vpipPct}% (${vpipHands}/${totalHands})`;
-  if (vpipBar) vpipBar.style.width = `${vpipPct}%`;
-
-  if (pfrVal) pfrVal.innerText = `${pfrPct}% (${pfrHands}/${totalHands})`;
-  if (pfrBar) pfrBar.style.width = `${pfrPct}%`;
-
-  if (threeBetVal) threeBetVal.innerText = `${threeBetPct}% (${threeBetHands}/${totalHands})`;
-  if (threeBetBar) threeBetBar.style.width = `${threeBetPct}%`;
+// User Dropdown Handlers (Image 1)
+function toggleUserDropdown(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('user-dropdown-menu');
+  if (menu) menu.classList.toggle('hidden');
 }
 
-// Edit Profile Modal State
+function closeUserDropdown() {
+  const menu = document.getElementById('user-dropdown-menu');
+  if (menu) menu.classList.add('hidden');
+}
+
+document.addEventListener('click', (e) => {
+  const container = document.getElementById('nav-user-container');
+  if (container && !container.contains(e.target)) {
+    closeUserDropdown();
+  }
+});
+
+// ============================================================================
+// 6. PROFILE VIEW (Matching Image 2)
+// ============================================================================
+let activeProfileSubTab = 'tourney';
+
+function switchProfileSubTab(tab) {
+  activeProfileSubTab = tab;
+  ['tourney', 'album', 'achievement'].forEach(t => {
+    const btn = document.getElementById(`tab-sub-${t}`);
+    if (btn) {
+      if (t === tab) {
+        btn.className = 'pb-3 text-amber-400 border-b-2 border-amber-400 transition font-bold';
+      } else {
+        btn.className = 'pb-3 text-slate-400 hover:text-white transition font-bold';
+      }
+    }
+  });
+}
+
+function renderProfileView() {
+  const mainAvatar = document.getElementById('profile-main-avatar');
+  const countryBadge = document.getElementById('profile-country-badge');
+  const genderBadge = document.getElementById('profile-gender-badge');
+  const displayNameEl = document.getElementById('profile-display-name');
+  const handleEl = document.getElementById('profile-handle');
+  const bioEl = document.getElementById('profile-bio-text');
+
+  const followersEl = document.getElementById('profile-followers-count');
+  const followingEl = document.getElementById('profile-following-count');
+  const likesEl = document.getElementById('profile-likes-count');
+
+  const totalProfitCard = document.getElementById('profile-card-total-profit');
+  const abovePctEl = document.getElementById('profile-above-pct');
+  const growthTitleEl = document.getElementById('profile-growth-title');
+  const growthExpEl = document.getElementById('profile-growth-exp');
+
+  // Avatar with Frame & Badges
+  if (mainAvatar) {
+    mainAvatar.className = `w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-4 border-slate-800 bg-gradient-to-tr from-purple-600 to-indigo-600 shadow-2xl flex items-center justify-center text-4xl font-black text-white ${userProfile.frame || 'frame-none'}`;
+    if (userProfile.avatarType === 'image' && userProfile.avatarUrl) {
+      mainAvatar.innerHTML = `<img src="${userProfile.avatarUrl}" class="w-full h-full object-cover">`;
+    } else {
+      mainAvatar.innerHTML = `<span>${userProfile.avatarEmoji || '🦁'}</span>`;
+    }
+  }
+
+  if (countryBadge) countryBadge.innerText = userProfile.country || '🇹🇭';
+  if (genderBadge) {
+    const isFemale = userProfile.gender === 'female';
+    genderBadge.innerText = isFemale ? '♀' : '♂';
+    genderBadge.className = `absolute bottom-0 right-0 w-7 h-7 rounded-full ${isFemale ? 'bg-pink-600' : 'bg-cyan-600'} text-white border border-slate-700 flex items-center justify-center text-xs shadow font-black`;
+  }
+
+  if (displayNameEl) displayNameEl.innerText = userProfile.username || 'MICKDANCE';
+  if (handleEl) handleEl.innerText = userProfile.handle || `@${userProfile.username || 'MICKDANCE'}`;
+  if (bioEl) bioEl.innerText = userProfile.bio || 'I have no bio yet';
+
+  if (followersEl) followersEl.innerText = userProfile.followers || 0;
+  if (followingEl) followingEl.innerText = userProfile.following || 0;
+  if (likesEl) likesEl.innerText = userProfile.likes || 0;
+
+  // 3 Metric Cards
+  const net = userProfile.netTgb || 0;
+  if (totalProfitCard) {
+    totalProfitCard.innerText = `${net >= 0 ? '+' : ''}${net.toLocaleString()}`;
+    totalProfitCard.className = `text-3xl font-black font-mono ${net > 0 ? 'text-emerald-400' : (net < 0 ? 'text-rose-400' : 'text-white')}`;
+  }
+
+  if (abovePctEl) {
+    abovePctEl.innerText = net > 0 ? 'Above 86.32% players' : 'Above 0% players';
+  }
+
+  if (growthTitleEl) {
+    let title = 'Amateur <span class="text-amber-400 text-xs ml-1.5">★★★</span>';
+    if (userProfile.level >= 10) title = 'Grand Master <span class="text-amber-400 text-xs ml-1.5">👑👑👑</span>';
+    else if (userProfile.level >= 5) title = 'Semi-Pro <span class="text-amber-400 text-xs ml-1.5">★★★★</span>';
+    growthTitleEl.innerHTML = title;
+  }
+
+  if (growthExpEl) {
+    growthExpEl.innerText = `${(userProfile.exp || 0) % 500} / 500 EXP`;
+  }
+
+  // Draw Line Chart
+  setTimeout(drawProfitLossChart, 60);
+}
+
+// Draw Profit / Loss Trend Canvas Chart (Matching Image 2)
+function drawProfitLossChart() {
+  const canvas = document.getElementById('profit-loss-chart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+
+  if (rect.width === 0 || rect.height === 0) return;
+
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+
+  const w = rect.width;
+  const h = rect.height;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Chart Margins
+  const padLeft = 40;
+  const padRight = 20;
+  const padTop = 20;
+  const padBottom = 25;
+
+  const chartW = w - padLeft - padRight;
+  const chartH = h - padTop - padBottom;
+
+  // Zero baseline is in the middle-ish
+  const yZero = padTop + chartH * 0.55;
+
+  // Draw Horizontal Gridlines & Y-Axis Labels
+  const ySteps = [
+    { val: 100, y: padTop + chartH * 0.1 },
+    { val: 50, y: padTop + chartH * 0.32 },
+    { val: 0, y: yZero },
+    { val: -50, y: padTop + chartH * 0.75 },
+    { val: -100, y: padTop + chartH * 0.95 },
+  ];
+
+  ctx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.font = '10px monospace';
+  ctx.fillStyle = '#64748b';
+  ctx.textAlign = 'right';
+
+  ySteps.forEach(s => {
+    ctx.beginPath();
+    ctx.moveTo(padLeft, s.y);
+    ctx.lineTo(w - padRight, s.y);
+    ctx.stroke();
+    ctx.fillText(s.val, padLeft - 8, s.y + 3);
+  });
+
+  // Zero reference line is slightly brighter
+  ctx.strokeStyle = 'rgba(100, 116, 139, 0.6)';
+  ctx.beginPath();
+  ctx.moveTo(padLeft, yZero);
+  ctx.lineTo(w - padRight, yZero);
+  ctx.stroke();
+
+  // Generate Data Points (Starts at 0, curves to current net profit)
+  const totalPoints = 24;
+  const net = userProfile.netTgb || 0;
+  const points = [];
+
+  for (let i = 0; i < totalPoints; i++) {
+    const x = padLeft + (chartW / (totalPoints - 1)) * i;
+    let val = 0;
+    if (i < 6) val = 0;
+    else if (i === 7) val = Math.min(net * 0.3, 30);
+    else if (i === 8) val = Math.min(net * 0.8, 91);
+    else val = net;
+
+    // Map val to y coordinate
+    const yRatio = val / 150;
+    const y = yZero - yRatio * (chartH * 0.45);
+    points.push({ x, y, val });
+  }
+
+  // Draw Smooth Golden Line (Matching Image 2)
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    const xc = (points[i].x + points[i - 1].x) / 2;
+    const yc = (points[i].y + points[i - 1].y) / 2;
+    ctx.quadraticCurveTo(points[i - 1].x, points[i - 1].y, xc, yc);
+  }
+  ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+
+  ctx.strokeStyle = '#f59e0b'; // Amber-500
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = 'rgba(245, 158, 11, 0.5)';
+  ctx.shadowBlur = 8;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Draw Tooltip / Bubble on Peak or End Point (Matching `91.00` in Image 2)
+  const tipPoint = points[points.length - 1];
+  ctx.fillStyle = '#0f172a';
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 1.5;
+
+  const tipText = `${net >= 0 ? '+' : ''}${net.toFixed(2)}`;
+  const tipW = 60;
+  const tipH = 22;
+  const tipX = Math.min(w - padRight - tipW, Math.max(padLeft, tipPoint.x - tipW / 2));
+  const tipY = tipPoint.y - 32;
+
+  ctx.beginPath();
+  ctx.roundRect(tipX, tipY, tipW, tipH, 6);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#fcd34d';
+  ctx.font = 'bold 10px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(tipText, tipX + tipW / 2, tipY + 14);
+
+  // End Point Dot
+  ctx.fillStyle = '#f59e0b';
+  ctx.beginPath();
+  ctx.arc(tipPoint.x, tipPoint.y, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Draw X Axis Numbers
+  ctx.fillStyle = '#64748b';
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'center';
+  [1, 5, 10, 15, 20, 24].forEach(idx => {
+    const pt = points[idx - 1];
+    if (pt) ctx.fillText(idx, pt.x, h - 8);
+  });
+}
+
+// ============================================================================
+// 7. CAREER & HISTORY VIEWS (Matching Image 3 & Image 4)
+// ============================================================================
+function renderCareer() {
+  const totalEl = document.getElementById('career-total-profit');
+  const weeklyEl = document.getElementById('career-weekly-profit');
+  const historyRows = document.getElementById('career-history-rows');
+
+  const net = userProfile.netTgb || 0;
+  if (totalEl) {
+    totalEl.innerText = `${net >= 0 ? '+' : ''}${net.toLocaleString()}`;
+    totalEl.className = `text-2xl sm:text-3xl font-black font-mono mt-1 ${net > 0 ? 'text-emerald-400' : (net < 0 ? 'text-rose-400' : 'text-white')}`;
+  }
+
+  if (weeklyEl) {
+    weeklyEl.innerText = `${net >= 0 ? '+' : ''}${net.toLocaleString()}`;
+    weeklyEl.className = `text-2xl sm:text-3xl font-black font-mono mt-1 ${net > 0 ? 'text-emerald-400' : (net < 0 ? 'text-rose-400' : 'text-white')}`;
+  }
+
+  if (historyRows) {
+    historyRows.innerHTML = gameHistorySessions.map(s => `
+      <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center font-black">
+            ₮
+          </div>
+          <div>
+            <div class="font-black text-white text-sm">${s.room}</div>
+            <div class="text-[10px] text-slate-500 font-mono">${s.timestamp}</div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-6 self-stretch sm:self-auto justify-between sm:justify-end">
+          <div class="text-right">
+            <span class="text-slate-400">Blinds:</span> <span class="text-slate-200 font-mono">${s.blinds}</span>
+          </div>
+          <div class="text-right">
+            <span class="text-slate-400">Hands:</span> <span class="text-slate-200 font-mono">${s.hands}</span>
+          </div>
+          <div class="text-right font-black font-mono ${s.profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+            ${s.profit >= 0 ? '+' : ''}${s.profit} ₮
+          </div>
+          <button onclick="switchView('table')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold transition">
+            Details
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  setTimeout(drawCareerTrendChart, 60);
+}
+
+function drawCareerTrendChart() {
+  const canvas = document.getElementById('career-trend-chart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+
+  if (rect.width === 0 || rect.height === 0) return;
+
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+
+  const w = rect.width;
+  const h = rect.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const padLeft = 45;
+  const padRight = 20;
+  const padTop = 15;
+  const padBottom = 25;
+
+  const chartW = w - padLeft - padRight;
+  const chartH = h - padTop - padBottom;
+  const yZero = padTop + chartH * 0.25;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.font = '10px monospace';
+  ctx.fillStyle = '#64748b';
+  ctx.textAlign = 'right';
+
+  [0, -100, -200, -300, -400, -500].forEach((val, idx) => {
+    const y = yZero + (idx * (chartH * 0.7) / 5);
+    ctx.beginPath();
+    ctx.moveTo(padLeft, y);
+    ctx.lineTo(w - padRight, y);
+    ctx.stroke();
+    ctx.fillText(val, padLeft - 6, y + 3);
+  });
+
+  // Curve (Green to Cyan gradient fill, matching Image 3)
+  const dates = ['09-18', '09-19', '09-20', '09-21', '09-22', '09-23', '09-24'];
+  const net = userProfile.netTgb || 0;
+  const points = dates.map((d, i) => {
+    const x = padLeft + (chartW / (dates.length - 1)) * i;
+    let y = yZero;
+    if (i >= 3) {
+      const drop = Math.min(1, (i - 2) / 2);
+      y = yZero + drop * (chartH * 0.7);
+    }
+    return { x, y, date: d };
+  });
+
+  // Area gradient
+  const grad = ctx.createLinearGradient(0, yZero, 0, h - padBottom);
+  grad.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+  grad.addColorStop(1, 'rgba(16, 185, 129, 0.02)');
+
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, yZero);
+  for (let i = 0; i < points.length; i++) {
+    ctx.lineTo(points[i].x, points[i].y);
+  }
+  ctx.lineTo(points[points.length - 1].x, h - padBottom);
+  ctx.lineTo(points[0].x, h - padBottom);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    const xc = (points[i].x + points[i - 1].x) / 2;
+    const yc = (points[i].y + points[i - 1].y) / 2;
+    ctx.quadraticCurveTo(points[i - 1].x, points[i - 1].y, xc, yc);
+  }
+  ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+  ctx.strokeStyle = '#34d399'; // Emerald-400
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Dates on X Axis
+  ctx.fillStyle = '#64748b';
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'center';
+  points.forEach(pt => {
+    ctx.fillText(pt.date, pt.x, h - 8);
+  });
+}
+
+function renderHistory() {
+  const container = document.getElementById('mygames-history-list');
+  if (!container) return;
+
+  container.innerHTML = gameHistorySessions.map(s => `
+    <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex items-center justify-between text-xs">
+      <div>
+        <div class="font-black text-white">${s.room}</div>
+        <div class="text-[10px] text-slate-500 font-mono">${s.timestamp}</div>
+      </div>
+      <div class="font-black font-mono ${s.profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+        ${s.profit >= 0 ? '+' : ''}${s.profit} ₮
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================================
+// 8. WALLET VIEW (Matching Image 5)
+// ============================================================================
+function renderWallet() {
+  const balanceEl = document.getElementById('wallet-balance-big');
+  const recordsContainer = document.getElementById('wallet-records-container');
+
+  if (balanceEl) {
+    balanceEl.innerText = (userProfile.tgbBalance || 12500).toLocaleString();
+  }
+
+  if (recordsContainer) {
+    recordsContainer.innerHTML = userLedgerTransactions.map(tx => {
+      const isCredit = tx.amount > 0;
+      return `
+        <tr class="hover:bg-slate-800/30 transition">
+          <td class="py-3 font-bold text-slate-300">${tx.game || 'Vault'}</td>
+          <td class="py-3"><span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 font-bold text-[10px]">${tx.type}</span></td>
+          <td class="py-3 text-right">
+            <div class="font-black ${isCredit ? 'text-emerald-400' : 'text-rose-400'}">
+              ${isCredit ? '+' : ''}${tx.amount.toLocaleString()} ₮
+            </div>
+            <div class="text-[10px] text-slate-500">Balance ${(tx.balance || userProfile.tgbBalance).toLocaleString()}</div>
+          </td>
+          <td class="py-3 text-right text-slate-400 text-[11px]">${tx.timestamp}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+}
+
+// ============================================================================
+// 9. PROFILE CUSTOMIZER MODAL (Display Name, Handle, Bio, Gender, Flag, Avatar, Frame)
+// ============================================================================
 let tempProfileEdit = {
   username: '',
+  handle: '',
+  bio: '',
+  gender: 'male',
+  country: '🇹🇭',
   avatarType: 'preset',
   avatarEmoji: '🦁',
   avatarUrl: '',
@@ -554,7 +908,11 @@ function openEditProfileModal() {
   if (!modal) return;
 
   tempProfileEdit = {
-    username: userProfile.username || 'HeroAce',
+    username: userProfile.username || 'MICKDANCE',
+    handle: userProfile.handle || `@${userProfile.username || 'MICKDANCE'}`,
+    bio: userProfile.bio || 'I have no bio yet',
+    gender: userProfile.gender || 'male',
+    country: userProfile.country || '🇹🇭',
     avatarType: userProfile.avatarType || 'preset',
     avatarEmoji: userProfile.avatarEmoji || '🦁',
     avatarUrl: userProfile.avatarUrl || '',
@@ -563,7 +921,16 @@ function openEditProfileModal() {
   };
 
   const nameInput = document.getElementById('edit-username-input');
+  const handleInput = document.getElementById('edit-handle-input');
+  const bioInput = document.getElementById('edit-bio-input');
+  const genderSelect = document.getElementById('edit-gender-select');
+  const countrySelect = document.getElementById('edit-country-select');
+
   if (nameInput) nameInput.value = tempProfileEdit.username;
+  if (handleInput) handleInput.value = tempProfileEdit.handle;
+  if (bioInput) bioInput.value = tempProfileEdit.bio;
+  if (genderSelect) genderSelect.value = tempProfileEdit.gender;
+  if (countrySelect) countrySelect.value = tempProfileEdit.country;
 
   updateProfilePreview();
   modal.classList.remove('hidden');
@@ -607,9 +974,16 @@ function selectAvatarFrame(frameClass, frameName) {
 
 function updateProfilePreview() {
   const nameInput = document.getElementById('edit-username-input');
-  if (nameInput) {
-    tempProfileEdit.username = nameInput.value.trim() || 'Hero';
-  }
+  const handleInput = document.getElementById('edit-handle-input');
+  const bioInput = document.getElementById('edit-bio-input');
+  const genderSelect = document.getElementById('edit-gender-select');
+  const countrySelect = document.getElementById('edit-country-select');
+
+  if (nameInput) tempProfileEdit.username = nameInput.value.trim() || 'MICKDANCE';
+  if (handleInput) tempProfileEdit.handle = handleInput.value.trim() || `@${tempProfileEdit.username}`;
+  if (bioInput) tempProfileEdit.bio = bioInput.value.trim();
+  if (genderSelect) tempProfileEdit.gender = genderSelect.value;
+  if (countrySelect) tempProfileEdit.country = countrySelect.value;
 
   const previewBox = document.getElementById('preview-avatar-box');
   const previewContent = document.getElementById('preview-avatar-content');
@@ -628,20 +1002,28 @@ function updateProfilePreview() {
     }
   }
 
-  if (previewName) previewName.innerText = tempProfileEdit.username;
-  if (previewFrame) previewFrame.innerText = `กรอบ: ${tempProfileEdit.frameName}`;
+  if (previewName) previewName.innerText = `${tempProfileEdit.country} ${tempProfileEdit.username}`;
+  if (previewFrame) previewFrame.innerText = `กรอบ: ${tempProfileEdit.frameName} • ${tempProfileEdit.gender === 'female' ? '♀' : '♂'}`;
 }
 
 function saveProfileCustomization() {
   const nameInput = document.getElementById('edit-username-input');
-  const newName = nameInput ? nameInput.value.trim() : '';
+  const handleInput = document.getElementById('edit-handle-input');
+  const bioInput = document.getElementById('edit-bio-input');
+  const genderSelect = document.getElementById('edit-gender-select');
+  const countrySelect = document.getElementById('edit-country-select');
 
+  const newName = nameInput ? nameInput.value.trim() : '';
   if (!newName) {
     alert('กรุณากรอกชื่อผู้เล่น');
     return;
   }
 
   userProfile.username = newName;
+  userProfile.handle = (handleInput && handleInput.value.trim()) || `@${newName}`;
+  userProfile.bio = (bioInput && bioInput.value.trim()) || 'I have no bio yet';
+  userProfile.gender = (genderSelect && genderSelect.value) || 'male';
+  userProfile.country = (countrySelect && countrySelect.value) || '🇹🇭';
   userProfile.avatarType = tempProfileEdit.avatarType;
   userProfile.avatarEmoji = tempProfileEdit.avatarEmoji;
   userProfile.avatarUrl = tempProfileEdit.avatarUrl;
@@ -658,7 +1040,7 @@ function saveProfileCustomization() {
     }
   } catch (e) {}
 
-  // Update Hero seat on Table
+  // Update Table Seat 0 Hero Name
   if (activeTable && activeTable.seats && activeTable.seats[0]) {
     activeTable.seats[0].name = `${userProfile.username} (You)`;
   }
@@ -669,6 +1051,7 @@ function saveProfileCustomization() {
   closeEditProfileModal();
   playSound('win');
 }
+
 
 // ============================================================================
 // 7. RENDER POKER TABLE & ACTION CONSOLE
@@ -1523,6 +1906,13 @@ function handleFormRegister(event) {
   const newUser = {
     id: `user_${Date.now()}`,
     username,
+    handle: `@${username}`,
+    bio: 'I have no bio yet',
+    gender: 'male',
+    country: '🇹🇭',
+    followers: 0,
+    following: 0,
+    likes: 0,
     email,
     password,
     tgbBalance: 12500, // 12,500 TGB Starting Bonus
@@ -1675,6 +2065,13 @@ function setLoggedInUser(user) {
 
   userProfile.id = user.id;
   userProfile.username = user.username;
+  userProfile.handle = user.handle || `@${user.username}`;
+  userProfile.bio = user.bio || 'I have no bio yet';
+  userProfile.gender = user.gender || 'male';
+  userProfile.country = user.country || '🇹🇭';
+  userProfile.followers = user.followers !== undefined ? user.followers : 0;
+  userProfile.following = user.following !== undefined ? user.following : 0;
+  userProfile.likes = user.likes !== undefined ? user.likes : 0;
   userProfile.email = user.email || 'user@tgbpoker.local';
   userProfile.tgbBalance = user.tgbBalance !== undefined ? user.tgbBalance : 12500;
   userProfile.level = user.level || 1;
@@ -1710,6 +2107,13 @@ function handleLogout() {
   userProfile = {
     id: `guest_${Date.now()}`,
     username: 'Guest',
+    handle: '@Guest',
+    bio: 'I have no bio yet',
+    gender: 'male',
+    country: '🇹🇭',
+    followers: 0,
+    following: 0,
+    likes: 0,
     email: 'guest@tgbpoker.local',
     tgbBalance: 12500,
     level: 1,

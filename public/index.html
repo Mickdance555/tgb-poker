@@ -35,13 +35,16 @@
         <button onclick="switchView('academy')" id="nav-academy" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all">
           <i class="fa-solid fa-graduation-cap mr-1.5 text-blue-400"></i>AI Academy & Exam
         </button>
-        <button onclick="switchView('profile')" id="nav-profile" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all">
+        <button onclick="switchView('profile')" id="nav-profile" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all">
           <i class="fa-solid fa-user mr-1.5 text-purple-400"></i>Profile
         </button>
-        <button onclick="switchView('wallet')" id="nav-wallet" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all">
-          <i class="fa-solid fa-wallet mr-1.5 text-yellow-400"></i>TGB Ledger
+        <button onclick="switchView('career')" id="nav-career" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all">
+          <i class="fa-solid fa-chart-line mr-1.5 text-emerald-400"></i>Career
         </button>
-        <button onclick="switchView('verifier')" id="nav-verifier" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all">
+        <button onclick="switchView('wallet')" id="nav-wallet" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all">
+          <i class="fa-solid fa-wallet mr-1.5 text-yellow-400"></i>Wallet
+        </button>
+        <button onclick="switchView('verifier')" id="nav-verifier" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all">
           <i class="fa-solid fa-shield-halved mr-1.5 text-cyan-400"></i>Provably Fair
         </button>
       </nav>
@@ -56,7 +59,7 @@
       </button>
 
       <!-- TGB Balance Pill -->
-      <div class="flex items-center bg-slate-800/80 border border-amber-500/30 rounded-xl px-3 py-1.5 shadow-inner">
+      <div onclick="switchView('wallet')" class="flex items-center bg-slate-800/80 hover:bg-slate-800 border border-amber-500/30 rounded-xl px-3 py-1.5 shadow-inner cursor-pointer transition">
         <span class="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black text-xs flex items-center justify-center mr-2 shadow">
           ₮
         </span>
@@ -66,26 +69,91 @@
         </div>
       </div>
 
-      <!-- User Profile Pill (Visible when logged in) -->
-      <div id="nav-user-container" class="flex items-center space-x-2 pl-2 border-l border-slate-800">
-        <div class="relative cursor-pointer" onclick="switchView('profile')">
-          <div id="nav-user-avatar" class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center font-bold text-white shadow overflow-hidden text-sm">
-            H
+      <!-- User Profile Pill & Dropdown (Image 1) -->
+      <div id="nav-user-container" class="relative">
+        <div onclick="toggleUserDropdown(event)" class="flex items-center space-x-2 bg-slate-800/90 hover:bg-slate-700/90 rounded-2xl p-1.5 pr-3 cursor-pointer border border-slate-700/80 transition shadow select-none">
+          <div id="nav-user-avatar" class="w-8 h-8 rounded-full overflow-hidden border border-slate-600 bg-slate-900 flex items-center justify-center font-bold text-xs text-white">
+            🦁
           </div>
-          <span id="nav-user-level-badge" class="absolute -bottom-1 -right-1 text-[9px] font-black bg-amber-500 text-slate-950 px-1 rounded-md leading-tight">
-            Lv.1
-          </span>
+          <span id="nav-user-name" class="text-xs font-bold text-slate-200 truncate max-w-[100px]">HeroAce</span>
+          <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
         </div>
-        <div class="hidden lg:block text-left cursor-pointer" onclick="switchView('profile')">
-          <div id="nav-user-name" class="text-xs font-bold text-slate-200">HeroAce</div>
-          <div id="nav-user-rank-title" class="text-[10px] text-emerald-400 font-semibold flex items-center">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>Novice Rank
+
+        <!-- Dropdown Popup Menu (Matching MTT SPORTS Image 1) -->
+        <div id="user-dropdown-menu" class="hidden absolute right-0 top-12 w-64 bg-slate-900/95 backdrop-blur-xl border border-slate-800 rounded-3xl p-3 shadow-2xl z-50 space-y-2">
+          <!-- Top Card -->
+          <div onclick="switchView('profile'); closeUserDropdown();" class="p-3 rounded-2xl bg-slate-950/80 hover:bg-slate-800/80 transition cursor-pointer flex items-center justify-between border border-slate-800">
+            <div class="flex items-center space-x-3 overflow-hidden">
+              <div id="dropdown-user-avatar" class="w-10 h-10 rounded-full overflow-hidden border border-slate-600 bg-slate-800 flex items-center justify-center text-lg text-white flex-shrink-0">
+                🦁
+              </div>
+              <div class="overflow-hidden">
+                <div id="dropdown-user-name" class="text-xs font-black text-white truncate">HeroAce</div>
+                <div id="dropdown-user-handle" class="text-[10px] text-slate-400 font-mono truncate">@HeroAce</div>
+              </div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-xs text-slate-500 flex-shrink-0"></i>
+          </div>
+
+          <!-- Menu Items List -->
+          <div class="py-1 divide-y divide-slate-800/60 text-xs">
+            <div class="space-y-0.5 pb-1">
+              <button onclick="switchView('profile'); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-slate-800/80 text-slate-300 hover:text-white flex items-center justify-between transition">
+                <div class="flex items-center space-x-2.5">
+                  <i class="fa-regular fa-user text-slate-400 w-4"></i>
+                  <span class="font-semibold">Profile</span>
+                </div>
+              </button>
+              <button onclick="switchView('career'); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-slate-800/80 text-slate-300 hover:text-white flex items-center justify-between transition">
+                <div class="flex items-center space-x-2.5">
+                  <i class="fa-solid fa-chart-line text-slate-400 w-4"></i>
+                  <span class="font-semibold">Career</span>
+                </div>
+              </button>
+              <button onclick="switchView('history'); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-slate-800/80 text-slate-300 hover:text-white flex items-center justify-between transition">
+                <div class="flex items-center space-x-2.5">
+                  <i class="fa-solid fa-gamepad text-slate-400 w-4"></i>
+                  <span class="font-semibold">My Games</span>
+                </div>
+              </button>
+              <button onclick="switchView('wallet'); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-slate-800/80 text-slate-300 hover:text-white flex items-center justify-between transition">
+                <div class="flex items-center space-x-2.5">
+                  <i class="fa-solid fa-wallet text-slate-400 w-4"></i>
+                  <span class="font-semibold">Wallet</span>
+                </div>
+              </button>
+              <button onclick="alert('Tickets Feature Coming Soon'); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-slate-800/80 text-slate-300 hover:text-white flex items-center justify-between transition">
+                <div class="flex items-center space-x-2.5">
+                  <i class="fa-regular fa-envelope text-slate-400 w-4"></i>
+                  <span class="font-semibold">Tickets</span>
+                </div>
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+              </button>
+            </div>
+
+            <div class="space-y-0.5 pt-1 pb-1">
+              <button onclick="alert('Backpack Feature Coming Soon'); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-slate-800/80 text-slate-300 hover:text-white flex items-center space-x-2.5 transition">
+                <i class="fa-solid fa-box-archive text-slate-400 w-4"></i>
+                <span class="font-semibold">Backpack</span>
+              </button>
+              <button onclick="alert('Marked Hands Coming Soon'); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-slate-800/80 text-slate-300 hover:text-white flex items-center space-x-2.5 transition">
+                <i class="fa-regular fa-star text-slate-400 w-4"></i>
+                <span class="font-semibold">Marked Hands</span>
+              </button>
+              <button onclick="openEditProfileModal(); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-slate-800/80 text-slate-300 hover:text-white flex items-center space-x-2.5 transition">
+                <i class="fa-solid fa-gear text-slate-400 w-4"></i>
+                <span class="font-semibold">Settings</span>
+              </button>
+            </div>
+
+            <div class="pt-1">
+              <button onclick="handleLogout(); closeUserDropdown();" class="w-full px-3 py-2 rounded-xl hover:bg-rose-950/50 text-rose-400 hover:text-rose-300 flex items-center space-x-2.5 transition font-bold">
+                <i class="fa-solid fa-arrow-right-from-bracket w-4"></i>
+                <span>Log Out</span>
+              </button>
+            </div>
           </div>
         </div>
-        <!-- Logout Button -->
-        <button onclick="handleLogout()" title="ออกจากระบบ" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300 flex items-center justify-center text-xs transition ml-1">
-          <i class="fa-solid fa-right-from-bracket"></i>
-        </button>
       </div>
 
     </div>
@@ -430,140 +498,298 @@
     </section>
 
     <!-- ========================================================================= -->
-    <!-- VIEW 4: USER PROFILE & STATS -->
+    <!-- VIEW 4: USER PROFILE (Exact MTT SPORTS Design matching Image 2) -->
     <!-- ========================================================================= -->
     <section id="view-profile" class="p-4 lg:p-8 max-w-5xl mx-auto w-full space-y-6 hidden">
+      
+      <!-- Profile Header Card (Matching Image 2) -->
       <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 lg:p-8 shadow-2xl space-y-6">
-        
-        <!-- Profile Header with Real Avatar & Custom Frame -->
-        <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 border-b border-slate-800 pb-6">
-          <div class="relative">
-            <div id="profile-avatar-display" class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center font-black text-3xl text-white shadow-xl overflow-hidden select-none">
-              H
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-slate-800 pb-6">
+          <div class="flex items-center space-x-5">
+            <!-- Big Circular Avatar with Country Flag & Gender badge -->
+            <div class="relative flex-shrink-0">
+              <div id="profile-main-avatar" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-4 border-slate-800 bg-gradient-to-tr from-purple-600 to-indigo-600 shadow-2xl flex items-center justify-center text-4xl font-black text-white">
+                🦁
+              </div>
+              <!-- Country Flag badge (bottom-left) -->
+              <div id="profile-country-badge" class="absolute bottom-0 left-0 w-7 h-7 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-sm shadow">
+                🇹🇭
+              </div>
+              <!-- Gender badge (bottom-right) -->
+              <div id="profile-gender-badge" class="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-cyan-600 text-white border border-slate-700 flex items-center justify-center text-xs shadow font-black">
+                ♂
+              </div>
             </div>
-          </div>
-          <div class="text-center sm:text-left space-y-1.5 flex-1">
-            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-              <h2 id="profile-name" class="text-2xl font-black text-white">HeroAce</h2>
-              <span id="profile-level" class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">Level 1 — Novice</span>
-              <span id="profile-style" class="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-xs font-bold">New Player</span>
+
+            <!-- User Details -->
+            <div class="space-y-1.5">
+              <div class="flex flex-wrap items-center gap-2">
+                <h1 id="profile-display-name" class="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">MICKDANCE</h1>
+                <span id="profile-handle" class="text-xs text-slate-400 font-mono">@MICKDANCE</span>
+                <!-- Gold Verified Checkmark Badge -->
+                <span class="w-4 h-4 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center text-[9px] font-black shadow" title="Verified Player">
+                  <i class="fa-solid fa-check"></i>
+                </span>
+              </div>
+
+              <div class="flex items-center space-x-2 text-xs text-slate-400">
+                <span id="profile-bio-text">I have no bio yet</span>
+                <button onclick="openEditProfileModal()" class="text-slate-500 hover:text-amber-400 transition text-[11px]" title="Edit Bio">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+              </div>
+
+              <!-- Followers / Following / Likes Row (Image 2) -->
+              <div class="flex items-center space-x-4 text-xs font-semibold pt-1">
+                <div><span id="profile-followers-count" class="font-bold text-white">0</span> <span class="text-slate-400">Followers</span></div>
+                <div><span id="profile-following-count" class="font-bold text-white">0</span> <span class="text-slate-400">Following</span></div>
+                <div><span id="profile-likes-count" class="font-bold text-white">0</span> <span class="text-slate-400">Likes</span></div>
+              </div>
             </div>
-            <p id="profile-account-id" class="text-xs text-slate-400">Account ID: user_guest • Registered 2026</p>
-            
-            <!-- EXP Progress Bar -->
-            <div class="w-full max-w-md bg-slate-950 h-2.5 rounded-full overflow-hidden mt-3 border border-slate-800">
-              <div id="profile-exp-bar" class="bg-gradient-to-r from-amber-500 to-yellow-400 h-full w-[0%] transition-all duration-500"></div>
-            </div>
-            <div id="profile-exp-text" class="text-[10px] text-slate-400 font-mono">0 / 500 EXP to Level 2</div>
           </div>
 
-          <!-- Edit Profile Action Button -->
-          <div class="self-center sm:self-start">
-            <button onclick="openEditProfileModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition border border-slate-700 flex items-center shadow">
-              <i class="fa-solid fa-pen-to-square mr-2 text-amber-400"></i> แก้ไขโปรไฟล์ / กรอบรูป
+          <!-- Action Buttons (Share & Edit - Image 2) -->
+          <div class="flex items-center space-x-3 self-stretch md:self-auto justify-end">
+            <button onclick="navigator.clipboard && navigator.clipboard.writeText(window.location.href); alert('Copied profile link to clipboard!');" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition flex items-center space-x-1.5 border border-slate-700">
+              <i class="fa-solid fa-share-nodes"></i>
+              <span>Share</span>
+            </button>
+            <button onclick="openEditProfileModal()" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black transition flex items-center space-x-1.5 shadow-lg shadow-emerald-500/20 active:scale-95">
+              <i class="fa-solid fa-pen-to-square"></i>
+              <span>Edit</span>
             </button>
           </div>
         </div>
 
-        <!-- Career Statistics Grid (Strictly Real Data, Starts at 0 for new players) -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
-            <div class="text-xs text-slate-400 font-semibold">Tournaments Played</div>
-            <div id="profile-tournaments-count" class="text-xl font-black text-white mt-1">0</div>
+        <!-- Sub Navigation Tabs (Tourney | Album | Achievement) -->
+        <div class="flex items-center space-x-8 border-b border-slate-800 text-sm font-bold">
+          <button onclick="switchProfileSubTab('tourney')" id="tab-sub-tourney" class="pb-3 text-amber-400 border-b-2 border-amber-400 transition">
+            Tourney
+          </button>
+          <button onclick="switchProfileSubTab('album')" id="tab-sub-album" class="pb-3 text-slate-400 hover:text-white transition">
+            Album
+          </button>
+          <button onclick="switchProfileSubTab('achievement')" id="tab-sub-achievement" class="pb-3 text-slate-400 hover:text-white transition">
+            Achievement
+          </button>
+        </div>
+
+        <!-- 3 Summary Metrics Cards (Image 2) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Card 1: Total Profit -->
+          <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800/80 relative space-y-2 shadow-inner">
+            <div class="flex items-center justify-between text-xs text-slate-400 font-semibold">
+              <span class="flex items-center">Total Profit <i class="fa-regular fa-circle-question ml-1 text-slate-600"></i></span>
+            </div>
+            <div class="text-[11px] text-slate-500 font-medium" id="profile-above-pct">Above 0% players</div>
+            <div class="flex items-center space-x-2 pt-1">
+              <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-black text-xs">₮</span>
+              <span id="profile-card-total-profit" class="text-3xl font-black text-white font-mono">0</span>
+            </div>
           </div>
-          <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
-            <div class="text-xs text-slate-400 font-semibold">MTT 1st Wins</div>
-            <div id="profile-wins-count" class="text-xl font-black text-amber-400 mt-1">0 <span class="text-xs text-slate-500">(0%)</span></div>
+
+          <!-- Card 2: Pro Ranking -->
+          <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800/80 relative space-y-2 shadow-inner">
+            <div class="flex items-center justify-between text-xs text-slate-400 font-semibold">
+              <span class="flex items-center">Pro Ranking <i class="fa-regular fa-circle-question ml-1 text-slate-600"></i></span>
+            </div>
+            <div class="text-[11px] text-slate-500 font-medium">Pro Points 0</div>
+            <div class="pt-1">
+              <span class="text-3xl font-black text-emerald-400 font-mono">-</span>
+            </div>
           </div>
-          <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
-            <div class="text-xs text-slate-400 font-semibold">In The Money (ITM)</div>
-            <div id="profile-itm-count" class="text-xl font-black text-emerald-400 mt-1">0 <span class="text-xs text-slate-500">(0%)</span></div>
-          </div>
-          <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
-            <div class="text-xs text-slate-400 font-semibold">Net TGB Profit</div>
-            <div id="profile-net-profit" class="text-xl font-black text-amber-300 mt-1">0 ₮</div>
+
+          <!-- Card 3: Growth Level -->
+          <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800/80 relative space-y-2 shadow-inner">
+            <div class="flex items-center justify-between text-xs text-slate-400 font-semibold">
+              <span>Growth Level</span>
+              <i class="fa-solid fa-chevron-right text-slate-600 text-xs"></i>
+            </div>
+            <div class="text-[11px] text-slate-500 font-medium">Experience Ranking 10000+</div>
+            <div class="flex items-center space-x-3 pt-1">
+              <div class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center text-sm shadow">
+                🤠
+              </div>
+              <div>
+                <div id="profile-growth-title" class="text-sm font-black text-white flex items-center">
+                  Amateur <span class="text-amber-400 text-xs ml-1.5">★★★</span>
+                </div>
+                <div id="profile-growth-exp" class="text-[10px] text-slate-400 font-mono">0 / 500 EXP</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Play Style Analysis Indicators (Calculated from Real Played Hands!) -->
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-black text-slate-200 uppercase tracking-wider flex items-center">
-              <i class="fa-solid fa-chart-simple text-purple-400 mr-2"></i> Real Gameplay Style Metrics
-            </h3>
-            <span id="profile-total-hands-badge" class="text-[10px] text-slate-500 font-mono">0 Hands Tracked</span>
+        <!-- Tournament Profit And Loss Section (Interactive Line Chart - Image 2) -->
+        <div class="space-y-4 pt-2">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+            <div>
+              <h3 class="text-base font-black text-white">Tournament Profit And Loss</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Profit and loss chart for the last 600 Tourney (excluding Mini... ticket tournaments, etc.), with amounts converted to TGB.</p>
+            </div>
+            <button onclick="switchView('career')" class="text-xs text-amber-400 hover:text-amber-300 font-bold flex items-center self-end sm:self-auto">
+              View All <i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i>
+            </button>
           </div>
-          
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
-              <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
-                <span>VPIP (Voluntarily Put $ In Pot)</span>
-                <span id="profile-vpip-val" class="text-amber-400">0%</span>
-              </div>
-              <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
-                <div id="profile-vpip-bar" class="bg-amber-500 h-full w-[0%] transition-all duration-300"></div>
-              </div>
-              <div class="text-[10px] text-slate-500 mt-1">Optimal Range: 20% - 28%</div>
-            </div>
 
-            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
-              <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
-                <span>PFR (Pre-Flop Raise)</span>
-                <span id="profile-pfr-val" class="text-blue-400">0%</span>
-              </div>
-              <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
-                <div id="profile-pfr-bar" class="bg-blue-500 h-full w-[0%] transition-all duration-300"></div>
-              </div>
-              <div class="text-[10px] text-slate-500 mt-1">Tight-Aggressive benchmark: 15% - 22%</div>
+          <!-- Canvas Line Chart -->
+          <div class="relative w-full bg-slate-950 rounded-2xl p-4 border border-slate-800/80 space-y-2">
+            <div class="relative w-full h-48">
+              <canvas id="profit-loss-chart" class="w-full h-full"></canvas>
             </div>
-
-            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
-              <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
-                <span>3-Bet Frequency</span>
-                <span id="profile-3bet-val" class="text-emerald-400">0%</span>
-              </div>
-              <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
-                <div id="profile-3bet-bar" class="bg-emerald-500 h-full w-[0%] transition-all duration-300"></div>
-              </div>
-              <div class="text-[10px] text-slate-500 mt-1">Healthy re-raise pressure: 7% - 12%</div>
+            <div class="flex items-center justify-center text-xs text-slate-400 font-medium pt-1">
+              <span class="inline-block w-4 h-0.5 bg-amber-400 mr-2"></span>
+              <span>Accumulated profit and loss</span>
             </div>
           </div>
+        </div>
+
+        <!-- Peak Performance Section (Image 2) -->
+        <div class="space-y-3 pt-2">
+          <div>
+            <h3 class="text-base font-black text-white">Peak Performance</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Your top 10 performances over 52 weeks determine your pro rank.</p>
+          </div>
+          <div id="peak-performance-container" class="py-8 bg-slate-950 rounded-2xl border border-slate-800/80 flex flex-col items-center justify-center text-center space-y-2">
+            <div class="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 text-slate-600 flex items-center justify-center text-xl">
+              <i class="fa-solid fa-trophy"></i>
+            </div>
+            <div class="text-xs text-slate-400">No Tournament Records Yet</div>
+            <button onclick="switchView('lobby')" class="px-4 py-1.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold hover:bg-amber-500/20 transition">
+              Play Daily MTT Tournament
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 5: CAREER (Matching Image 3) -->
+    <!-- ========================================================================= -->
+    <section id="view-career" class="p-4 lg:p-8 max-w-5xl mx-auto w-full space-y-6 hidden">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-black text-white">Career</h2>
+      </div>
+
+      <!-- Sub Tabs: Casual Rooms | Friends Room (Image 3) -->
+      <div class="flex items-center space-x-8 border-b border-slate-800 text-sm font-bold">
+        <button class="pb-3 text-amber-400 border-b-2 border-amber-400">Casual Rooms</button>
+        <button class="pb-3 text-slate-400 hover:text-white transition">Friends Room</button>
+      </div>
+
+      <!-- Section: Profit -->
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5">
+        <h3 class="text-base font-black text-white">Profit</h3>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800/80 text-center">
+            <div class="text-xs text-slate-400 font-semibold">Total Profit</div>
+            <div id="career-total-profit" class="text-2xl sm:text-3xl font-black text-white font-mono mt-1">0</div>
+          </div>
+          <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800/80 text-center">
+            <div class="text-xs text-slate-400 font-semibold">Weekly Profit</div>
+            <div id="career-weekly-profit" class="text-2xl sm:text-3xl font-black text-white font-mono mt-1">0</div>
+          </div>
+        </div>
+
+        <!-- Profit/Loss Trend Chart (Image 3) -->
+        <div class="space-y-2">
+          <div class="text-xs text-slate-400 font-semibold">Profit/Loss trend</div>
+          <div class="w-full h-48 bg-slate-950 rounded-2xl p-4 border border-slate-800/80 relative">
+            <canvas id="career-trend-chart" class="w-full h-full"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: History (Image 3) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
+        <h3 class="text-base font-black text-white">History</h3>
+        <div id="career-history-rows" class="space-y-3">
+          <!-- Rendered dynamically by JS -->
         </div>
       </div>
     </section>
 
     <!-- ========================================================================= -->
-    <!-- VIEW 5: TGB WALLET & TAMPER-EVIDENT LEDGER -->
+    <!-- VIEW 6: MY GAMES / HISTORY (Matching Image 4) -->
     <!-- ========================================================================= -->
-    <section id="view-wallet" class="p-4 lg:p-8 max-w-5xl mx-auto w-full space-y-6 hidden">
-      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-800 pb-4">
-          <div>
-            <h2 class="text-2xl font-black text-white flex items-center">
-              <i class="fa-solid fa-wallet text-amber-400 mr-3"></i> TGB VIRTUAL LEDGER
-            </h2>
-            <p class="text-xs text-slate-400 mt-1">Append-only cryptographic transaction chain with server signatures</p>
-          </div>
-          <button onclick="claimFaucet()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition shadow-lg shadow-amber-500/20 flex items-center">
-            <i class="fa-solid fa-gift mr-1.5"></i> Claim Daily Faucet (+1,000 ₮)
+    <section id="view-history" class="p-4 lg:p-8 max-w-5xl mx-auto w-full space-y-6 hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 lg:p-8 shadow-2xl space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <h2 class="text-2xl font-black text-white flex items-center">
+            <i class="fa-solid fa-gamepad text-emerald-400 mr-3"></i> My Games History
+          </h2>
+          <button onclick="switchView('table')" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition">
+            Play Table Now
           </button>
         </div>
 
-        <!-- Ledger Table -->
+        <div id="mygames-history-list" class="space-y-3">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 7: WALLET (Matching Image 5) -->
+    <!-- ========================================================================= -->
+    <section id="view-wallet" class="p-4 lg:p-8 max-w-5xl mx-auto w-full space-y-6 hidden">
+      
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-black text-white">Wallet</h2>
+        <div class="flex items-center space-x-2">
+          <span class="px-3.5 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs">Game</span>
+          <span class="px-3.5 py-1.5 rounded-xl bg-slate-800 text-slate-400 font-bold text-xs">Web3</span>
+        </div>
+      </div>
+
+      <!-- Emerald Gradient Balance Card (Matching Image 5) -->
+      <div class="rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-emerald-900/90 via-teal-900/70 to-slate-900 border border-emerald-500/30 shadow-2xl space-y-5">
+        <div>
+          <div class="text-xs font-bold text-emerald-300 uppercase tracking-wider">Balance (TGB)</div>
+          <div id="wallet-balance-big" class="text-4xl sm:text-5xl font-black text-white font-mono tracking-tight mt-1">
+            12,500
+          </div>
+        </div>
+
+        <!-- Buttons: Purchase / Claim Faucet, Transfer, Gift (Image 5) -->
+        <div class="flex flex-wrap gap-3 pt-2">
+          <button onclick="claimFaucet()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black text-xs uppercase tracking-wider hover:from-amber-300 hover:to-yellow-400 transition shadow-lg shadow-amber-500/25 flex items-center active:scale-95">
+            <i class="fa-solid fa-plus mr-1.5"></i> Purchase / Claim Faucet
+          </button>
+          <button onclick="alert('Transfer feature available in MTT v2');" class="px-5 py-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-white font-bold text-xs transition flex items-center border border-slate-700">
+            <i class="fa-solid fa-arrow-right-arrow-left mr-2 text-cyan-400"></i> Transfer
+          </button>
+          <button onclick="alert('Gift feature available in MTT v2');" class="px-5 py-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-white font-bold text-xs transition flex items-center border border-slate-700">
+            <i class="fa-solid fa-gift mr-2 text-amber-400"></i> Gift
+          </button>
+        </div>
+      </div>
+
+      <!-- Records Section with Date Filter (Matching Image 5) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <div class="text-base font-black text-white">Records</div>
+          <div class="flex items-center space-x-2 text-xs">
+            <span class="text-slate-400 font-mono px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800">2026-09-01 → 2026-09-24</span>
+            <span class="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 font-bold border border-slate-700">All</span>
+          </div>
+        </div>
+
+        <!-- Records Table matching Image 5 -->
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
             <thead>
               <tr class="text-slate-400 border-b border-slate-800 uppercase font-mono tracking-wider">
-                <th class="pb-3">Tx ID</th>
+                <th class="pb-3">Game</th>
                 <th class="pb-3">Type</th>
                 <th class="pb-3 text-right">Amount</th>
-                <th class="pb-3 text-right">Balance</th>
-                <th class="pb-3">Signature & Prev Hash</th>
-                <th class="pb-3 text-right">Timestamp</th>
+                <th class="pb-3 text-right">Time</th>
               </tr>
             </thead>
-            <tbody id="ledger-rows-container" class="divide-y divide-slate-800/60 font-mono">
-              <!-- Rendered by JS -->
+            <tbody id="wallet-records-container" class="divide-y divide-slate-800/60 font-mono">
+              <!-- Rendered dynamically by JS -->
             </tbody>
           </table>
         </div>
@@ -798,12 +1024,58 @@
         </div>
       </div>
 
-      <!-- Display Name Field -->
+      <!-- Display Name & Handle Fields (Grid) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">
+            <i class="fa-solid fa-signature text-amber-400 mr-1"></i> ชื่อผู้เล่น (Display Name)
+          </label>
+          <input id="edit-username-input" type="text" maxlength="20" placeholder="เช่น MICKDANCE" oninput="updateProfilePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 font-bold">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">
+            <i class="fa-solid fa-at text-cyan-400 mr-1"></i> Username Handle
+          </label>
+          <input id="edit-handle-input" type="text" maxlength="20" placeholder="@MICKDANCE" oninput="updateProfilePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 font-mono">
+        </div>
+      </div>
+
+      <!-- Bio Field -->
       <div>
         <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">
-          <i class="fa-solid fa-signature text-amber-400 mr-1"></i> ชื่อผู้เล่น (Display Name)
+          <i class="fa-solid fa-quote-left text-purple-400 mr-1"></i> ประวัติส่วนตัว (Bio)
         </label>
-        <input id="edit-username-input" type="text" maxlength="20" placeholder="ตั้งชื่อโปรไฟล์ของคุณ..." oninput="updateProfilePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 font-bold">
+        <input id="edit-bio-input" type="text" maxlength="80" placeholder="I have no bio yet" oninput="updateProfilePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500">
+      </div>
+
+      <!-- Gender & Country Flag (Grid) -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">
+            <i class="fa-solid fa-venus-mars text-rose-400 mr-1"></i> เพศ (Gender)
+          </label>
+          <select id="edit-gender-select" onchange="updateProfilePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+            <option value="male">♂ ชาย (Male)</option>
+            <option value="female">♀ หญิง (Female)</option>
+            <option value="other">★ อื่นๆ (Other)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">
+            <i class="fa-solid fa-flag text-emerald-400 mr-1"></i> ประเทศ (Country Flag)
+          </label>
+          <select id="edit-country-select" onchange="updateProfilePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+            <option value="🇹🇭">🇹🇭 Thailand</option>
+            <option value="🇺🇸">🇺🇸 United States</option>
+            <option value="🇯🇵">🇯🇵 Japan</option>
+            <option value="🇬🇧">🇬🇧 United Kingdom</option>
+            <option value="🇸🇬">🇸🇬 Singapore</option>
+            <option value="🇰🇷">🇰🇷 South Korea</option>
+            <option value="🇩🇪">🇩🇪 Germany</option>
+            <option value="🇫🇷">🇫🇷 France</option>
+            <option value="🇦🇺">🇦🇺 Australia</option>
+          </select>
+        </div>
       </div>
 
       <!-- Avatar Selection -->
