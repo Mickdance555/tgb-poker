@@ -24,12 +24,25 @@
    - Standard & Turbo blind schedules.
    - Exponential decay ICM payout matrix.
    - Table balancing algorithm maintaining $\le 1$ player delta across tables.
-5. **Interactive Web Application (`public/`):**
+5. **Firebase Cloud Integration (Auth & Firestore):**
+   - **Google Sign-In & Email Authentication:** 1-Click login with Google or email/password account creation.
+   - **Cloud Firestore Real-Time Sync:** Player profiles, avatar, level, TGB balance, and ledger transactions synced in real-time.
+   - **Custom Firebase Config UI:** Connect your own Firebase project from the web interface or `.env` file without modifying source code.
+6. **Interactive Web Application (`public/`):**
    - **Tournament Lobby:** Filter and join live MTT events, Freerolls, and Turbo Bounties.
    - **Interactive Felt Poker Table:** 6-Max radial table layout, card flip animations, synthesized Web Audio sound FX (cards, chips, win chords), and raise slider with standard poker presets (Min, 2.5BB, 1/2 Pot, Pot, All-in).
    - **AI Poker Academy & Exam:** Interactive promotion exam simulations with EV differential feedback.
    - **Profile & Style Analytics:** Real VPIP, PFR, and 3-Bet radar metrics.
    - **TGB Wallet & Faucet:** Live ledger viewer and free training TGB claim button.
+
+---
+
+## 🔥 Firebase Setup Guide (3 Simple Steps)
+
+1. Create a project at [Firebase Console](https://console.firebase.google.com/).
+2. Enable **Authentication** (under *Sign-in method*, enable **Google** and **Email/Password**).
+3. Enable **Cloud Firestore** in test mode.
+4. Copy your Web App config object into `E:\tgb-poker\public\firebase-config.js` or click the **"Sign In / Firebase"** button on the web app navbar and paste your config into the **Custom Firebase Credentials** box!
 
 ---
 

@@ -9,7 +9,16 @@
     "dev:server": "tsx watch src/server/index.ts",
     "dev:client": "npm run dev --prefix client"
   },
-  "keywords": ["poker", "mtt", "provably-fair", "texas-holdem", "realtime", "websocket"],
+  "dependencies": {
+    "firebase": "^10.13.0",
+    "firebase-admin": "^12.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4"
+  },
+  "keywords": ["poker", "mtt", "provably-fair", "texas-holdem", "realtime", "websocket", "firebase"],
   "author": "TGB Poker Team",
   "license": "UNLICENSED"
 }

@@ -3,6 +3,19 @@
  * Includes Web Audio FX, Bot AI, Provably Fair Verification, and Ledger Integration
  */
 
+import {
+  auth,
+  isFirebaseLive,
+  loginWithGoogle,
+  loginWithEmail,
+  registerWithEmail,
+  logoutFirebase,
+  recordTransactionFirestore,
+  listenToUserProfile,
+  listenToUserTransactions
+} from './firebase-config.js';
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+
 // ============================================================================
 // 1. WEB AUDIO SOUND SYNTHESIZER (No external mp3 dependencies needed)
 // ============================================================================
@@ -674,6 +687,163 @@ function runManualVerification() {
     <div>HMAC-SHA256 signature matches pre-published commitment. Unbiased Fisher-Yates deck sequence certified untampered by server or third-parties.</div>
   `;
 }
+
+// ============================================================================
+// 11. FIREBASE AUTHENTICATION & CLOUD SYNC
+// ============================================================================
+function openAuthModal() {
+  const modal = document.getElementById('auth-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById('auth-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function handleGoogleSignIn() {
+  try {
+    const user = await loginWithGoogle();
+    alert(`Welcome, ${user.displayName || user.email}! Connected via Google.`);
+    closeAuthModal();
+  } catch (err) {
+    alert(`Google Sign-In: ${err.message}`);
+  }
+}
+
+async function handleEmailLogin() {
+  const email = document.getElementById('auth-email-input').value.trim();
+  const password = document.getElementById('auth-pass-input').value;
+  if (!email || !password) {
+    alert('Please enter both email and password.');
+    return;
+  }
+  try {
+    const user = await loginWithEmail(email, password);
+    alert(`Signed in as ${user.email}`);
+    closeAuthModal();
+  } catch (err) {
+    alert(`Login failed: ${err.message}`);
+  }
+}
+
+async function handleEmailRegister() {
+  const email = document.getElementById('auth-email-input').value.trim();
+  const password = document.getElementById('auth-pass-input').value;
+  if (!email || password.length < 6) {
+    alert('Please enter a valid email and password with at least 6 characters.');
+    return;
+  }
+  try {
+    const user = await registerWithEmail(email, password, email.split('@')[0]);
+    alert(`Account created successfully for ${user.email}! Received 12,500 TGB starting bonus.`);
+    closeAuthModal();
+  } catch (err) {
+    alert(`Registration failed: ${err.message}`);
+  }
+}
+
+async function handleFirebaseSignOut() {
+  try {
+    await logoutFirebase();
+    alert('Signed out successfully.');
+    window.location.reload();
+  } catch (err) {
+    alert(`Sign out error: ${err.message}`);
+  }
+}
+
+function saveCustomFirebaseConfig() {
+  const rawJson = document.getElementById('custom-firebase-json').value.trim();
+  if (!rawJson) return;
+  try {
+    const parsed = JSON.parse(rawJson);
+    localStorage.setItem('TGB_CUSTOM_FIREBASE_CONFIG', JSON.stringify(parsed));
+    alert('Custom Firebase configuration saved! Reloading application...');
+    window.location.reload();
+  } catch (e) {
+    alert('Invalid JSON configuration. Please check the syntax.');
+  }
+}
+
+// Setup Auth State Listener
+if (auth) {
+  onAuthStateChanged(auth, (user) => {
+    const authBtn = document.getElementById('firebase-auth-btn');
+    const statusText = document.getElementById('firebase-status-text');
+    const navName = document.getElementById('nav-user-name');
+    const navAvatar = document.getElementById('nav-user-avatar');
+    const boxName = document.getElementById('auth-box-name');
+    const boxEmail = document.getElementById('auth-box-email');
+    const boxStatus = document.getElementById('auth-box-status');
+    const boxAvatar = document.getElementById('auth-box-avatar');
+    const logoutBtn = document.getElementById('auth-logout-btn');
+
+    if (user) {
+      userProfile.id = user.uid;
+      userProfile.username = user.displayName || user.email.split('@')[0];
+
+      if (statusText) statusText.innerText = userProfile.username;
+      if (authBtn) {
+        authBtn.className = 'flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold hover:bg-emerald-500/20 transition shadow-sm';
+      }
+      if (navName) navName.innerText = userProfile.username;
+      if (boxName) boxName.innerText = userProfile.username;
+      if (boxEmail) boxEmail.innerText = user.email;
+      if (boxStatus) {
+        boxStatus.className = 'text-[10px] text-emerald-400 font-semibold mt-0.5';
+        boxStatus.innerText = 'Connected to Firebase Cloud';
+      }
+      if (logoutBtn) logoutBtn.classList.remove('hidden');
+
+      if (user.photoURL) {
+        if (navAvatar) navAvatar.innerHTML = `<img src="${user.photoURL}" class="w-full h-full object-cover">`;
+        if (boxAvatar) boxAvatar.innerHTML = `<img src="${user.photoURL}" class="w-full h-full object-cover">`;
+      }
+
+      // Listen to Firestore updates
+      listenToUserProfile(user.uid, (data) => {
+        if (data.tgbBalance !== undefined) {
+          userProfile.tgbBalance = data.tgbBalance;
+          document.getElementById('top-tgb-balance').innerText = data.tgbBalance.toLocaleString() + '.00';
+        }
+      });
+
+      listenToUserTransactions(user.uid, (txs) => {
+        if (txs && txs.length > 0) {
+          userLedgerTransactions = txs;
+          renderLedgerTable();
+        }
+      });
+    } else {
+      if (statusText) statusText.innerText = isFirebaseLive ? 'Sign In / Firebase' : 'Connect Firebase';
+    }
+  });
+}
+
+// ============================================================================
+// EXPOSE HANDLERS TO WINDOW (For inline HTML onclicks)
+// ============================================================================
+window.switchView = switchView;
+window.launchTable = launchTable;
+window.startNewHand = startNewHand;
+window.takeAction = takeAction;
+window.setRaisePreset = setRaisePreset;
+window.onRaiseSliderChange = onRaiseSliderChange;
+window.onRaiseInputChange = onRaiseInputChange;
+window.toggleAudio = toggleAudio;
+window.claimFaucet = claimFaucet;
+window.submitExamChoice = submitExamChoice;
+window.openSeedModal = openSeedModal;
+window.closeSeedModal = closeSeedModal;
+window.runManualVerification = runManualVerification;
+window.openAuthModal = openAuthModal;
+window.closeAuthModal = closeAuthModal;
+window.handleGoogleSignIn = handleGoogleSignIn;
+window.handleEmailLogin = handleEmailLogin;
+window.handleEmailRegister = handleEmailRegister;
+window.handleFirebaseSignOut = handleFirebaseSignOut;
+window.saveCustomFirebaseConfig = saveCustomFirebaseConfig;
 
 // ============================================================================
 // INITIALIZATION
