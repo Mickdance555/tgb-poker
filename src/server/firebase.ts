@@ -50,7 +50,7 @@ export async function initializeFirebaseAdmin() {
 export async function verifyFirebaseToken(idToken: string): Promise<{ uid: string; email?: string } | null> {
   if (!isFirebaseAdminInitialized || !authService) {
     // Mock validation fallback in development
-    return { uid: 'user_hero', email: 'hero@tgbpoker.com' };
+    return { uid: 'user_default', email: 'user@tgbpoker.com' };
   }
 
   try {

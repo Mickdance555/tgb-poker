@@ -391,7 +391,7 @@ let activeTable = {
   serverSeedHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
   serverSeed: '',
   seats: [
-    { seatNumber: 0, name: 'Hero (You)', chips: 500, currentBet: 0, totalBetThisHand: 0, isHero: true, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-emerald-600 to-teal-700', avatarEmoji: '🦁', empty: false, turnTimeLeft: 15, lastAction: '', showdownHandDesc: '' },
+    { seatNumber: 0, name: 'User (You)', chips: 500, currentBet: 0, totalBetThisHand: 0, isHero: true, isUser: true, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-emerald-600 to-teal-700', avatarEmoji: '🦁', empty: false, turnTimeLeft: 15, lastAction: '', showdownHandDesc: '' },
     { seatNumber: 1, name: '蘇察哈爾燦', chips: 480, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-amber-600 to-red-600', avatarEmoji: '🐻', empty: false, turnTimeLeft: 15, lastAction: '', showdownHandDesc: '' },
     { seatNumber: 2, name: 'jryep117', chips: 520, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-slate-700 to-slate-900', avatarEmoji: '👤', empty: false, turnTimeLeft: 15, lastAction: '', showdownHandDesc: '' },
     { seatNumber: 3, name: 'ViperKing', chips: 650, currentBet: 0, totalBetThisHand: 0, isHero: false, cards: [], isFolded: false, isAllIn: false, actedThisStreet: false, avatarBg: 'from-purple-700 to-indigo-900', avatarEmoji: '🐍', empty: false, turnTimeLeft: 15, lastAction: '', showdownHandDesc: '' },
@@ -1085,9 +1085,9 @@ function saveProfileCustomization() {
     }
   } catch (e) {}
 
-  // Update Table Seat 0 Hero Name
+  // Update Table Seat 0 User Name
   if (activeTable && activeTable.seats && activeTable.seats[0]) {
-    activeTable.seats[0].name = `${userProfile.username} (You)`;
+    activeTable.seats[0].name = `${userProfile.username || 'User'} (You)`;
   }
 
   updateAuthUI(true, userProfile);
@@ -1115,20 +1115,21 @@ function clearAllTurnTimers() {
   }
 }
 
-function initTableForPlay(heroChips = 500) {
+function initTableForPlay(userChips = 500) {
   isSpectatorMode = false;
   
-  const heroName = (userProfile && (userProfile.nickname || userProfile.username)) 
+  const userName = (userProfile && (userProfile.nickname || userProfile.username)) 
     ? `${userProfile.nickname || userProfile.username} (You)` 
-    : 'Hero (You)';
+    : 'User (You)';
 
   activeTable.seats[0] = {
     seatNumber: 0,
-    name: heroName,
-    chips: Math.max(100, heroChips),
+    name: userName,
+    chips: Math.max(100, userChips),
     currentBet: 0,
     totalBetThisHand: 0,
     isHero: true,
+    isUser: true,
     cards: [],
     isFolded: false,
     isAllIn: false,
@@ -1380,7 +1381,7 @@ function renderPokerTable() {
           </div>
           <div class="bg-slate-950/90 border border-slate-700/60 rounded-full px-2.5 py-0.5 mt-1 text-center shadow-lg min-w-[70px]">
             <div class="text-[10px] font-bold text-white truncate max-w-[80px]">${seat.name}</div>
-            <div class="text-[10px] font-mono font-black text-amber-400">₮ ${(seat.chips || 0).toLocaleString()}</div>
+            <div class="text-[10px] font-mono font-black text-amber-400">${(seat.chips || 0).toLocaleString()} TGB</div>
           </div>
           ${statusBadgeHtml}
           ${cardsHtml}
@@ -1398,7 +1399,7 @@ function renderPokerTable() {
           </div>
           <div class="bg-slate-950/90 border border-slate-700/60 rounded-full px-2.5 py-0.5 mt-1 text-center shadow-lg min-w-[70px]">
             <div class="text-[10px] font-bold text-white truncate max-w-[80px]">${seat.name}</div>
-            <div class="text-[10px] font-mono font-black text-amber-400">₮ ${(seat.chips || 0).toLocaleString()}</div>
+            <div class="text-[10px] font-mono font-black text-amber-400">${(seat.chips || 0).toLocaleString()} TGB</div>
           </div>
           ${statusBadgeHtml}
           ${betChipHtml}
@@ -1567,13 +1568,14 @@ function sitDownAtSeat(seatIdx) {
     }
   });
 
-  const heroName = (userProfile && (userProfile.nickname || userProfile.username))
+  const userName = (userProfile && (userProfile.nickname || userProfile.username))
     ? `${userProfile.nickname || userProfile.username} (You)`
-    : 'Hero (You)';
+    : 'User (You)';
 
   targetSeat.empty = false;
   targetSeat.isHero = true;
-  targetSeat.name = heroName;
+  targetSeat.isUser = true;
+  targetSeat.name = userName;
   targetSeat.chips = buyInAmount;
   targetSeat.currentBet = 0;
   targetSeat.totalBetThisHand = 0;
@@ -1871,7 +1873,7 @@ function executeBotDecision(bot) {
       });
 
       playSound('chips');
-      showTableBanner(`${bot.name} Bets ${betAmt} ₮`);
+      showTableBanner(`${bot.name} Bets ${betAmt} TGB`);
     } else {
       bot.actedThisStreet = true;
       bot.lastAction = 'Check';
@@ -1920,7 +1922,7 @@ function executeBotDecision(bot) {
       });
 
       playSound('chips');
-      showTableBanner(`${bot.name} Raises to ${bot.currentBet} ₮`);
+      showTableBanner(`${bot.name} Raises to ${bot.currentBet} TGB`);
     } else if (action === 'CALL') {
       const callAmt = Math.min(toCall, bot.chips);
       bot.chips -= callAmt;
@@ -1930,7 +1932,7 @@ function executeBotDecision(bot) {
       bot.actedThisStreet = true;
       bot.lastAction = `Call ${callAmt}`;
       playSound('chips');
-      showTableBanner(`${bot.name} Calls ${callAmt} ₮`);
+      showTableBanner(`${bot.name} Calls ${callAmt} TGB`);
     } else {
       bot.isFolded = true;
       bot.actedThisStreet = true;
@@ -1974,7 +1976,7 @@ function takeAction(actionType) {
     heroSeat.actedThisStreet = true;
     heroSeat.lastAction = actualCall === 0 ? 'Check' : `Call ${actualCall}`;
     playSound('chips');
-    showTableBanner(actualCall === 0 ? 'You Checked' : `You Called ${actualCall} ₮`);
+    showTableBanner(actualCall === 0 ? 'You Checked' : `You Called ${actualCall} TGB`);
   } else if (actionType === 'RAISE') {
     const inputEl = document.getElementById('raise-amount-input');
     const inputVal = inputEl ? parseFloat(inputEl.value) : 0;
@@ -2014,7 +2016,7 @@ function takeAction(actionType) {
     });
 
     playSound('chips');
-    showTableBanner(`You Raised to ${heroSeat.currentBet} ₮`);
+    showTableBanner(`You Raised to ${heroSeat.currentBet} TGB`);
   }
 
   renderPokerTable();
@@ -2149,7 +2151,7 @@ function concludeHand(winner, reason, showdownDesc = '') {
   if (winner) {
     winner.chips += wonPot;
     const desc = showdownDesc ? `ด้วย ${showdownDesc}` : '(ผู้เล่นอื่นหมอบหมด)';
-    showTableBanner(`🏆 ${winner.name} ชนะ ${wonPot.toLocaleString()} ₮ ${desc}`);
+    showTableBanner(`🏆 ${winner.name} ชนะ ${wonPot.toLocaleString()} TGB ${desc}`);
   }
 
   const heroSeat = activeTable.seats.find(s => s.isHero);
@@ -2641,13 +2643,15 @@ function handleFormLogin(event) {
 
   if (!user) {
     // If not found in custom registered users, check if demo account
-    if ((identifier === 'hero' || identifier === 'heroace' || identifier.includes('hero')) && password.length >= 4) {
+    if ((identifier === 'user' || identifier === 'hero' || identifier === 'heroace' || identifier.includes('user') || identifier.includes('hero')) && password.length >= 4) {
       const demoUser = {
-        id: 'user_hero',
-        username: 'HeroAce',
-        email: 'hero@tgbpoker.com',
-        tgbBalance: 12500,
-        level: 1,
+        id: 'user_default',
+        username: 'User',
+        email: 'user@tgbpoker.com',
+        tgbBalance: 0,
+        gtbBalance: 0,
+        sundayTickets: 0,
+        level: 0,
         exp: 0,
         tournamentsPlayed: 0,
         tournamentsWon: 0,
@@ -2664,7 +2668,7 @@ function handleFormLogin(event) {
         registeredAt: new Date().toLocaleDateString('th-TH'),
       };
       setLoggedInUser(demoUser);
-      showAuthAlert('เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับ HeroAce', 'success');
+      showAuthAlert('เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับ User', 'success');
       playSound('win');
       setTimeout(closeAuthModal, 700);
       return;
@@ -2751,8 +2755,8 @@ function saveUserProfile() {
 
 function setLoggedInUser(user) {
   userProfile.id = user.id || `user_${Date.now()}`;
-  userProfile.username = user.username || 'Hero';
-  userProfile.handle = user.handle || `@${user.username || 'Hero'}`;
+  userProfile.username = user.username || 'User';
+  userProfile.handle = user.handle || `@${user.username || 'User'}`;
   userProfile.bio = user.bio || 'I have no bio yet';
   userProfile.gender = user.gender || 'male';
   userProfile.country = user.country || '🇹🇭';
@@ -2784,9 +2788,9 @@ function setLoggedInUser(user) {
 
   saveUserProfile();
 
-  // Update Hero seat on table
+  // Update User seat on table
   if (activeTable && activeTable.seats && activeTable.seats[0]) {
-    activeTable.seats[0].name = `${userProfile.username} (You)`;
+    activeTable.seats[0].name = `${userProfile.username || 'User'} (You)`;
   }
 
   updateAuthUI(true, userProfile);
@@ -3117,7 +3121,8 @@ function joinSundaySatellite() {
   isSpectatorMode = false;
   activeTable.seats[0].empty = false;
   activeTable.seats[0].isHero = true;
-  activeTable.seats[0].name = userProfile.username || 'Hero';
+  activeTable.seats[0].isUser = true;
+  activeTable.seats[0].name = `${userProfile.username || 'User'} (You)`;
   activeTable.seats[0].chips = 100;
   activeTable.seats[0].cards = ['As', 'Ks'];
 
@@ -3612,7 +3617,7 @@ function spectateCasualRoom(roomId) {
   launchCasualTable(room, false); // Free spectator!
 }
 
-function launchCasualTable(room, isSeatedHero) {
+function launchCasualTable(room, isSeatedUser) {
   activeTable.id = room.id;
   activeTable.title = `${room.name} • ${room.maxSeats}-Max`;
   activeTable.smallBlind = room.smallBlind;
@@ -3620,7 +3625,7 @@ function launchCasualTable(room, isSeatedHero) {
   activeTable.pot = room.smallBlind + room.bigBlind;
   activeTable.stage = 'PREFLOP';
 
-  if (isSeatedHero) {
+  if (isSeatedUser) {
     isSpectatorMode = false;
     const starterChips = (userProfile.tgbBalance && userProfile.tgbBalance >= room.buyIn) ? room.buyIn : 500;
     initTableForPlay(starterChips);

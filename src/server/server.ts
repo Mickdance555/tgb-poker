@@ -26,7 +26,7 @@ const defaultTable = new TableEngine({
 });
 
 // Seed default table with AI bots
-defaultTable.sitPlayer(0, 'user_hero', 'Hero (You)', 5000);
+defaultTable.sitPlayer(0, 'user_default', 'User (You)', 5000);
 defaultTable.sitPlayer(1, 'bot_viper', 'Viper (TAG)', 5000);
 defaultTable.sitPlayer(2, 'bot_bluffmaster', 'BluffMaster (LAG)', 5000);
 defaultTable.sitPlayer(3, 'bot_rock', 'The Rock (NIT)', 5000);
@@ -112,7 +112,7 @@ const server = http.createServer((req, res) => {
   }
 
   if (url.pathname === '/api/v1/wallet/balance') {
-    const userId = url.searchParams.get('userId') || 'user_hero';
+    const userId = url.searchParams.get('userId') || 'user_default';
     const balance = userBalances.get(userId) ?? 12500;
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ success: true, data: { userId, balance } }));

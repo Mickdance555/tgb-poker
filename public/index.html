@@ -116,7 +116,7 @@
           <div id="nav-user-avatar" class="w-8 h-8 rounded-full overflow-hidden border border-slate-600 bg-slate-900 flex items-center justify-center font-bold text-xs text-white">
             🦁
           </div>
-          <span id="nav-user-name" class="text-xs font-bold text-slate-200 truncate max-w-[100px]">HeroAce</span>
+          <span id="nav-user-name" class="text-xs font-bold text-slate-200 truncate max-w-[100px]">User</span>
           <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
         </div>
 
@@ -129,8 +129,8 @@
                 🦁
               </div>
               <div class="overflow-hidden">
-                <div id="dropdown-user-name" class="text-xs font-black text-white truncate">HeroAce</div>
-                <div id="dropdown-user-handle" class="text-[10px] text-slate-400 font-mono truncate">@HeroAce</div>
+                <div id="dropdown-user-name" class="text-xs font-black text-white truncate">User</div>
+                <div id="dropdown-user-handle" class="text-[10px] text-slate-400 font-mono truncate">@User</div>
               </div>
             </div>
             <i class="fa-solid fa-chevron-right text-xs text-slate-500 flex-shrink-0"></i>
@@ -228,7 +228,7 @@
         </button>
       </div>
 
-      <!-- 2. HERO BANNER CAROUSEL (Open A New Table, Get +5BB Bonus) -->
+      <!-- 2. MAIN BANNER CAROUSEL (Open A New Table, Get +5BB Bonus) -->
       <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-950/70 via-slate-900/90 to-emerald-950/80 border border-amber-500/30 p-6 sm:p-8 lg:p-10 shadow-2xl">
         <div class="absolute -right-8 -top-8 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
@@ -251,7 +251,7 @@
             </div>
           </div>
 
-          <!-- Hero Right Graphic (Poker Chips, Felt & +5BB emblem) -->
+          <!-- Main Right Graphic (Poker Chips, Felt & +5BB emblem) -->
           <div class="w-full lg:w-auto flex items-center justify-center">
             <div class="relative p-6 rounded-3xl bg-slate-950/80 border border-amber-500/30 shadow-2xl flex items-center gap-4 text-center">
               <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-tr from-amber-600 via-yellow-500 to-amber-300 flex items-center justify-center text-slate-950 text-3xl font-black shadow-lg shadow-amber-500/30">
@@ -875,7 +875,7 @@
               <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950/60">
                 <div class="flex items-center space-x-2">
                   <span class="w-4 font-bold text-slate-500">4</span>
-                  <span>🇩🇪 GTO_Hero</span>
+                  <span>🇩🇪 GTO_Player</span>
                 </div>
                 <span class="font-mono text-emerald-400 font-bold">+251,200</span>
               </div>
@@ -1276,7 +1276,7 @@
         </div>
 
         <!-- 8 SEATS AROUND THE PERIMETER (OUTSIDE THE FELT RAIL) -->
-        <!-- Seat 0: EXACT BOTTOM CENTER (User / Hero Seat) -->
+        <!-- Seat 0: EXACT BOTTOM CENTER (User Seat) -->
         <div id="seat-0" class="poker-seat absolute bottom-0 sm:bottom-1 left-1/2 -translate-x-1/2 z-30"></div>
 
         <!-- Seat 1: Bottom Right -->
@@ -1338,11 +1338,11 @@
           </button>
         </div>
 
-        <!-- Seated Player Action Console (Visible when seated Hero) -->
+        <!-- Seated Player Action Console (Visible when seated User) -->
         <div id="hero-action-console" class="hidden bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-3xl p-3 sm:p-4 max-w-2xl w-full shadow-2xl space-y-3">
           <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
             <div class="flex items-center space-x-2">
-              <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">YOUR HAND:</span>
+              <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">USER HAND:</span>
               <div id="hero-hand-rank-text" class="text-sm font-black text-amber-400 font-mono">Pair of Aces</div>
             </div>
             <button onclick="standUpToSpectate()" class="text-[11px] font-bold text-slate-400 hover:text-rose-400 transition">
@@ -1416,7 +1416,7 @@
         <div class="space-y-4">
           <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="space-y-1">
-              <div class="text-xs text-slate-400 font-bold uppercase">HERO HAND (CUTOFF)</div>
+              <div class="text-xs text-slate-400 font-bold uppercase">USER HAND (CUTOFF)</div>
               <div class="flex items-center space-x-2">
                 <div class="poker-mini-card bg-white text-slate-950 font-black rounded-lg px-2.5 py-1 text-sm shadow">A♠</div>
                 <div class="poker-mini-card bg-white text-slate-950 font-black rounded-lg px-2.5 py-1 text-sm shadow">K♠</div>
@@ -1434,7 +1434,7 @@
 
             <div class="space-y-1 text-right">
               <div class="text-xs text-slate-400 font-bold uppercase">POT SIZE & STACK</div>
-              <div class="text-sm font-black text-amber-400 font-mono">Pot: 1,800 ₮ • Hero: 12,400 ₮</div>
+              <div class="text-sm font-black text-amber-400 font-mono">Pot: 1,800 ₮ • User: 12,400 ₮</div>
             </div>
           </div>
 
@@ -1468,7 +1468,7 @@
               <i class="fa-solid fa-circle-check mr-2"></i> CORRECT! (+0.85 EV Decision)
             </div>
             <p class="text-slate-300 text-xs leading-relaxed">
-              <strong>AI Coach Analysis:</strong> On an asymmetrical dry board like K-7-2 rainbow, Hero has a massive range advantage and nut advantage. A small bet (25-33% pot) targets the opponent's wide BB defense range (88-JJ, second pairs, floats) while maintaining high fold equity against undercards.
+              <strong>AI Coach Analysis:</strong> On an asymmetrical dry board like K-7-2 rainbow, User has a massive range advantage and nut advantage. A small bet (25-33% pot) targets the opponent's wide BB defense range (88-JJ, second pairs, floats) while maintaining high fold equity against undercards.
             </p>
           </div>
         </div>
@@ -1991,7 +1991,7 @@
             <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 text-xs">
               <i class="fa-solid fa-user"></i>
             </span>
-            <input id="login-username-input" type="text" required placeholder="เช่น HeroAce หรือ email@domain.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 font-medium">
+            <input id="login-username-input" type="text" required placeholder="เช่น User หรือ email@domain.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 font-medium">
           </div>
         </div>
 
@@ -2019,7 +2019,7 @@
 
         <div>
           <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">ชื่อผู้เล่น (Username)</label>
-          <input id="reg-username-input" type="text" required placeholder="เช่น HeroPro, AceKing" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500">
+          <input id="reg-username-input" type="text" required placeholder="เช่น User, Mickdance" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500">
         </div>
 
         <div>
@@ -2096,7 +2096,7 @@
           <span id="preview-avatar-content">🦁</span>
         </div>
         <div>
-          <div id="preview-display-name" class="text-base font-black text-white">HeroAce</div>
+          <div id="preview-display-name" class="text-base font-black text-white">User</div>
           <div id="preview-frame-name" class="text-xs text-amber-400 font-semibold mt-0.5">กรอบ: ค่าเริ่มต้น (None)</div>
           <div class="text-[10px] text-slate-500 mt-0.5">พรีวิวรูปโปรไฟล์ของคุณที่จะปรากฏบนโต๊ะโป๊กเกอร์</div>
         </div>
